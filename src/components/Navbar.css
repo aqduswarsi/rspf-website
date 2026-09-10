@@ -1,0 +1,202 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0.8rem 0;
+  transition: all 0.4s ease;
+  background: rgba(13, 13, 13, 0.4);
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid transparent;
+}
+
+.navbar.scrolled {
+  background: rgba(13, 13, 13, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 4px 30px rgba(139, 0, 0, 0.3);
+}
+
+.nav-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Brand */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.nav-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 3px;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(212,175,55,0.5);
+}
+
+.nav-subtitle {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* Links */
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.nav-link {
+  position: relative;
+  text-decoration: none;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  letter-spacing: 0.5px;
+  transition: color 0.3s;
+  overflow: hidden;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--gold);
+}
+
+.nav-link-underline {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--maroon-light), var(--gold));
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.nav-link:hover .nav-link-underline,
+.nav-link.active .nav-link-underline {
+  width: 70%;
+}
+
+/* CTA */
+.nav-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
+  color: var(--gold);
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(212,175,55,0.3);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-cta:hover {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--dark-bg);
+  box-shadow: 0 4px 20px rgba(212,175,55,0.4);
+  transform: translateY(-1px);
+}
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+}
+
+.hamburger span {
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* Mobile Menu */
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+  background: rgba(13, 13, 13, 0.97);
+  border-top: 1px solid rgba(212,175,55,0.1);
+}
+
+.mobile-menu.open {
+  display: flex;
+  max-height: 300px;
+  padding: 1rem 0;
+}
+
+.mobile-link {
+  text-decoration: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 1rem;
+  padding: 0.8rem 2rem;
+  border-left: 3px solid transparent;
+  transition: all 0.3s;
+}
+
+.mobile-link:hover,
+.mobile-link.active {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: rgba(212,175,55,0.05);
+}
+
+@media (max-width: 900px) {
+  .nav-links, .nav-cta { display: none; }
+  .hamburger { display: flex; }
+  .mobile-menu { display: flex; }
+}
