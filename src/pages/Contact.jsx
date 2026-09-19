@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import './Contact.css';
 
 const offices = [
   { zone: 'Headquarters', address: 'Security Directorate, Rail Bhavan, New Delhi – 110001', phone: '011-23387510', email: 'dg-rpf@gov.in' },
@@ -32,7 +31,7 @@ export default function Contact() {
         <div className="page-hero-content">
           <img src="/rpsf-logo.jpg" alt="RPSF Logo" className="page-hero-logo" />
           <h1>Contact <span>RPSF</span></h1>
-          <p>Get in touch with RAILWAY PROTECTION SPECIAL FORCE</p>
+          <p>Get in touch with RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR</p>
           <nav className="breadcrumb">
             <a href="/">Home</a>
             <span>›</span>
@@ -45,25 +44,25 @@ export default function Contact() {
       <section className="quick-contact">
         <div className="quick-grid">
           <a href="tel:182" className="quick-card emergency-card">
-            <div className="qc-icon">🚨</div>
+            <div className="qc-icon">EMERGENCY</div>
             <h4>Emergency</h4>
             <span>182</span>
             <p>24×7 Railway Helpline</p>
           </a>
           <div className="quick-card">
-            <div className="qc-icon">📞</div>
+            <div className="qc-icon">PHONE</div>
             <h4>Headquarters</h4>
             <span>011-23387510</span>
             <p>New Delhi HQ</p>
           </div>
           <div className="quick-card">
-            <div className="qc-icon">✉️</div>
+            <div className="qc-icon">EMAIL</div>
             <h4>Email</h4>
             <span>RPSF@gov.in</span>
             <p>Official Email</p>
           </div>
           <div className="quick-card">
-            <div className="qc-icon">⏱️</div>
+            <div className="qc-icon">HOURS</div>
             <h4>Working Hours</h4>
             <span>24 × 7</span>
             <p>Always Available</p>
@@ -81,7 +80,6 @@ export default function Contact() {
 
           {submitted ? (
             <div className="success-box">
-              <div className="success-icon">✅</div>
               <h3>Message Sent Successfully!</h3>
               <p>Thank you for contacting RPSF. Our team will respond within 2-3 working days.</p>
               <button className="btn-primary" onClick={() => { setSubmitted(false); setForm({ name: '', email: '', phone: '', subject: '', message: '' }); }}>
@@ -92,21 +90,21 @@ export default function Contact() {
             <form className="contact-form" onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="c-name">👤 Full Name *</label>
+                  <label htmlFor="c-name">Full Name *</label>
                   <input id="c-name" type="text" name="name" value={form.name} onChange={handleChange} placeholder="Your full name" required />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="c-email">✉️ Email Address *</label>
+                  <label htmlFor="c-email">Email Address *</label>
                   <input id="c-email" type="email" name="email" value={form.email} onChange={handleChange} placeholder="your@email.com" required />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="c-phone">📞 Phone Number</label>
+                  <label htmlFor="c-phone">Phone Number</label>
                   <input id="c-phone" type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+91 XXXXX XXXXX" />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="c-subject">📋 Subject *</label>
+                  <label htmlFor="c-subject">Subject *</label>
                   <select id="c-subject" name="subject" value={form.subject} onChange={handleChange} required>
                     <option value="">Select a subject</option>
                     <option>Lost &amp; Found Complaint</option>
@@ -118,11 +116,11 @@ export default function Contact() {
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="c-message">💬 Message *</label>
+                <label htmlFor="c-message">Message *</label>
                 <textarea id="c-message" name="message" value={form.message} onChange={handleChange} placeholder="Describe your concern in detail..." rows={5} required />
               </div>
               <button type="submit" className={`contact-submit-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                {loading ? <span className="spinner" /> : <><span>📤</span> Submit Message</>}
+                {loading ? <span className="spinner" /> : <>Submit Message</>}
               </button>
             </form>
           )}
@@ -140,10 +138,10 @@ export default function Contact() {
                 <div className="office-card-header">
                   <span className="office-zone-badge">{o.zone}</span>
                 </div>
-                <p className="office-address">📍 {o.address}</p>
+                <p className="office-address">{o.address}</p>
                 <div className="office-contacts">
-                  <a href={`tel:${o.phone}`} className="office-contact-link">📞 {o.phone}</a>
-                  <a href={`mailto:${o.email}`} className="office-contact-link">✉️ {o.email}</a>
+                  <a href={`tel:${o.phone}`} className="office-contact-link">{o.phone}</a>
+                  <a href={`mailto:${o.email}`} className="office-contact-link">{o.email}</a>
                 </div>
               </div>
             ))}
@@ -155,7 +153,7 @@ export default function Contact() {
             <div className="social-links">
               <a href="https://twitter.com/rpf_india" target="_blank" rel="noreferrer" className="social-btn twitter">𝕏 Twitter</a>
               <a href="https://www.facebook.com/people/RPF-INDIA/100064795897796" target="_blank" rel="noreferrer" className="social-btn facebook">f Facebook</a>
-              <a href="https://www.instagram.com/rpf_india_official/" target="_blank" rel="noreferrer" className="social-btn instagram">📸 Instagram</a>
+              <a href="https://www.instagram.com/rpf_india_official/" target="_blank" rel="noreferrer" className="social-btn instagram">Instagram</a>
               <a href="https://www.youtube.com/channel/UCBbWf0kco2N5v9R_6eeuSOA" target="_blank" rel="noreferrer" className="social-btn youtube">▶ YouTube</a>
             </div>
           </div>

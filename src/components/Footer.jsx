@@ -1,5 +1,3 @@
-import './Footer.css';
-
 export default function Footer() {
   return (
     <footer className="footer">
@@ -10,12 +8,12 @@ export default function Footer() {
           <div className="footer-brand">
             <img src="/rpsf-logo.jpg" alt="RPSF" className="footer-logo" />
             <h3>RPSF</h3>
-            <p>RAILWAY PROTECTION SPECIAL FORCE</p>
+            <p>RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR</p>
             <p className="footer-motto">तपसा शौर्यसन्धानम्</p>
             <div className="footer-socials">
               <a href="https://twitter.com/rpf_india" target="_blank" rel="noreferrer" aria-label="Twitter">𝕏</a>
               <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">📸</a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">Instagram</a>
               <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
             </div>
           </div>
@@ -47,21 +45,18 @@ export default function Footer() {
             <h4>Emergency</h4>
             <div className="emergency-box">
               <div className="emergency-number">
-                <span className="em-icon">🚨</span>
                 <div>
                   <strong>Helpline</strong>
                   <span>182</span>
                 </div>
               </div>
               <div className="emergency-number">
-                <span className="em-icon">📞</span>
                 <div>
                   <strong>HQ Delhi</strong>
                   <span>011-23387510</span>
                 </div>
               </div>
               <div className="emergency-number">
-                <span className="em-icon">✉️</span>
                 <div>
                   <strong>Email</strong>
                   <span>RPSF@gov.in</span>
@@ -72,7 +67,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2024 RAILWAY PROTECTION SPECIAL FORCE (RPSF) | Government of India</p>
+          <p>© 2024 RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR (RPSF) | Government of India</p>
           <p>Ministry of Railways | All Rights Reserved</p>
         </div>
       </div>

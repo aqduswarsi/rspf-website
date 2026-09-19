@@ -1,10 +1,9 @@
-import './About.css';
 
 const timeline = [
   { year: '1957', event: 'Watch & Ward force established under Indian Railways.' },
   { year: '1985', event: 'Renamed to Railway Protection Force (RPF) under RPF Act 1957.' },
   { year: '2003', event: 'Granted armed force status under Indian Railways Act.' },
-  { year: '2018', event: 'RPSF (Railway Protection Special Force) expanded operations.' },
+  { year: '2018', event: 'RPSF (RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR) expanded operations.' },
   { year: '2022', event: 'Operation NANHE FARISHTE rescues 80,000+ children.' },
   { year: '2024', event: 'RPSF modernised with cyber cells, FRS and geo-fencing technology.' },
 ];
@@ -26,7 +25,7 @@ export default function About() {
         <div className="page-hero-content">
           <img src="/rpsf-logo.jpg" alt="RPSF Logo" className="page-hero-logo" />
           <h1>About <span>RPSF</span></h1>
-          <p>RAILWAY PROTECTION SPECIAL FORCE — Guardians of India's Iron Roads</p>
+          <p>RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR — Guardians of India's Iron Roads</p>
           <nav className="breadcrumb">
             <a href="/">Home</a>
             <span>›</span>
@@ -39,23 +38,23 @@ export default function About() {
       <section className="mv-section">
         <div className="mv-grid">
           <div className="mv-card">
-            <div className="mv-icon">🎯</div>
+            <div className="mv-icon">MISSION</div>
             <h3>Our Mission</h3>
             <p>To protect and safeguard railway passengers, railway property, and assets of Indian Railways through disciplined, efficient, and responsive security services across all 18 railway zones.</p>
           </div>
           <div className="mv-card featured">
-            <div className="mv-icon">🦅</div>
+            <div className="mv-icon">VISION</div>
             <h3>Our Vision</h3>
             <p>To become India's most trusted and technologically advanced railway security force — ensuring every passenger travels safely, confidently, and comfortably across the world's 4th largest railway network.</p>
           </div>
           <div className="mv-card">
-            <div className="mv-icon">⚖️</div>
+            <div className="mv-icon">VALUES</div>
             <h3>Core Values</h3>
             <ul className="values-list">
-              <li>🔸 Integrity &amp; Honesty</li>
-              <li>🔸 Discipline &amp; Duty</li>
-              <li>🔸 Courage &amp; Valor</li>
-              <li>🔸 Service to Nation</li>
+              <li>Integrity &amp; Honesty</li>
+              <li>Discipline &amp; Duty</li>
+              <li>Courage &amp; Valor</li>
+              <li>Service to Nation</li>
             </ul>
           </div>
         </div>
@@ -93,7 +92,7 @@ export default function About() {
               </div>
               <div className="leader-badge">{l.badge}</div>
               <h4>{l.name}</h4>
-              <p>RAILWAY PROTECTION SPECIAL FORCE</p>
+              <p>RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR</p>
             </div>
           ))}
         </div>
@@ -119,10 +118,10 @@ export default function About() {
         <div className="divider" />
         <div className="achievements-grid">
           {[
-            { icon: '👶', title: '87,000+', sub: 'Children Rescued', desc: 'Operation NANHE FARISHTE has rescued over 87,000 trafficked children from railway stations.' },
-            { icon: '💰', title: '₹500 Cr+', sub: 'Property Recovered', desc: 'Stolen railway and passenger property worth ₹500 crores recovered in 2023-24.' },
-            { icon: '🔒', title: '1.2L+', sub: 'Arrests (2024)', desc: 'Over 1.2 lakh persons arrested for various offences on Indian Railways in 2024.' },
-            { icon: '👩', title: '3,000+', sub: 'Women Escorted', desc: 'Meri Saheli initiative has escorted thousands of solo women travellers safely.' },
+            { icon: 'CHILD SAFETY', title: '87,000+', sub: 'Children Rescued', desc: 'Operation NANHE FARISHTE has rescued over 87,000 trafficked children from railway stations.' },
+            { icon: 'RECOVERY', title: '₹500 Cr+', sub: 'Property Recovered', desc: 'Stolen railway and passenger property worth ₹500 crores recovered in 2023-24.' },
+            { icon: 'LAW & ORDER', title: '1.2L+', sub: 'Arrests (2024)', desc: 'Over 1.2 lakh persons arrested for various offences on Indian Railways in 2024.' },
+            { icon: 'WOMEN SAFETY', title: '3,000+', sub: 'Women Escorted', desc: 'Meri Saheli initiative has escorted thousands of solo women travellers safely.' },
           ].map((a, i) => (
             <div className="achievement-card" key={i}>
               <div className="ach-icon">{a.icon}</div>

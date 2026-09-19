@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import './Home.css';
 
 const stats = [
   { label: 'Personnel', value: 75000, suffix: '+' },
@@ -9,12 +8,12 @@ const stats = [
 ];
 
 const services = [
-  { icon: '🛡️', title: 'Railway Security', desc: 'Protecting passengers and railway property across 18 zones and 7,000+ stations.' },
-  { icon: '👩‍⚕️', title: 'Meri Saheli', desc: 'Dedicated women safety initiative ensuring safe travel for female passengers.' },
-  { icon: '🔍', title: 'Crime Prevention', desc: 'Swift action against theft, trespassing, and anti-social elements on trains.' },
-  { icon: '📦', title: 'Lost & Found', desc: 'Comprehensive lost article tracking system for passengers.' },
-  { icon: '👶', title: 'Child Rescue', desc: 'Operation NANHE FARISHTE rescuing trafficked children at railway stations.' },
-  { icon: '💻', title: 'Cyber Cell', desc: 'Dedicated cyber crime cells in all zones to tackle digital threats.' },
+  { icon: 'SECURITY', title: 'Railway Security', desc: 'Protecting passengers and railway property across 18 zones and 7,000+ stations.' },
+  { icon: 'WOMEN SAFETY', title: 'Meri Saheli', desc: 'Dedicated women safety initiative ensuring safe travel for female passengers.' },
+  { icon: 'CRIME PREVENTION', title: 'Crime Prevention', desc: 'Swift action against theft, trespassing, and anti-social elements on trains.' },
+  { icon: 'LOST & FOUND', title: 'Lost & Found', desc: 'Comprehensive lost article tracking system for passengers.' },
+  { icon: 'CHILD RESCUE', title: 'Child Rescue', desc: 'Operation NANHE FARISHTE rescuing trafficked children at railway stations.' },
+  { icon: 'CYBER CELL', title: 'Cyber Cell', desc: 'Dedicated cyber crime cells in all zones to tackle digital threats.' },
 ];
 
 function AnimatedCounter({ target, suffix }) {
@@ -163,7 +162,7 @@ export default function Home() {
           </div>
           <h1 className="hero-title">
             <span className="hero-title-main">RPSF</span>
-            <span className="hero-title-sub">RAILWAY PROTECTION SPECIAL FORCE</span>
+            <span className="hero-title-sub">RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR</span>
           </h1>
           <p className="hero-tagline">रेलवे सुरक्षा विशेष बल</p>
           <p className="hero-motto">तपसा शौर्यसन्धानम् — Through Discipline, Valour &amp; Dedication</p>
@@ -183,7 +182,7 @@ export default function Home() {
 
       {/* Ticker */}
       <div className="ticker-wrap">
-        <div className="ticker-label">📢 NOTICE</div>
+        <div className="ticker-label">NOTICE</div>
         <div className="ticker-track">
           <div className="ticker-content">
             &nbsp;&nbsp;• Admit Card Link for CBT Examination – ASI Promotion 2024 &nbsp;&nbsp;•&nbsp;&nbsp;
@@ -217,7 +216,7 @@ export default function Home() {
             <p className="section-eyebrow">WHO WE ARE</p>
             <h2 className="section-title" style={{ textAlign: 'left' }}>Guardians of Indian Railways</h2>
             <div className="divider" style={{ margin: '1rem 0 1.5rem' }} />
-            <p>The RAILWAY PROTECTION SPECIAL FORCE (RPSF) is India's elite armed force dedicated to protecting railway passengers, property, and assets. Operating across <strong>18 zonal railways</strong>, 7,000+ stations, and covering India's <strong>67,956 km</strong> railway network.</p>
+            <p>The RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR (RPSF) is India's elite armed force dedicated to protecting railway passengers, property, and assets. Operating across <strong>18 zonal railways</strong>, 7,000+ stations, and covering India's <strong>67,956 km</strong> railway network.</p>
             <p>Established to ensure the safety and security of railway passengers and property, RPSF personnel serve with unmatched dedication — 24×7, 365 days a year.</p>
             <a href="/about" className="btn-primary" style={{ marginTop: '1.5rem', display: 'inline-block' }}>Learn More</a>
           </div>
@@ -253,7 +252,7 @@ export default function Home() {
       {/* Emergency Banner */}
       <section className="emergency-section">
         <div className="emergency-content">
-          <div className="emergency-pulse">🚨</div>
+          <div className="emergency-pulse">!</div>
           <div>
             <h3>Emergency Helpline</h3>
             <p>Available 24×7 across all railway zones</p>
