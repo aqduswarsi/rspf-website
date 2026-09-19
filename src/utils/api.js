@@ -2,7 +2,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://rspf-backend.onrender.com";
 
 export async function adminLogin(email, password) {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,7 +20,7 @@ export async function adminLogin(email, password) {
 }
 
 export async function adminRegister(name, email, password) {
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
