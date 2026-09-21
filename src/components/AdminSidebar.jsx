@@ -8,9 +8,11 @@ export default function AdminSidebar({ isOpen, onClose }) {
   const isUserManagementActive = location.pathname.startsWith("/admin/users");
   const isEducationActive = location.pathname.startsWith("/admin/education");
   const isExamActive = location.pathname.startsWith("/admin/exam");
+  const isSupportActive = location.pathname.startsWith("/admin/support");
   const [usersOpen, setUsersOpen] = useState(isUserManagementActive);
   const [educationOpen, setEducationOpen] = useState(isEducationActive);
   const [examOpen, setExamOpen] = useState(isExamActive);
+  const [supportOpen, setSupportOpen] = useState(isSupportActive);
 
   const handleLogout = () => {
     localStorage.removeItem("rpsf_login_token");
@@ -175,7 +177,56 @@ export default function AdminSidebar({ isOpen, onClose }) {
           </div>
         )}
 
+        <div className="nav-section">SUPPORT</div>
+        <button
+          type="button"
+          className={`admin-nav-item admin-nav-toggle ${isSupportActive ? "active" : ""}`}
+          aria-expanded={supportOpen}
+          onClick={() => setSupportOpen((open) => !open)}
+        >
+          <span>Support</span>
+          <span className={`nav-chevron ${supportOpen ? "open" : ""}`} aria-hidden="true">
+            ›
+          </span>
+        </button>
+        {supportOpen && (
+          <div className="admin-nav-submenu">
+            <NavLink
+              to="/admin/support/non-answered"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
+              Non Answered Ticket
+            </NavLink>
+            <NavLink
+              to="/admin/support/answered"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
+              Answered Ticket
+            </NavLink>
+          </div>
+        )}
+
         <div className="nav-section">ACCOUNT</div>
+        <NavLink
+          to="/admin/change-password"
+          onClick={onClose}
+          className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
+        >
+          Change Password
+        </NavLink>
+        <NavLink
+          to="/admin/contact-details"
+          onClick={onClose}
+          className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
+        >
+          Add Contact Details
+        </NavLink>
         <button onClick={handleLogout} className="admin-nav-item logout">
           Logout
         </button>

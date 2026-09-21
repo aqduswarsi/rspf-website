@@ -20,6 +20,11 @@ export default function AdminTopbar({ onMenuClick }) {
     "/admin/exam/results": "Manage Result",
     "/admin/exam/non-printed": "Non Printed Result",
     "/admin/exam/printed": "Printed Result",
+    "/admin/support": "Support Ticket Report",
+    "/admin/support/non-answered": "Non Answered Ticket",
+    "/admin/support/answered": "Answered Ticket",
+    "/admin/change-password": "Change Password",
+    "/admin/contact-details": "Add Contact Details",
   };
 
   const title = titleMap[path] || "Dashboard";

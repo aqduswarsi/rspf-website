@@ -15,6 +15,9 @@ import AddNews from "./pages/AddNews";
 import Gallery from "./pages/Gallery";
 import EducationManagement from "./pages/EducationManagement";
 import ExamManagement from "./pages/ExamManagement";
+import SupportTickets from "./pages/SupportTickets";
+import ChangePassword from "./pages/ChangePassword";
+import AddContactDetails from "./pages/AddContactDetails";
 
 function PublicLayout({ children }) {
   return (
@@ -74,6 +77,11 @@ export default function App() {
           <Route path="exam/results" element={<ExamManagement />} />
           <Route path="exam/non-printed" element={<ExamManagement />} />
           <Route path="exam/printed" element={<ExamManagement />} />
+          <Route path="support" element={<SupportTickets />} />
+          <Route path="support/non-answered" element={<SupportTickets />} />
+          <Route path="support/answered" element={<SupportTickets />} />
+          <Route path="change-password" element={<ChangePassword />} />
+          <Route path="contact-details" element={<AddContactDetails />} />
         </Route>
       </Routes>
     </Router>

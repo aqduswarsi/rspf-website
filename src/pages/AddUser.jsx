@@ -1201,17 +1201,6 @@ export default function AddUser() {
           </label>
         </div>
 
-        {/* ==================== SIGNATURE NOTE ==================== */}
-        <div className="bio-signature-note">
-          <div>
-            <span>Signature of Candidate</span>
-          </div>
-          <div>
-            <span>Vice-Principal</span>
-            <small>RPSF / TC / GKP</small>
-          </div>
-        </div>
-
         {/* ==================== ACTIONS ==================== */}
         <div className="bio-form-actions">
           <button type="button" className="btn-reset" onClick={handleReset}>
