@@ -1,10 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StatCard from "../components/StatCard";
+import { getStats } from "../utils/api";
 
 export default function AdminDashboard() {
   const [copied, setCopied] = useState(false);
+  const [stats, setStats] = useState({
+    total: 0,
+    unverified: 0,
+    verified: 0,
+    blocked: 0,
+    todayRegistered: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const referralLink =
     "https://directsellingeducation.com/online_admission/32825325";
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    setLoading(true);
+    try {
+      const data = await getStats();
+      console.log("Stats loaded:", data);
+      setStats(data);
+      setError("");
+    } catch (err) {
+      console.error("Stats error:", err);
+      setError(err.message || "Failed to load stats");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const copyLink = () => {
     navigator.clipboard.writeText(referralLink);
@@ -12,10 +42,31 @@ export default function AdminDashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const stats = [
-    { label: "Today Registered Members", value: 0, color: "#27ae60" },
-    { label: "Unverified Members", value: 5, color: "#27ae60" },
-    { label: "Verified Members", value: 8, color: "#27ae60" },
+  const statCards = [
+    {
+      label: "Today Registered",
+      value: stats.todayRegistered,
+      color:
+        "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
+    },
+    {
+      label: "Unverified Members",
+      value: stats.unverified,
+      color:
+        "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
+    },
+    {
+      label: "Verified Members",
+      value: stats.verified,
+      color:
+        "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
+    },
+    {
+      label: "Total Members",
+      value: stats.total,
+      color:
+        "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
+    },
   ];
 
   return (
@@ -25,7 +76,7 @@ export default function AdminDashboard() {
         <div className="referral-row">
           <input type="text" value={referralLink} readOnly />
           <button onClick={copyLink} className="btn-copy">
-            {copied ? "Copied" : "Copy"}
+            {copied ? "✅ Copied" : "Copy"}
           </button>
         </div>
       </div>
@@ -33,13 +84,36 @@ export default function AdminDashboard() {
       <div className="user-management-summary">
         <div className="summary-heading">
           <h2>User Management</h2>
-          <span>Member overview</span>
+          <span>Real-time member overview</span>
         </div>
-        <div className="stats-grid">
-          {stats.map((s, i) => (
-            <StatCard key={i} {...s} />
-          ))}
-        </div>
+
+        {loading ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px",
+              color: "var(--gold)",
+            }}
+          >
+            Loading stats...
+          </div>
+        ) : error ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px",
+              color: "#ef4444",
+            }}
+          >
+            ❌ {error}
+          </div>
+        ) : (
+          <div className="stats-grid">
+            {statCards.map((s, i) => (
+              <StatCard key={i} {...s} />
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

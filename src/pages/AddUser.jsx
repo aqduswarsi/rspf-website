@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { createBioData } from "../utils/api";
+
 
 const initialForm = {
   // === PHOTO ===
@@ -178,23 +180,29 @@ export default function AddUser() {
   };
 
   // ==================== SUBMIT ====================
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.declarationAccepted) {
-      alert(
-        "Please accept the Declaration / Undertaking before submitting.",
-      );
-      return;
-    }
-    setSubmitting(true);
-    console.log("Full BIO Data:", form);
-    // TODO: API call — POST /api/admin/users
-    setTimeout(() => {
-      alert("BIO Data submitted successfully!");
-      setForm(initialForm);
-      setSubmitting(false);
-    }, 800);
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!form.declarationAccepted) {
+    alert("Please accept the Declaration / Undertaking before submitting.");
+    return;
+  }
+  setSubmitting(true);
+  try {
+    const payload = { ...form };
+    delete payload.photo; // File object हटा
+    payload.photo = form.photoPreview; // base64 save कर
+
+    const result = await createBioData(payload);
+    console.log("Saved:", result);
+    alert("✅ BIO Data submitted successfully!");
+    setForm(initialForm);
+  } catch (err) {
+    console.error("Submit error:", err);
+    alert("❌ " + (err.message || "Failed to submit"));
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleReset = () => {
     if (window.confirm("Reset entire form?")) setForm(initialForm);
