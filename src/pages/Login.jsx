@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminLogin } from "../utils/api";
+import { adminLogin, userLogin } from "../utils/api";
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ input: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -14,32 +14,59 @@ export default function Login() {
     setError("");
   };
 
+  // Detect karo — Email ya Phone
+  const detectType = (value) => {
+    if (value.includes("@")) return "admin";
+    if (/^\d{10}$/.test(value)) return "user";
+    return "unknown";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) {
-      setError("Please enter email and password.");
+
+    const { input, password } = form;
+
+    if (!input || !password) {
+      setError("Please enter both fields.");
       return;
     }
+
+    const type = detectType(input);
+
     setLoading(true);
+    setError("");
+
     try {
-      const data = await adminLogin(form.email, form.password);
+      // ============ ADMIN LOGIN ============
+      if (type === "admin") {
+        const data = await adminLogin(input, password);
+        localStorage.setItem("rpsf_login_token", data.token);
+        localStorage.setItem("rpsf_login_name", data.admin?.name || input);
+        localStorage.setItem("rpsf_login_role", "admin");
+        // user token clear
+        localStorage.removeItem("rpsf_user_token");
+        navigate("/admin");
+      }
 
-      // token save
-      localStorage.setItem("rpsf_login_token", data.token);
-      localStorage.setItem("rpsf_login_logged_in", "true");
+      // ============ USER LOGIN ============
+      else if (type === "user") {
+        const data = await userLogin(input, password);
+        localStorage.setItem("rpsf_user_token", data.token);
+        localStorage.setItem("rpsf_user_name", data.user?.name || input);
+        localStorage.setItem("rpsf_login_role", "user");
+        // admin token clear
+        localStorage.removeItem("rpsf_login_token");
+        navigate("/user/dashboard");
+      }
 
-      // name save — user या admin दोनों handle करें
-      const name =
-        data.user?.name ||
-        data.admin?.name ||
-        data.user?.email ||
-        data.admin?.email ||
-        form.email;
-      localStorage.setItem("rpsf_login_name", name);
-
-      navigate("/admin");
-    } catch (loginError) {
-      setError(loginError.message || "Login failed. Please try again.");
+      // ============ INVALID INPUT ============
+      else {
+        setError(
+          "Please enter a valid Email (for admin) or 10-digit Phone (for member).",
+        );
+      }
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -70,20 +97,20 @@ export default function Login() {
           <p className="login-motto">तपसा शौर्यसन्धानम्</p>
           <div className="login-features">
             <div className="lf-item">
-              Website &amp; Content Control
+              <span>👨‍✈️</span> <strong>Admin:</strong> Email + Password
             </div>
             <div className="lf-item">
-              Encrypted Access
+              <span>👤</span> <strong>Member:</strong> Phone + DOB (ddmmyyyy)
             </div>
             <div className="lf-item">
-              Real-time Management
+              <span>🔐</span> Single Secure Login
             </div>
             <div className="lf-item">
-              Official Railway Portal
+              <span>🇮🇳</span> Official Railway Portal
             </div>
           </div>
           <div className="login-warning">
-            Restricted Access — Authorized RPSF Personnel Only.
+            ⚠️ Restricted Access — Authorized RPSF Personnel Only.
           </div>
         </div>
 
@@ -91,31 +118,45 @@ export default function Login() {
         <div className="login-right">
           <div className="login-card">
             <div className="login-card-header">
-              <div className="login-card-icon">ADMIN</div>
-              <h3>Admin Login</h3>
-              <p>Sign in to access the RPSF Control Dashboard</p>
+              <div className="login-card-icon">🔐</div>
+              <h3>Portal Login</h3>
+              <p>Sign in with Email (Admin) or Phone (Member)</p>
             </div>
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
-                <label htmlFor="email">
-                  Admin Email
+                <label htmlFor="input">
+                  <span className="label-icon">👤</span> Email or Phone
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  value={form.email}
+                  id="input"
+                  type="text"
+                  name="input"
+                  value={form.input}
                   onChange={handleChange}
-                  placeholder="Enter admin email"
-                  autoComplete="email"
+                  placeholder="admin@rspf.com  OR  9876543210"
+                  autoComplete="username"
                   required
                 />
+                <small
+                  style={{
+                    color: "rgba(212,175,55,0.7)",
+                    fontSize: "11px",
+                    marginTop: "4px",
+                    display: "block",
+                  }}
+                >
+                  {form.input.includes("@")
+                    ? "🔐 Admin mode detected"
+                    : /^\d{10}$/.test(form.input)
+                      ? "👤 Member mode detected"
+                      : "Enter email for admin, 10-digit phone for member"}
+                </small>
               </div>
 
               <div className="form-group">
                 <label htmlFor="password">
-                  Password
+                  <span className="label-icon">🔑</span> Password
                 </label>
                 <div className="password-wrap">
                   <input
@@ -134,12 +175,22 @@ export default function Login() {
                     onClick={() => setShowPass(!showPass)}
                     aria-label={showPass ? "Hide password" : "Show password"}
                   >
-                    {showPass ? "Hide" : "Show"}
+                    {showPass ? "🙈" : "👁️"}
                   </button>
                 </div>
+                <small
+                  style={{
+                    color: "rgba(212,175,55,0.7)",
+                    fontSize: "11px",
+                    marginTop: "4px",
+                    display: "block",
+                  }}
+                >
+                  Member: password is your DOB (ddmmyyyy)
+                </small>
               </div>
 
-              {error && <div className="form-error">{error}</div>}
+              {error && <div className="form-error">⚠️ {error}</div>}
 
               <button
                 type="submit"
@@ -150,7 +201,7 @@ export default function Login() {
                   <span className="spinner" />
                 ) : (
                   <>
-                    Access Dashboard
+                    <span>🔓</span> Login
                   </>
                 )}
               </button>
@@ -165,7 +216,7 @@ export default function Login() {
                 rel="noreferrer"
                 className="login-alt-btn"
               >
-                Access RTI Portal
+                📋 Access RTI Portal
               </a>
               <a
                 href="https://railmadad.indianrailways.gov.in/madad/final/home.jsp"
@@ -173,12 +224,12 @@ export default function Login() {
                 rel="noreferrer"
                 className="login-alt-btn"
               >
-                Rail Madad Portal
+                🚆 Rail Madad Portal
               </a>
             </form>
 
             <p className="login-footer-note">
-              Government of India — Security Directorate | RPSF Control
+              🔒 Government of India — Security Directorate | RPSF Control
               System
             </p>
           </div>

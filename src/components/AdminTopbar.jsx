@@ -3,6 +3,12 @@ import { useLocation, Link } from "react-router-dom";
 export default function AdminTopbar({ onMenuClick }) {
   const location = useLocation();
   const path = location.pathname;
+  const role = localStorage.getItem("rpsf_login_role") || "admin";
+  const displayName = role === "user"
+    ? (localStorage.getItem("rpsf_user_name") || "User")
+    : (localStorage.getItem("rpsf_login_name") || "Admin");
+
+  const homePath = role === "user" ? "/user/dashboard" : "/admin";
 
   const titleMap = {
     "/admin": "Dashboard",
@@ -42,13 +48,13 @@ export default function AdminTopbar({ onMenuClick }) {
 
       <div className="admin-topbar-right">
         <div className="breadcrumb">
-          <Link to="/admin">Home</Link>
+          <Link to={homePath}>Home</Link>
           <span>›</span>
           <span>{title}</span>
         </div>
         <div className="topbar-user">
-          <div className="avatar">A</div>
-          <span>Admin</span>
+          <div className="avatar">{role === "user" ? "U" : "A"}</div>
+          <span>{role === "user" ? "User" : "Admin"}</span>
         </div>
       </div>
     </header>

@@ -1,4 +1,4 @@
-// v2 - admin routes
+// v2 - admin + user routes
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://rspf-backend.onrender.com";
@@ -61,7 +61,7 @@ export async function getProfile() {
   return data;
 }
 
-// ==================== BIO DATA ====================
+// ==================== BIO DATA (ADMIN) ====================
 
 export async function createBioData(data) {
   const token = localStorage.getItem("rpsf_login_token");
@@ -173,5 +173,62 @@ export async function getStats() {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Failed to load stats.");
+  return data;
+}
+
+// ==================== USER AUTH ====================
+
+export async function userLogin(phone, password) {
+  const response = await fetch(`${API_BASE_URL}/api/user/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, password }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || "Login failed");
+  }
+  return data;
+}
+
+// ==================== USER PROFILE ====================
+
+export async function getUserProfile() {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to load profile");
+  return data;
+}
+
+export async function updateUserProfile(updates) {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to update profile");
+  return data;
+}
+
+export async function changeUserPassword(oldPassword, newPassword) {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/change-password`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ oldPassword, newPassword }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to change password");
   return data;
 }

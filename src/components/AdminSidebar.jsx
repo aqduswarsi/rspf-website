@@ -4,7 +4,10 @@ import { useState } from "react";
 export default function AdminSidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const name = localStorage.getItem("rpsf_login_name") || "Admin";
+  const role = localStorage.getItem("rpsf_login_role") || "admin";
+  const name = role === "user"
+    ? (localStorage.getItem("rpsf_user_name") || "User")
+    : (localStorage.getItem("rpsf_login_name") || "Admin");
   const isUserManagementActive = location.pathname.startsWith("/admin/users");
   const isEducationActive = location.pathname.startsWith("/admin/education");
   const isExamActive = location.pathname.startsWith("/admin/exam");
@@ -15,11 +18,16 @@ export default function AdminSidebar({ isOpen, onClose }) {
   const [supportOpen, setSupportOpen] = useState(isSupportActive);
 
   const handleLogout = () => {
+    localStorage.removeItem("rpsf_user_token");
+    localStorage.removeItem("rpsf_user_name");
     localStorage.removeItem("rpsf_login_token");
     localStorage.removeItem("rpsf_login_logged_in");
     localStorage.removeItem("rpsf_login_name");
+    localStorage.removeItem("rpsf_login_role");
     navigate("/login");
   };
+
+  const isUserPanel = role === "user";
 
   return (
     <aside className={`admin-sidebar ${isOpen ? "open" : ""}`}>
@@ -28,7 +36,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
       </div>
 
       <div className="admin-profile">
-        <div className="admin-avatar" aria-hidden="true" />
+        <div className="admin-avatar" aria-hidden="true">{role === "user" ? "U" : "A"}</div>
         <div className="admin-profile-info">
           <strong>{name}</strong>
           <span className="online-status">
@@ -38,19 +46,21 @@ export default function AdminSidebar({ isOpen, onClose }) {
       </div>
 
       <nav className="admin-nav">
-        <div className="nav-section">MAIN NAVIGATION</div>
-        <NavLink
-          to="/admin"
-          end
-          onClick={onClose}
-          className={({ isActive }) =>
-            `admin-nav-item ${isActive ? "active" : ""}`
-          }
-        >
-          Dashboard
-        </NavLink>
+        {!isUserPanel ? (
+          <>
+            <div className="nav-section">MAIN NAVIGATION</div>
+            <NavLink
+              to="/admin"
+              end
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
+              Dashboard
+            </NavLink>
 
-        <div className="nav-section">USERS MANAGEMENT</div>
+            <div className="nav-section">USERS MANAGEMENT</div>
         <button
           type="button"
           className={`admin-nav-item admin-nav-toggle ${isUserManagementActive ? "active" : ""}`}
@@ -212,21 +222,49 @@ export default function AdminSidebar({ isOpen, onClose }) {
           </div>
         )}
 
-        <div className="nav-section">ACCOUNT</div>
-        <NavLink
-          to="/admin/change-password"
-          onClick={onClose}
-          className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
-        >
-          Change Password
-        </NavLink>
-        <NavLink
-          to="/admin/contact-details"
-          onClick={onClose}
-          className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
-        >
-          Add Contact Details
-        </NavLink>
+            <div className="nav-section">ACCOUNT</div>
+            <NavLink
+              to="/admin/change-password"
+              onClick={onClose}
+              className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
+            >
+              Change Password
+            </NavLink>
+            <NavLink
+              to="/admin/contact-details"
+              onClick={onClose}
+              className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
+            >
+              Add Contact Details
+            </NavLink>
+          </>
+        ) : (
+          <>
+            <div className="nav-section">MAIN NAVIGATION</div>
+            <NavLink to="/user/dashboard" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+              Dashboard
+            </NavLink>
+            <NavLink to="/user/account" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+              My Account
+            </NavLink>
+            <NavLink to="/user/class" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+              My Class
+            </NavLink>
+            <NavLink to="/user/network" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+              My Network
+            </NavLink>
+            <NavLink to="/user/scholarship" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+              Scholarship
+            </NavLink>
+            <NavLink to="/user/change-password" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+              Change Password
+            </NavLink>
+            <NavLink to="/user/support" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+              Support
+            </NavLink>
+          </>
+        )}
+
         <button onClick={handleLogout} className="admin-nav-item logout">
           Logout
         </button>

@@ -13,11 +13,15 @@ import AddUser from "./pages/AddUser";
 import AddEvents from "./pages/AddEvents";
 import AddNews from "./pages/AddNews";
 import Gallery from "./pages/Gallery";
-import EducationManagement from "./pages/EducationManagement";
-import ExamManagement from "./pages/ExamManagement";
-import SupportTickets from "./pages/SupportTickets";
-import ChangePassword from "./pages/ChangePassword";
-import AddContactDetails from "./pages/AddContactDetails";
+import UserDashboard from "./pages/UserDashboard";
+import UserProfileUpdate from "./pages/UserProfileUpdate";
+import UserIdCard from "./pages/UserIdCard";
+import UserChangePassword from "./pages/UserChangePassword";
+import UserReadCourse from "./pages/UserReadCourse";
+import UserExam from "./pages/UserExam";
+import UserExamResult from "./pages/UserExamResult";
+import UserOpenTicket from "./pages/UserOpenTicket";
+import UserSupportTicket from "./pages/UserSupportTicket";
 
 function PublicLayout({ children }) {
   return (
@@ -33,7 +37,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Public website */}
+        {/* ============ PUBLIC ============ */}
         <Route
           path="/"
           element={
@@ -60,7 +64,7 @@ export default function App() {
         />
         <Route path="/login" element={<Login />} />
 
-        {/* Admin Dashboard */}
+        {/* ============ ADMIN ============ */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="users/unverified" element={<UsersUnverified />} />
@@ -69,20 +73,22 @@ export default function App() {
           <Route path="events" element={<AddEvents />} />
           <Route path="news" element={<AddNews />} />
           <Route path="gallery" element={<Gallery />} />
-          <Route path="education/courses" element={<EducationManagement />} />
-          <Route path="education/subjects" element={<EducationManagement />} />
-          <Route path="education/lessons/add" element={<EducationManagement />} />
-          <Route path="education/lessons" element={<EducationManagement />} />
-          <Route path="exam/questions" element={<ExamManagement />} />
-          <Route path="exam/results" element={<ExamManagement />} />
-          <Route path="exam/non-printed" element={<ExamManagement />} />
-          <Route path="exam/printed" element={<ExamManagement />} />
-          <Route path="support" element={<SupportTickets />} />
-          <Route path="support/non-answered" element={<SupportTickets />} />
-          <Route path="support/answered" element={<SupportTickets />} />
-          <Route path="change-password" element={<ChangePassword />} />
-          <Route path="contact-details" element={<AddContactDetails />} />
         </Route>
+
+        {/* ============ USER ============ */}
+        <Route path="/user/dashboard" element={<UserDashboard />} />
+        <Route path="/user/account/profile" element={<UserProfileUpdate />} />
+        <Route path="/user/account/id-card" element={<UserIdCard />} />
+        <Route path="/user/change-password" element={<UserChangePassword />} />
+
+        {/* ============ USER COURSE ============ */}
+        <Route path="/user/course/read" element={<UserReadCourse />} />
+        <Route path="/user/course/exam" element={<UserExam />} />
+        <Route path="/user/course/result" element={<UserExamResult />} />
+
+        {/* ============ USER SUPPORT ============ */}
+        <Route path="/user/support/open" element={<UserOpenTicket />} />
+        <Route path="/user/support/tickets" element={<UserSupportTicket />} />
       </Routes>
     </Router>
   );
