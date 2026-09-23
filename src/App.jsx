@@ -13,6 +13,11 @@ import AddUser from "./pages/AddUser";
 import AddEvents from "./pages/AddEvents";
 import AddNews from "./pages/AddNews";
 import Gallery from "./pages/Gallery";
+import EducationManagement from "./pages/EducationManagement";
+import ExamManagement from "./pages/ExamManagement";
+import SupportTickets from "./pages/SupportTickets";
+import ChangePassword from "./pages/ChangePassword";
+import AddContactDetails from "./pages/AddContactDetails";
 import UserDashboard from "./pages/UserDashboard";
 import UserProfileUpdate from "./pages/UserProfileUpdate";
 import UserIdCard from "./pages/UserIdCard";
@@ -67,12 +72,42 @@ export default function App() {
         {/* ============ ADMIN ============ */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+
+          {/* Users Management */}
           <Route path="users/unverified" element={<UsersUnverified />} />
           <Route path="users/verified" element={<UsersVerified />} />
           <Route path="users/add" element={<AddUser />} />
+
+          {/* Content Management */}
           <Route path="events" element={<AddEvents />} />
           <Route path="news" element={<AddNews />} />
           <Route path="gallery" element={<Gallery />} />
+
+          {/* Educational Management */}
+          <Route path="education/courses" element={<EducationManagement />} />
+          <Route path="education/subjects" element={<EducationManagement />} />
+          <Route
+            path="education/lessons/add"
+            element={<EducationManagement />}
+          />
+          <Route path="education/lessons" element={<EducationManagement />} />
+
+          {/* Exam Management */}
+          <Route path="exam/questions" element={<ExamManagement />} />
+          <Route path="exam/results" element={<ExamManagement />} />
+          <Route path="exam/non-printed" element={<ExamManagement />} />
+          <Route path="exam/printed" element={<ExamManagement />} />
+
+          {/* Support */}
+          <Route path="support/non-answered" element={<SupportTickets />} />
+          <Route path="support/answered" element={<SupportTickets />} />
+
+          {/* Account */}
+          <Route path="change-password" element={<ChangePassword />} />
+          <Route path="contact-details" element={<AddContactDetails />} />
+
+          {/* Catch-all — jo bhi route miss ho */}
+          <Route path="*" element={<AdminDashboard />} />
         </Route>
 
         {/* ============ USER ============ */}
