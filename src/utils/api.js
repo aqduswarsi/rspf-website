@@ -367,3 +367,16 @@ export async function deleteGalleryImage(id) {
   if (!res.ok) throw new Error(data.message || "Failed to delete");
   return data;
 }
+
+// ==================== PUBLIC REGISTRATION ====================
+
+export async function publicRegister(data) {
+  const res = await fetch(`${API_BASE_URL}/api/public/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Registration failed");
+  return result;
+}

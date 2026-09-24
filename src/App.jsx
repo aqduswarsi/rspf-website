@@ -27,6 +27,8 @@ import UserExam from "./pages/UserExam";
 import UserExamResult from "./pages/UserExamResult";
 import UserOpenTicket from "./pages/UserOpenTicket";
 import UserSupportTicket from "./pages/UserSupportTicket";
+import PublicRegister from "./pages/PublicRegister";
+
 
 function PublicLayout({ children }) {
   return (
@@ -68,7 +70,7 @@ export default function App() {
           }
         />
         <Route path="/login" element={<Login />} />
-
+        <Route path="/register" element={<PublicRegister />} /> {/* ← नया */}
         {/* ============ ADMIN ============ */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
@@ -109,18 +111,15 @@ export default function App() {
           {/* Catch-all — jo bhi route miss ho */}
           <Route path="*" element={<AdminDashboard />} />
         </Route>
-
         {/* ============ USER ============ */}
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/account/profile" element={<UserProfileUpdate />} />
         <Route path="/user/account/id-card" element={<UserIdCard />} />
         <Route path="/user/change-password" element={<UserChangePassword />} />
-
         {/* ============ USER COURSE ============ */}
         <Route path="/user/course/read" element={<UserReadCourse />} />
         <Route path="/user/course/exam" element={<UserExam />} />
         <Route path="/user/course/result" element={<UserExamResult />} />
-
         {/* ============ USER SUPPORT ============ */}
         <Route path="/user/support/open" element={<UserOpenTicket />} />
         <Route path="/user/support/tickets" element={<UserSupportTicket />} />
