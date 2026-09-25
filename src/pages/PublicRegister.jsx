@@ -169,6 +169,61 @@ export default function PublicRegister() {
   if (!keyValid) {
     return (
       <div className="public-register-wrapper">
+        <style>{`
+          .public-register-wrapper {
+            min-height: 100vh;
+            background: var(--dark-bg);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .public-register-card {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 50px 40px;
+            background: linear-gradient(135deg, rgba(139,0,0,0.2), rgba(212,175,55,0.05));
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+          }
+          @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+          }
+          .invalid-icon {
+            font-size: 80px;
+            display: inline-block;
+            margin-bottom: 16px;
+            animation: shake 0.8s ease;
+          }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(-12px) rotate(-5deg); }
+            30% { transform: translateX(12px) rotate(5deg); }
+            45% { transform: translateX(-10px) rotate(-3deg); }
+            60% { transform: translateX(10px) rotate(3deg); }
+            75% { transform: translateX(-4px); }
+          }
+          .public-register-card h2 {
+            color: var(--gold);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 26px;
+            letter-spacing: 2px;
+            margin: 12px 0 16px;
+            text-transform: uppercase;
+            font-weight: 800;
+          }
+          .public-register-card p {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 15px;
+            line-height: 1.8;
+          }
+        `}</style>
+
         <div className="public-register-card invalid">
           <div className="invalid-icon">🔒</div>
           <h2>Invalid Link</h2>
@@ -182,13 +237,118 @@ export default function PublicRegister() {
     );
   }
 
-  // ============ SUCCESS ============
+   // ============ SUCCESS ============
   if (submitted) {
     return (
       <div className="public-register-wrapper">
+        <style>{`
+          .public-register-wrapper {
+            min-height: 100vh;
+            background: var(--dark-bg);
+            padding: 40px 20px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .public-register-card {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 50px 40px;
+            background: linear-gradient(135deg, rgba(139,0,0,0.15), rgba(212,175,55,0.05));
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 20px;
+            text-align: center;
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+          }
+          @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.7) translateY(30px); }
+            60% { opacity: 1; transform: scale(1.03) translateY(-5px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
+          .success-icon {
+            font-size: 80px;
+            display: inline-block;
+            margin-bottom: 16px;
+            animation: bounceIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+          }
+          @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3) rotate(-20deg); }
+            50% { opacity: 1; transform: scale(1.2) rotate(10deg); }
+            70% { transform: scale(0.95) rotate(-5deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0); }
+          }
+          .public-register-card h2 {
+            color: var(--gold);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 28px;
+            letter-spacing: 3px;
+            margin: 12px 0 20px;
+            text-transform: uppercase;
+            font-weight: 800;
+          }
+          .public-register-card p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 15px;
+            line-height: 1.8;
+            margin: 10px 0;
+          }
+          .public-register-card strong { color: var(--gold); }
+          .public-register-card .muted {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+          }
+          .public-register-card .redirect-note {
+            color: rgba(212, 175, 55, 0.8);
+            font-size: 13px;
+            margin-top: 24px;
+            letter-spacing: 1px;
+            font-style: italic;
+          }
+          .public-register-card .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(212, 175, 55, 0.15);
+            border-radius: 4px;
+            margin-top: 12px;
+            overflow: hidden;
+          }
+          .public-register-card .progress-bar span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, var(--maroon-light), var(--gold));
+            animation: progressFill 5s linear forwards;
+          }
+          @keyframes progressFill {
+            from { width: 0%; }
+            to { width: 100%; }
+          }
+          .public-btn-primary {
+            padding: 14px 40px;
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Outfit', sans-serif;
+            margin-top: 24px;
+          }
+          .public-btn-primary:hover {
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--dark-bg);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5);
+            transform: translateY(-3px);
+          }
+        `}</style>
+
         <div className="public-register-card success">
           <div className="success-icon">✅</div>
-          <h2>Registration Successful!</h2>
+          <h2>Registration Successful</h2>
           <p>
             Thank you <strong>{form.nameEnglish || "Candidate"}</strong>!
           </p>
@@ -200,12 +360,14 @@ export default function PublicRegister() {
             You will be notified once your account is approved.
           </p>
           <p className="redirect-note">
-            Redirecting to home page in <strong>5 seconds</strong>...
+            Redirecting to home in 5 seconds...
           </p>
+          <div className="progress-bar">
+            <span />
+          </div>
           <button
             className="public-btn-primary"
             onClick={() => navigate("/")}
-            style={{ marginTop: "20px" }}
           >
             Go to Home Now
           </button>
@@ -1287,7 +1449,82 @@ export default function PublicRegister() {
           max-width: 1100px;
         }
 
-        /* Invalid / Success Cards */
+        /* ============ PLACEHOLDER — WHITE ============ */
+        .public-form input::placeholder,
+        .public-form textarea::placeholder {
+          color: rgba(255, 255, 255, 0.55) !important;
+          opacity: 1 !important;
+        }
+
+        .public-form input::-webkit-input-placeholder,
+        .public-form textarea::-webkit-input-placeholder {
+          color: rgba(255, 255, 255, 0.55) !important;
+        }
+
+        .public-form input::-moz-placeholder,
+        .public-form textarea::-moz-placeholder {
+          color: rgba(255, 255, 255, 0.55) !important;
+        }
+
+        /* ============ SUBMIT BUTTON HOVER ============ */
+        .public-form .bio-form-actions button.primary {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .public-form .bio-form-actions button.primary:hover:not(:disabled) {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 12px 35px rgba(212, 175, 55, 0.5),
+                      0 0 25px rgba(212, 175, 55, 0.3);
+          letter-spacing: 2px;
+        }
+
+        .public-form .bio-form-actions button.primary:active:not(:disabled) {
+          transform: translateY(-1px) scale(0.99);
+        }
+
+        /* Shine effect on hover */
+        .public-form .bio-form-actions button.primary::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.25),
+            transparent
+          );
+          transition: left 0.6s ease;
+        }
+
+        .public-form .bio-form-actions button.primary:hover:not(:disabled)::before {
+          left: 100%;
+        }
+
+                /* Reset Button Hover */
+        .public-form .bio-form-actions button.btn-reset {
+          position: relative;
+          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .public-form .bio-form-actions button.btn-reset:hover:not(:disabled) {
+          background: rgba(212, 175, 55, 0.15);
+          color: var(--gold);
+          border-color: var(--gold);
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
+          letter-spacing: 2px;
+        }
+
+        .public-form .bio-form-actions button.btn-reset:active:not(:disabled) {
+          transform: translateY(-1px) scale(0.99);
+        }
+
+        /* ============ SUCCESS CARD ANIMATION ============ */
         .public-register-card {
           max-width: 500px;
           margin: 60px auto;
@@ -1296,7 +1533,22 @@ export default function PublicRegister() {
           border: 1px solid rgba(212, 175, 55, 0.3);
           border-radius: 16px;
           text-align: center;
-          animation: fadeInUp 0.5s ease;
+          animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.7) translateY(30px);
+          }
+          60% {
+            opacity: 1;
+            transform: scale(1.03) translateY(-5px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
         }
 
         .public-register-card h2 {
@@ -1325,11 +1577,49 @@ export default function PublicRegister() {
           letter-spacing: 1px;
         }
 
-        .invalid-icon, .success-icon {
+        /* ============ SUCCESS ICON BOUNCE ============ */
+        .success-icon {
           font-size: 60px;
           margin-bottom: 10px;
+          display: inline-block;
+          animation: bounceIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
         }
 
+        @keyframes bounceIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.3);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.15);
+          }
+          70% {
+            transform: scale(0.95);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        /* ============ INVALID ICON SHAKE ============ */
+        .invalid-icon {
+          font-size: 60px;
+          margin-bottom: 10px;
+          display: inline-block;
+          animation: shake 0.6s ease;
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
+
+        /* ============ BUTTONS ============ */
         .public-btn-primary {
           padding: 12px 30px;
           background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
@@ -1347,7 +1637,8 @@ export default function PublicRegister() {
         .public-btn-primary:hover {
           background: linear-gradient(135deg, var(--gold-dark), var(--gold));
           color: var(--dark-bg);
-          box-shadow: 0 6px 25px rgba(212, 175, 55, 0.4);
+          box-shadow: 0 8px 28px rgba(212, 175, 55, 0.5);
+          transform: translateY(-2px);
         }
 
         @keyframes fadeInUp {
