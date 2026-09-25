@@ -71,15 +71,6 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <div className="referral-block">
-        <h3>Referral Link:</h3>
-        <div className="referral-row">
-          <input type="text" value={referralLink} readOnly />
-          <button onClick={copyLink} className="btn-copy">
-            {copied ? "✅ Copied" : "Copy"}
-          </button>
-        </div>
-      </div>
 
       <div className="user-management-summary">
         <div className="summary-heading">
