@@ -13,8 +13,14 @@ import AddUser from "./pages/AddUser";
 import AddEvents from "./pages/AddEvents";
 import AddNews from "./pages/AddNews";
 import Gallery from "./pages/Gallery";
-import EducationManagement from "./pages/EducationManagement";
-import ExamManagement from "./pages/ExamManagement";
+import ManageCourse from "./pages/ManageCourse";
+import ManageSubject from "./pages/ManageSubject";
+import ManageLessons from "./pages/ManageLessons";
+import AllLessons from "./pages/AllLessons";
+import ManageQuestion from "./pages/ManageQuestion";
+import ManageResult from "./pages/ManageResult";
+import NonPrintedResult from "./pages/NonPrintedResult";
+import PrintedResult from "./pages/PrintedResult";
 import SupportTickets from "./pages/SupportTickets";
 import ChangePassword from "./pages/ChangePassword";
 import AddContactDetails from "./pages/AddContactDetails";
@@ -86,19 +92,16 @@ export default function App() {
           <Route path="gallery" element={<Gallery />} />
 
           {/* Educational Management */}
-          <Route path="education/courses" element={<EducationManagement />} />
-          <Route path="education/subjects" element={<EducationManagement />} />
-          <Route
-            path="education/lessons/add"
-            element={<EducationManagement />}
-          />
-          <Route path="education/lessons" element={<EducationManagement />} />
+          <Route path="education/courses" element={<ManageCourse />} />
+          <Route path="education/subjects" element={<ManageSubject />} />
+          <Route path="education/lessons/add" element={<ManageLessons />} />
+          <Route path="education/lessons" element={<AllLessons />} />
 
           {/* Exam Management */}
-          <Route path="exam/questions" element={<ExamManagement />} />
-          <Route path="exam/results" element={<ExamManagement />} />
-          <Route path="exam/non-printed" element={<ExamManagement />} />
-          <Route path="exam/printed" element={<ExamManagement />} />
+          <Route path="exam/questions" element={<ManageQuestion />} />
+          <Route path="exam/results" element={<ManageResult />} />
+          <Route path="exam/non-printed" element={<NonPrintedResult />} />
+          <Route path="exam/printed" element={<PrintedResult />} />
 
           {/* Support */}
           <Route path="support/non-answered" element={<SupportTickets />} />
