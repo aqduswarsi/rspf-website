@@ -1,74 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UserSidebar from "../components/UserSidebar";
 import UserTopbar from "../components/UserTopbar";
-
-const exams = [
-  {
-    id: 1,
-    title: "STEP 01 — Origin and Concept",
-    subject: "Direct Selling Basics",
-    duration: "30 minutes",
-    totalQuestions: 5,
-    passingMarks: 50,
-    questions: [
-      {
-        id: 1,
-        type: "Fill in the Blank",
-        question: "Direct selling mein product ______ ko becha jata hai.",
-        answer: "customer",
-      },
-      {
-        id: 2,
-        type: "True/False",
-        question: "Direct selling mein middleman hota hai.",
-        answer: "False",
-      },
-      {
-        id: 3,
-        type: "Fill in the Blank",
-        question: "Direct selling mein ______ aur customer direct milte hain.",
-        answer: "seller",
-      },
-      {
-        id: 4,
-        type: "True/False",
-        question: "Direct selling mein product ka price fixed hota hai.",
-        answer: "True",
-      },
-      {
-        id: 5,
-        type: "Fill in the Blank",
-        question: "Direct selling ka doosra naam ______ selling hai.",
-        answer: "network",
-      },
-    ],
-    status: "available",
-  },
-];
+import { getUserExams, getUserExamById, submitUserExam } from "../utils/api";
 
 const questionTypes = [
   { type: "Fill in the Blank", icon: "✏️", color: "#22c55e" },
-  { type: "True/False", icon: "✓", color: "#f59e0b" },
+  { type: "True / False", icon: "✓", color: "#f59e0b" },
+  { type: "MCQ", icon: "◉", color: "#3b82f6" },
+  { type: "Written", icon: "✍️", color: "#a855f7" },
 ];
 
 export default function UserExam() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [exams, setExams] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedExam, setSelectedExam] = useState(null);
+  const [loadingExam, setLoadingExam] = useState(false);
   const [answers, setAnswers] = useState({});
-  const [showResults, setShowResults] = useState(false);
+  const [result, setResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState({ text: "", type: "" });
 
-  const startExam = (exam) => {
-    setSelectedExam(exam);
-    setAnswers({});
-    setShowResults(false);
+  useEffect(() => {
+    loadExams();
+  }, []);
+
+  const loadExams = async () => {
+    try {
+      setLoading(true);
+      const data = await getUserExams();
+      setExams(data);
+    } catch (err) {
+      setMessage({ text: err.message, type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startExam = async (examId) => {
+    try {
+      setLoadingExam(true);
+      setMessage({ text: "", type: "" });
+      const data = await getUserExamById(examId);
+      setSelectedExam(data);
+      setAnswers({});
+      setResult(null);
+    } catch (err) {
+      setMessage({ text: err.message, type: "error" });
+    } finally {
+      setLoadingExam(false);
+    }
   };
 
   const handleAnswerChange = (qId, value) => {
     setAnswers({ ...answers, [qId]: value });
   };
 
-  const handleSubmit = () => {
-    const unanswered = selectedExam.questions.filter((q) => !answers[q.id]);
+  const handleSubmit = async () => {
+    const unanswered = selectedExam.questions.filter(
+      (q) => !answers[q._id] || !answers[q._id].toString().trim(),
+    );
+
     if (unanswered.length > 0) {
       if (
         !window.confirm(
@@ -80,29 +72,40 @@ export default function UserExam() {
       if (!window.confirm("Submit exam? You cannot change answers after this."))
         return;
     }
-    setShowResults(true);
-  };
 
-  const calculateScore = () => {
-    let correct = 0;
-    selectedExam.questions.forEach((q) => {
-      const userAns = (answers[q.id] || "").toString().trim().toLowerCase();
-      const correctAns = (q.answer || "").toString().trim().toLowerCase();
-      if (userAns === correctAns) correct++;
-    });
-    return correct;
+    try {
+      setSubmitting(true);
+      setMessage({ text: "", type: "" });
+
+      const answersPayload = selectedExam.questions.map((q) => ({
+        questionId: q._id,
+        userAnswer: answers[q._id] || "",
+      }));
+
+      const data = await submitUserExam(selectedExam._id, answersPayload);
+      setResult(data.data);
+    } catch (err) {
+      setMessage({ text: err.message, type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleBackToExams = () => {
     setSelectedExam(null);
     setAnswers({});
-    setShowResults(false);
+    setResult(null);
+    setMessage({ text: "", type: "" });
   };
 
   const handleRetry = () => {
     setAnswers({});
-    setShowResults(false);
+    setResult(null);
   };
+
+  // ---------- helpers ----------
+  const isPassed = result && result.status === "Pass";
+  const isPending = result && result.status === "pending";
 
   return (
     <div className="admin-layout">
@@ -112,7 +115,44 @@ export default function UserExam() {
         <UserTopbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
         <main className="admin-content">
-          {!selectedExam ? (
+          {message.text && (
+            <div
+              className="form-error"
+              style={{
+                marginBottom: "16px",
+                background:
+                  message.type === "success"
+                    ? "rgba(74,222,128,0.15)"
+                    : "rgba(239,68,68,0.15)",
+                borderColor: message.type === "success" ? "#4ade80" : "#ef4444",
+                color: message.type === "success" ? "#4ade80" : "#ef4444",
+              }}
+            >
+              {message.text}
+            </div>
+          )}
+
+          {loading ? (
+            <div
+              style={{
+                padding: "80px",
+                textAlign: "center",
+                color: "var(--gold)",
+              }}
+            >
+              Loading exams...
+            </div>
+          ) : loadingExam ? (
+            <div
+              style={{
+                padding: "80px",
+                textAlign: "center",
+                color: "var(--gold)",
+              }}
+            >
+              Loading exam...
+            </div>
+          ) : !selectedExam ? (
             /* ================= EXAM LIST ================= */
             <div className="users-page">
               <div className="users-header">
@@ -120,7 +160,7 @@ export default function UserExam() {
                 <span
                   style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
                 >
-                  {exams.length} exam{exams.length > 1 ? "s" : ""}
+                  {exams.length} exam{exams.length !== 1 ? "s" : ""}
                 </span>
               </div>
 
@@ -138,31 +178,43 @@ export default function UserExam() {
                 </div>
               </div>
 
-              <div className="exam-list-grid">
-                {exams.map((exam) => (
-                  <div key={exam.id} className="exam-list-card">
-                    <div className="exam-card-top">
-                      <span className="exam-badge">Available</span>
-                      <span className="exam-id">#{exam.id}</span>
+              {exams.length === 0 ? (
+                <p
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  No exams available yet.
+                </p>
+              ) : (
+                <div className="exam-list-grid">
+                  {exams.map((exam) => (
+                    <div key={exam._id} className="exam-list-card">
+                      <div className="exam-card-top">
+                        <span className="exam-badge">Available</span>
+                        <span className="exam-id">{exam.step}</span>
+                      </div>
+                      <h3 className="exam-title">{exam.title}</h3>
+                      <p className="exam-subject">{exam.description}</p>
+                      <div className="exam-meta">
+                        <span>⏱️ {exam.duration} min</span>
+                        <span>📝 {exam.questionCount} Qs</span>
+                        <span>🎯 {exam.passPercentage}% Pass</span>
+                      </div>
+                      <button
+                        className="exam-start-btn"
+                        onClick={() => startExam(exam._id)}
+                      >
+                        Start Exam →
+                      </button>
                     </div>
-                    <h3 className="exam-title">{exam.title}</h3>
-                    <p className="exam-subject">{exam.subject}</p>
-                    <div className="exam-meta">
-                      <span>⏱️ {exam.duration}</span>
-                      <span>📝 {exam.totalQuestions} Qs</span>
-                      <span>🎯 {exam.passingMarks}% Pass</span>
-                    </div>
-                    <button
-                      className="exam-start-btn"
-                      onClick={() => startExam(exam)}
-                    >
-                      Start Exam →
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : !showResults ? (
+          ) : !result ? (
             /* ================= EXAM VIEW ================= */
             <div className="users-page">
               <div className="users-header">
@@ -176,7 +228,8 @@ export default function UserExam() {
                 <span
                   style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
                 >
-                  {selectedExam.duration} • {selectedExam.passingMarks}% Pass
+                  {selectedExam.duration} min • {selectedExam.passPercentage}%
+                  Pass
                 </span>
               </div>
 
@@ -193,22 +246,23 @@ export default function UserExam() {
               <p
                 style={{ color: "rgba(255,255,255,0.6)", marginBottom: "24px" }}
               >
-                {selectedExam.subject} • {selectedExam.questions.length}{" "}
+                {selectedExam.courseName} • {selectedExam.questions.length}{" "}
                 Questions
               </p>
 
               <div className="exam-questions-preview">
                 {selectedExam.questions.map((q, i) => (
-                  <div key={q.id} className="question-preview-card">
+                  <div key={q._id} className="question-preview-card">
                     <div className="q-preview-header">
                       <span className="q-num">Q{i + 1}</span>
                       <span
                         className="q-type-badge"
                         style={{
-                          background: `${questionTypes.find((t) => t.type === q.type)?.color}22`,
-                          color: questionTypes.find((t) => t.type === q.type)
-                            ?.color,
-                          border: `1px solid ${questionTypes.find((t) => t.type === q.type)?.color}55`,
+                          background: `${questionTypes.find((t) => t.type === q.type)?.color || "#888"}22`,
+                          color:
+                            questionTypes.find((t) => t.type === q.type)
+                              ?.color || "#888",
+                          border: `1px solid ${questionTypes.find((t) => t.type === q.type)?.color || "#888"}55`,
                         }}
                       >
                         {q.type}
@@ -222,30 +276,70 @@ export default function UserExam() {
                         <input
                           type="text"
                           placeholder="Type your answer here..."
-                          value={answers[q.id] || ""}
+                          value={answers[q._id] || ""}
                           onChange={(e) =>
-                            handleAnswerChange(q.id, e.target.value)
+                            handleAnswerChange(q._id, e.target.value)
                           }
                         />
                       </div>
                     )}
 
-                    {q.type === "True/False" && (
+                    {q.type === "True / False" && (
                       <div className="q-tf">
                         <button
                           type="button"
-                          className={`tf-btn ${answers[q.id] === "True" ? "active" : ""}`}
-                          onClick={() => handleAnswerChange(q.id, "True")}
+                          className={`tf-btn ${answers[q._id] === "True" ? "active" : ""}`}
+                          onClick={() => handleAnswerChange(q._id, "True")}
                         >
                           ✓ True
                         </button>
                         <button
                           type="button"
-                          className={`tf-btn ${answers[q.id] === "False" ? "active" : ""}`}
-                          onClick={() => handleAnswerChange(q.id, "False")}
+                          className={`tf-btn ${answers[q._id] === "False" ? "active" : ""}`}
+                          onClick={() => handleAnswerChange(q._id, "False")}
                         >
                           ✗ False
                         </button>
+                      </div>
+                    )}
+
+                    {q.type === "MCQ" && (
+                      <div className="q-tf" style={{ flexWrap: "wrap" }}>
+                        {(q.options || []).map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            className={`tf-btn ${answers[q._id] === opt ? "active" : ""}`}
+                            onClick={() => handleAnswerChange(q._id, opt)}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {q.type === "Written" && (
+                      <div className="q-fill-blank">
+                        <textarea
+                          rows="4"
+                          placeholder="Type your answer here..."
+                          value={answers[q._id] || ""}
+                          onChange={(e) =>
+                            handleAnswerChange(q._id, e.target.value)
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "12px",
+                            background: "rgba(0,0,0,0.4)",
+                            border: "1px solid rgba(168,85,247,0.4)",
+                            borderRadius: "6px",
+                            color: "white",
+                            fontSize: "14px",
+                            fontFamily: "'Outfit', sans-serif",
+                            outline: "none",
+                            resize: "vertical",
+                          }}
+                        />
                       </div>
                     )}
                   </div>
@@ -255,125 +349,61 @@ export default function UserExam() {
                   <button
                     className="btn-copy"
                     onClick={handleSubmit}
+                    disabled={submitting}
                     style={{ padding: "14px 40px", fontSize: "15px" }}
                   >
-                    📤 Submit Exam
+                    {submitting ? "Submitting..." : "📤 Submit Exam"}
                   </button>
                 </div>
               </div>
             </div>
           ) : (
-            /* ================= RESULTS ================= */
+            /* ================= SUBMITTED ================= */
             <div className="users-page">
-              <div className="users-header">
-                <button
-                  className="btn-reset"
-                  onClick={handleBackToExams}
-                  style={{ padding: "8px 16px", fontSize: "13px" }}
-                >
-                  ← Back to Exams
-                </button>
-              </div>
-
-              <div className="result-summary">
-                <div className="result-icon">
-                  {calculateScore() / selectedExam.questions.length >= 0.5
-                    ? "🎉"
-                    : "😔"}
-                </div>
-                <h3>
-                  {calculateScore() / selectedExam.questions.length >= 0.5
-                    ? "Congratulations! You Passed!"
-                    : "Better Luck Next Time"}
-                </h3>
-                <div className="result-score">
-                  <span className="score-value">{calculateScore()}</span>
-                  <span className="score-divider">/</span>
-                  <span className="score-total">
-                    {selectedExam.questions.length}
-                  </span>
-                </div>
-                <p className="score-percent">
-                  {Math.round(
-                    (calculateScore() / selectedExam.questions.length) * 100,
-                  )}
-                  %
-                </p>
-              </div>
-
-              <h3
-                style={{
-                  color: "var(--gold)",
-                  fontFamily: "'Rajdhani', sans-serif",
-                  letterSpacing: "1.5px",
-                  margin: "30px 0 16px",
-                }}
-              >
-                📋 Answer Review
-              </h3>
-
-              {selectedExam.questions.map((q, i) => {
-                const userAns = (answers[q.id] || "")
-                  .toString()
-                  .trim()
-                  .toLowerCase();
-                const correctAns = (q.answer || "")
-                  .toString()
-                  .trim()
-                  .toLowerCase();
-                const isCorrect = userAns === correctAns;
-
-                return (
-                  <div
-                    key={q.id}
-                    className={`question-preview-card ${isCorrect ? "correct" : "wrong"}`}
-                  >
-                    <div className="q-preview-header">
-                      <span className="q-num">Q{i + 1}</span>
-                      <span
-                        className={`result-badge ${isCorrect ? "correct" : "wrong"}`}
-                      >
-                        {isCorrect ? "✓ Correct" : "✗ Wrong"}
-                      </span>
-                    </div>
-                    <p className="q-text">{q.question}</p>
-                    <div className="answer-review">
-                      <p>
-                        <strong>Your Answer:</strong>{" "}
-                        <span
-                          style={{ color: isCorrect ? "#4ade80" : "#ef4444" }}
-                        >
-                          {answers[q.id] || "(Not answered)"}
-                        </span>
-                      </p>
-                      {!isCorrect && (
-                        <p>
-                          <strong>Correct Answer:</strong>{" "}
-                          <span style={{ color: "#4ade80" }}>{q.answer}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
               <div
                 style={{
                   textAlign: "center",
-                  marginTop: "30px",
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "center",
-                  flexWrap: "wrap",
+                  padding: "80px 20px",
+                  background:
+                    "linear-gradient(135deg, rgba(139,0,0,0.15), rgba(212,175,55,0.05))",
+                  border: "1px solid rgba(212,175,55,0.3)",
+                  borderRadius: "12px",
+                  maxWidth: "600px",
+                  margin: "40px auto",
                 }}
               >
-                <button
-                  className="btn-reset"
-                  onClick={handleRetry}
-                  style={{ padding: "14px 40px", fontSize: "15px" }}
+                <div style={{ fontSize: "72px", marginBottom: "16px" }}>✅</div>
+                <h2
+                  style={{
+                    color: "var(--gold)",
+                    fontFamily: "'Rajdhani', sans-serif",
+                    letterSpacing: "2px",
+                    fontSize: "26px",
+                    margin: "0 0 12px",
+                  }}
                 >
-                  🔄 Retry Exam
-                </button>
+                  Exam Submitted Successfully!
+                </h2>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: "14px",
+                    lineHeight: 1.7,
+                    margin: "0 0 8px",
+                  }}
+                >
+                  Aapka exam successfully submit ho gaya hai.
+                </p>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: "13px",
+                    margin: "0 0 30px",
+                  }}
+                >
+                  Result admin review ke baad available hoga.
+                </p>
+
                 <button
                   className="btn-copy"
                   onClick={handleBackToExams}
@@ -524,14 +554,6 @@ export default function UserExam() {
           margin-bottom: 14px;
           transition: all 0.3s;
         }
-        .question-preview-card.correct {
-          border-left-color: #4ade80;
-          background: rgba(74,222,128,0.05);
-        }
-        .question-preview-card.wrong {
-          border-left-color: #ef4444;
-          background: rgba(239,68,68,0.05);
-        }
         .q-preview-header {
           display: flex;
           justify-content: space-between;
@@ -560,7 +582,8 @@ export default function UserExam() {
           font-size: 14px;
         }
 
-        .q-fill-blank input {
+        .q-fill-blank input,
+        .q-fill-blank textarea {
           width: 100%;
           max-width: 400px;
           padding: 12px 14px;
@@ -571,16 +594,20 @@ export default function UserExam() {
           font-size: 14px;
           outline: none;
           transition: all 0.2s;
+          font-family: inherit;
         }
-        .q-fill-blank input:focus {
+        .q-fill-blank textarea { max-width: 100%; resize: vertical; }
+        .q-fill-blank input:focus,
+        .q-fill-blank textarea:focus {
           border-color: #22c55e;
           box-shadow: 0 0 0 3px rgba(34,197,94,0.15);
         }
-        .q-fill-blank input::placeholder {
+        .q-fill-blank input::placeholder,
+        .q-fill-blank textarea::placeholder {
           color: rgba(255,255,255,0.3);
         }
 
-        .q-tf { display: flex; gap: 12px; }
+        .q-tf { display: flex; gap: 12px; flex-wrap: wrap; }
         .tf-btn {
           padding: 10px 24px;
           background: rgba(0,0,0,0.3);
@@ -602,7 +629,6 @@ export default function UserExam() {
           color: #f59e0b;
         }
 
-        /* Result Summary */
         .result-summary {
           text-align: center;
           padding: 40px 20px;
@@ -611,10 +637,7 @@ export default function UserExam() {
           border-radius: 12px;
           margin-bottom: 24px;
         }
-        .result-icon {
-          font-size: 60px;
-          margin-bottom: 12px;
-        }
+        .result-icon { font-size: 60px; margin-bottom: 12px; }
         .result-summary h3 {
           color: var(--gold);
           font-family: 'Rajdhani', sans-serif;
@@ -636,10 +659,7 @@ export default function UserExam() {
           font-family: 'Rajdhani', sans-serif;
           line-height: 1;
         }
-        .score-divider {
-          font-size: 40px;
-          color: rgba(255,255,255,0.3);
-        }
+        .score-divider { font-size: 40px; color: rgba(255,255,255,0.3); }
         .score-total {
           font-size: 40px;
           color: rgba(255,255,255,0.5);
@@ -650,42 +670,6 @@ export default function UserExam() {
           color: rgba(255,255,255,0.7);
           font-weight: 600;
           letter-spacing: 1px;
-        }
-
-        .result-badge {
-          font-size: 11px;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-weight: 700;
-        }
-        .result-badge.correct {
-          background: rgba(74,222,128,0.15);
-          color: #4ade80;
-          border: 1px solid rgba(74,222,128,0.4);
-        }
-        .result-badge.wrong {
-          background: rgba(239,68,68,0.15);
-          color: #ef4444;
-          border: 1px solid rgba(239,68,68,0.4);
-        }
-
-        .answer-review {
-          margin-top: 12px;
-          padding: 12px;
-          background: rgba(0,0,0,0.3);
-          border-radius: 6px;
-        }
-        .answer-review p {
-          margin: 6px 0;
-          font-size: 13px;
-          color: rgba(255,255,255,0.7);
-        }
-        .answer-review strong {
-          color: rgba(255,255,255,0.5);
-          font-size: 12px;
-          letter-spacing: 0.5px;
         }
       `}</style>
     </div>

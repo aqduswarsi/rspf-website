@@ -111,7 +111,7 @@ export default function UserProfileUpdate() {
     setMessage({ text: "", type: "" });
 
     try {
-      const payload = { ...form };
+      const { mobileNumber, ...payload } = form; // mobileNumber exclude
       await updateUserProfile(payload);
       setMessage({ text: "✅ Profile updated successfully!", type: "success" });
     } catch (err) {
@@ -291,12 +291,17 @@ export default function UserProfileUpdate() {
                 <h3>Contact Information</h3>
                 <div className="bio-grid">
                   <div className="form-field">
-                    <label>Mobile Number</label>
+                    <label>
+                      Mobile Number{" "}
+                      <small style={{ color: "rgba(255,255,255,0.4)" }}>
+                        (cannot be changed)
+                      </small>
+                    </label>
                     <input
                       name="mobileNumber"
                       value={form.mobileNumber}
-                      onChange={handleChange}
-                      placeholder="+91 XXXXX XXXXX"
+                      readOnly
+                      style={{ opacity: 0.6, cursor: "not-allowed" }}
                     />
                     <div className="whatsapp-radio">
                       <span>WhatsApp:</span>
