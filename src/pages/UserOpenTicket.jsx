@@ -1,56 +1,76 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import UserSidebar from "../components/UserSidebar";
 import UserTopbar from "../components/UserTopbar";
+import { createUserTicket, getMyTickets } from "../utils/api";
 
 export default function UserOpenTicket() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const navigate = useNavigate();
 
-  // Load from localStorage (temporary — backend baad me)
   useEffect(() => {
-    const saved = localStorage.getItem("rpsf_support_tickets");
-    if (saved) {
-      try {
-        setTickets(JSON.parse(saved));
-      } catch {
-        setTickets([]);
-      }
+    const token = localStorage.getItem("rpsf_user_token");
+    if (!token) {
+      navigate("/login");
+      return;
     }
-  }, []);
+    loadTickets();
+  }, [navigate]);
 
-  const saveTickets = (newTickets) => {
-    setTickets(newTickets);
-    localStorage.setItem("rpsf_support_tickets", JSON.stringify(newTickets));
+  const loadTickets = async () => {
+    try {
+      setLoading(true);
+      const data = await getMyTickets();
+      setTickets(data);
+    } catch (err) {
+      setMessage({ text: err.message, type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!question.trim()) {
-      alert("Please enter your question");
+      setMessage({ text: "Please enter your question", type: "error" });
       return;
     }
 
     setSubmitting(true);
+    setMessage({ text: "", type: "" });
 
-    const newTicket = {
-      id: Date.now(),
-      ticketNo: `TKT#${Math.floor(100 + Math.random() * 900)}`,
-      question: question.trim(),
-      reply: null,
-      date: new Date().toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-    };
+    try {
+      await createUserTicket(question.trim());
+      setQuestion("");
+      setMessage({
+        text: "Ticket submitted successfully",
+        type: "success",
+      });
+      loadTickets();
+    } catch (err) {
+      setMessage({ text: err.message, type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    const updated = [newTicket, ...tickets];
-    saveTickets(updated);
-    setQuestion("");
-    setSubmitting(false);
-    alert("✅ Ticket submitted successfully!");
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getTicketNo = (id) => {
+    if (!id) return "-";
+    return "TKT#" + id.slice(-3).toUpperCase();
   };
 
   return (
@@ -91,7 +111,10 @@ export default function UserOpenTicket() {
               >
                 <textarea
                   value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
+                  onChange={(e) => {
+                    setQuestion(e.target.value);
+                    setMessage({ text: "", type: "" });
+                  }}
                   placeholder="Enter your question here..."
                   rows="6"
                   style={{
@@ -147,6 +170,18 @@ export default function UserOpenTicket() {
                   {submitting ? "Submitting..." : "Submit"}
                 </button>
               </div>
+
+              {message.text && (
+                <p
+                  style={{
+                    marginTop: "12px",
+                    fontSize: "13px",
+                    color: message.type === "success" ? "#4ade80" : "#ef4444",
+                  }}
+                >
+                  {message.text}
+                </p>
+              )}
             </form>
           </div>
 
@@ -154,48 +189,76 @@ export default function UserOpenTicket() {
           <div className="users-page">
             <div className="users-header">
               <h2>Support Questions List</h2>
+              <span
+                style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
+              >
+                {tickets.length} {tickets.length === 1 ? "ticket" : "tickets"}
+              </span>
             </div>
 
             <div className="table-wrap">
-              <table className="users-table">
-                <thead>
-                  <tr>
-                    <th>Sr. No</th>
-                    <th>Ticket No</th>
-                    <th>Question</th>
-                    <th>Reply ?</th>
-                    <th>Ticket Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tickets.map((t, i) => (
-                    <tr key={t.id}>
-                      <td>{i + 1}</td>
-                      <td>{t.ticketNo}</td>
-                      <td>{t.question}</td>
-                      <td>
-                        {t.reply ? (
-                          <span style={{ color: "#4ade80", fontWeight: 600 }}>
-                            Yes
-                          </span>
-                        ) : (
-                          <span style={{ color: "#f59e0b", fontWeight: 600 }}>
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                      <td>{t.date}</td>
-                    </tr>
-                  ))}
-                  {tickets.length === 0 && (
+              {loading ? (
+                <p
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    color: "var(--gold)",
+                  }}
+                >
+                  Loading...
+                </p>
+              ) : tickets.length === 0 ? (
+                <p
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  No tickets yet. Submit your first question above.
+                </p>
+              ) : (
+                <table className="users-table">
+                  <thead>
                     <tr>
-                      <td colSpan="5" className="empty-row">
-                        No tickets yet. Submit your first question above.
-                      </td>
+                      <th>Sr. No</th>
+                      <th>Ticket No</th>
+                      <th>Question</th>
+                      <th>Reply ?</th>
+                      <th>Ticket Date</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {tickets.map((t, i) => (
+                      <tr key={t._id}>
+                        <td>{i + 1}</td>
+                        <td
+                          style={{
+                            color: "var(--gold)",
+                            fontFamily: "monospace",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {getTicketNo(t._id)}
+                        </td>
+                        <td>{t.question}</td>
+                        <td>
+                          {t.status === "answered" ? (
+                            <span style={{ color: "#4ade80", fontWeight: 600 }}>
+                              Answered
+                            </span>
+                          ) : (
+                            <span style={{ color: "#f59e0b", fontWeight: 600 }}>
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td>{formatDate(t.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </main>

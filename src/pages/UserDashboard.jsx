@@ -2,10 +2,23 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserSidebar from "../components/UserSidebar";
 import UserTopbar from "../components/UserTopbar";
-import { getUserProfile } from "../utils/api";
+import {
+  getUserProfile,
+  getUserDashboardStats,
+  getMyResults,
+  getAllNews,
+} from "../utils/api";
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    passed: 0,
+    failed: 0,
+    pending: 0,
+  });
+  const [recentResults, setRecentResults] = useState([]);
+  const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,8 +35,21 @@ export default function UserDashboard() {
 
   const load = async () => {
     try {
-      const data = await getUserProfile();
-      setUser(data);
+      const [userData, statsData, resultsData, newsData] = await Promise.all([
+        getUserProfile(),
+        getUserDashboardStats().catch(() => ({
+          total: 0,
+          passed: 0,
+          failed: 0,
+          pending: 0,
+        })),
+        getMyResults().catch(() => []),
+        getAllNews().catch(() => []),
+      ]);
+      setUser(userData);
+      setStats(statsData);
+      setRecentResults(resultsData.slice(0, 3)); // top 3
+      setNews(newsData.slice(0, 2)); // top 2
     } catch (err) {
       setError(err.message);
     } finally {
@@ -79,30 +105,45 @@ export default function UserDashboard() {
 
   const statCards = [
     {
-      label: "Joining Date",
-      value: user?.dateOfEnlistment || "—",
+      label: "Total Exams",
+      value: stats.total,
       color:
         "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
     },
     {
-      label: "My Rank",
-      value: user?.rank || "—",
+      label: "Passed",
+      value: stats.passed,
       color:
-        "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
+        "linear-gradient(135deg, rgba(74,222,128,0.15), rgba(212,175,55,0.05))",
     },
     {
-      label: "Zone",
-      value: user?.zone || "—",
+      label: "Failed",
+      value: stats.failed,
       color:
-        "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
+        "linear-gradient(135deg, rgba(239,68,68,0.15), rgba(212,175,55,0.05))",
     },
     {
-      label: "Status",
-      value: user?.status ? user.status.toUpperCase() : "—",
+      label: "Pending",
+      value: stats.pending,
       color:
-        "linear-gradient(135deg, rgba(139,0,0,0.35), rgba(212,175,55,0.08))",
+        "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(212,175,55,0.05))",
     },
   ];
+
+  const formatDate = (d) => {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const statusColor = (status) => {
+    if (status === "Pass") return "#4ade80";
+    if (status === "Fail") return "#ef4444";
+    return "#f59e0b";
+  };
 
   return (
     <div className="admin-layout">
@@ -126,7 +167,7 @@ export default function UserDashboard() {
                 fontSize: "24px",
               }}
             >
-              Welcome, {user?.nameEnglish || "Member"} 👋
+              Welcome, {user?.nameEnglish || "Member"}
             </h2>
             <p
               style={{
@@ -144,20 +185,10 @@ export default function UserDashboard() {
           <div className="stats-grid">
             {statCards.map((s, i) => (
               <div className="stat-box" key={i} style={{ background: s.color }}>
-                <div
-                  className="stat-value"
-                  style={{
-                    fontSize:
-                      typeof s.value === "string" && s.value.length > 8
-                        ? "24px"
-                        : "40px",
-                  }}
-                >
-                  {s.value}
-                </div>
+                <div className="stat-value">{s.value}</div>
                 <div className="stat-label">{s.label}</div>
                 <div className="stat-footer">
-                  My Info <span>➜</span>
+                  View <span>➜</span>
                 </div>
                 <div className="stat-chart">
                   <span />
@@ -201,6 +232,12 @@ export default function UserDashboard() {
                   </tr>
                   <tr>
                     <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                      Rank
+                    </td>
+                    <td>{user?.rank || "—"}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
                       Phone
                     </td>
                     <td>{user?.mobileNumber || "—"}</td>
@@ -217,8 +254,82 @@ export default function UserDashboard() {
                     </td>
                     <td>{user?.bloodGroup || "—"}</td>
                   </tr>
+                  <tr>
+                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                      Zone
+                    </td>
+                    <td>{user?.zone || "—"}</td>
+                  </tr>
                 </tbody>
               </table>
+            </div>
+
+            {/* Recent Results Card */}
+            <div className="users-page">
+              <div className="users-header">
+                <h2>📊 Recent Results</h2>
+              </div>
+              {recentResults.length === 0 ? (
+                <p
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: "13px",
+                  }}
+                >
+                  No exam results yet.
+                </p>
+              ) : (
+                recentResults.map((r) => (
+                  <div
+                    key={r._id}
+                    style={{
+                      padding: "14px",
+                      background: "rgba(139,0,0,0.12)",
+                      borderLeft: `3px solid ${statusColor(r.status)}`,
+                      borderRadius: "6px",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      <strong
+                        style={{ color: "var(--gold)", fontSize: "13px" }}
+                      >
+                        {r.examId?.title || "Exam"}
+                      </strong>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: statusColor(r.status),
+                          fontWeight: 700,
+                        }}
+                      >
+                        {r.status}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "12px",
+                        color: "rgba(255,255,255,0.7)",
+                      }}
+                    >
+                      Score:{" "}
+                      <strong style={{ color: "var(--gold)" }}>
+                        {r.totalScore}/{r.maxScore}
+                      </strong>{" "}
+                      ({r.percentage}%) • {formatDate(r.createdAt)}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* News Card */}
@@ -226,32 +337,52 @@ export default function UserDashboard() {
               <div className="users-header">
                 <h2>📰 Latest News</h2>
               </div>
-              <div
-                style={{
-                  padding: "16px",
-                  background: "rgba(139,0,0,0.12)",
-                  borderLeft: "3px solid var(--gold)",
-                  borderRadius: "6px",
-                  color: "rgba(255,255,255,0.8)",
-                  lineHeight: 1.7,
-                  fontSize: "14px",
-                }}
-              >
-                <strong style={{ color: "var(--gold)" }}>
-                  1. Early Morning Live Classes
-                </strong>
-                <br />
-                Join Zoom Meeting:
-                <br />
-                🔗{" "}
-                <span style={{ color: "var(--gold)" }}>
-                  https://us06web.zoom.us/j/81315476933
-                </span>
-                <br />
-                Meeting ID: 813 1547 6933
-                <br />
-                Passcode: 123
-              </div>
+              {news.length === 0 ? (
+                <p
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: "13px",
+                  }}
+                >
+                  No news available.
+                </p>
+              ) : (
+                news.map((n) => (
+                  <div
+                    key={n._id}
+                    style={{
+                      padding: "14px",
+                      background: "rgba(139,0,0,0.12)",
+                      borderLeft: "3px solid var(--gold)",
+                      borderRadius: "6px",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <strong
+                      style={{
+                        color: "var(--gold)",
+                        fontSize: "13px",
+                        display: "block",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {n.title}
+                    </strong>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "12px",
+                        color: "rgba(255,255,255,0.7)",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {n.description || n.content || ""}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </main>

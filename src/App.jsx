@@ -18,6 +18,7 @@ import ManageSubject from "./pages/ManageSubject";
 import ManageLessons from "./pages/ManageLessons";
 import AllLessons from "./pages/AllLessons";
 import ManageQuestion from "./pages/ManageQuestion";
+import ManageExam from "./pages/ManageExam";
 import ManageResult from "./pages/ManageResult";
 import NonPrintedResult from "./pages/NonPrintedResult";
 import PrintedResult from "./pages/PrintedResult";
@@ -34,7 +35,6 @@ import UserExamResult from "./pages/UserExamResult";
 import UserOpenTicket from "./pages/UserOpenTicket";
 import UserSupportTicket from "./pages/UserSupportTicket";
 import PublicRegister from "./pages/PublicRegister";
-
 
 function PublicLayout({ children }) {
   return (
@@ -99,6 +99,7 @@ export default function App() {
 
           {/* Exam Management */}
           <Route path="exam/questions" element={<ManageQuestion />} />
+          <Route path="exam/manage" element={<ManageExam />} />
           <Route path="exam/results" element={<ManageResult />} />
           <Route path="exam/non-printed" element={<NonPrintedResult />} />
           <Route path="exam/printed" element={<PrintedResult />} />

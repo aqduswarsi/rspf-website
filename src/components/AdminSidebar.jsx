@@ -5,9 +5,10 @@ export default function AdminSidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const role = localStorage.getItem("rpsf_login_role") || "admin";
-  const name = role === "user"
-    ? (localStorage.getItem("rpsf_user_name") || "User")
-    : (localStorage.getItem("rpsf_login_name") || "Admin");
+  const name =
+    role === "user"
+      ? localStorage.getItem("rpsf_user_name") || "User"
+      : localStorage.getItem("rpsf_login_name") || "Admin";
   const isUserManagementActive = location.pathname.startsWith("/admin/users");
   const isEducationActive = location.pathname.startsWith("/admin/education");
   const isExamActive = location.pathname.startsWith("/admin/exam");
@@ -36,7 +37,9 @@ export default function AdminSidebar({ isOpen, onClose }) {
       </div>
 
       <div className="admin-profile">
-        <div className="admin-avatar" aria-hidden="true">{role === "user" ? "U" : "A"}</div>
+        <div className="admin-avatar" aria-hidden="true">
+          {role === "user" ? "U" : "A"}
+        </div>
         <div className="admin-profile-info">
           <strong>{name}</strong>
           <span className="online-status">
@@ -61,179 +64,254 @@ export default function AdminSidebar({ isOpen, onClose }) {
             </NavLink>
 
             <div className="nav-section">USERS MANAGEMENT</div>
-        <button
-          type="button"
-          className={`admin-nav-item admin-nav-toggle ${isUserManagementActive ? "active" : ""}`}
-          aria-expanded={usersOpen}
-          onClick={() => setUsersOpen((open) => !open)}
-        >
-          <span>User Management</span>
-          <span className={`nav-chevron ${usersOpen ? "open" : ""}`} aria-hidden="true">
-            ›
-          </span>
-        </button>
-        {usersOpen && (
-          <div className="admin-nav-submenu">
-            <NavLink
-              to="/admin/users/unverified"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
+            <button
+              type="button"
+              className={`admin-nav-item admin-nav-toggle ${isUserManagementActive ? "active" : ""}`}
+              aria-expanded={usersOpen}
+              onClick={() => setUsersOpen((open) => !open)}
             >
-              User Unverified
-            </NavLink>
-            <NavLink
-              to="/admin/users/verified"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
-            >
-              User Verified
-            </NavLink>
-            <NavLink
-              to="/admin/users/add"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
-            >
-              Add User
-            </NavLink>
-            <NavLink
-              to="/admin/events"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
-            >
-              Add Events
-            </NavLink>
-            <NavLink
-              to="/admin/news"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
-            >
-              Add News
-            </NavLink>
-            <NavLink
-              to="/admin/gallery"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
-            >
-              Gallery
-            </NavLink>
-          </div>
-        )}
+              <span>User Management</span>
+              <span
+                className={`nav-chevron ${usersOpen ? "open" : ""}`}
+                aria-hidden="true"
+              >
+                ›
+              </span>
+            </button>
+            {usersOpen && (
+              <div className="admin-nav-submenu">
+                <NavLink
+                  to="/admin/users/unverified"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  User Unverified
+                </NavLink>
+                <NavLink
+                  to="/admin/users/verified"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  User Verified
+                </NavLink>
+                <NavLink
+                  to="/admin/users/add"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Add User
+                </NavLink>
+                <NavLink
+                  to="/admin/events"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Add Events
+                </NavLink>
+                <NavLink
+                  to="/admin/news"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Add News
+                </NavLink>
+                <NavLink
+                  to="/admin/gallery"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Gallery
+                </NavLink>
+              </div>
+            )}
 
-        <div className="nav-section">EDUCATIONAL MANAGEMENT</div>
-        <button
-          type="button"
-          className={`admin-nav-item admin-nav-toggle ${isEducationActive ? "active" : ""}`}
-          aria-expanded={educationOpen}
-          onClick={() => setEducationOpen((open) => !open)}
-        >
-          <span>Educational Management</span>
-          <span className={`nav-chevron ${educationOpen ? "open" : ""}`} aria-hidden="true">
-            ›
-          </span>
-        </button>
-        {educationOpen && (
-          <div className="admin-nav-submenu">
-            <NavLink to="/admin/education/courses" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              Manage Course
-            </NavLink>
-            <NavLink to="/admin/education/subjects" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              Manage Subject
-            </NavLink>
-            <NavLink to="/admin/education/lessons/add" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              Manage Lessons
-            </NavLink>
-            <NavLink to="/admin/education/lessons" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              All Lessons
-            </NavLink>
-          </div>
-        )}
-
-        <div className="nav-section">EXAM MANAGEMENT</div>
-        <button
-          type="button"
-          className={`admin-nav-item admin-nav-toggle ${isExamActive ? "active" : ""}`}
-          aria-expanded={examOpen}
-          onClick={() => setExamOpen((open) => !open)}
-        >
-          <span>Exam Management</span>
-          <span className={`nav-chevron ${examOpen ? "open" : ""}`} aria-hidden="true">›</span>
-        </button>
-        {examOpen && (
-          <div className="admin-nav-submenu">
-            <NavLink to="/admin/exam/questions" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              Manage Question
-            </NavLink>
-            <NavLink to="/admin/exam/results" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              Manage Result
-            </NavLink>
-            <NavLink to="/admin/exam/non-printed" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              Non Printed Result
-            </NavLink>
-            <NavLink to="/admin/exam/printed" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
-              Printed Result
-            </NavLink>
-          </div>
-        )}
-
-        <div className="nav-section">SUPPORT</div>
-        <button
-          type="button"
-          className={`admin-nav-item admin-nav-toggle ${isSupportActive ? "active" : ""}`}
-          aria-expanded={supportOpen}
-          onClick={() => setSupportOpen((open) => !open)}
-        >
-          <span>Support</span>
-          <span className={`nav-chevron ${supportOpen ? "open" : ""}`} aria-hidden="true">
-            ›
-          </span>
-        </button>
-        {supportOpen && (
-          <div className="admin-nav-submenu">
-            <NavLink
-              to="/admin/support/non-answered"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
+            <div className="nav-section">EDUCATIONAL MANAGEMENT</div>
+            <button
+              type="button"
+              className={`admin-nav-item admin-nav-toggle ${isEducationActive ? "active" : ""}`}
+              aria-expanded={educationOpen}
+              onClick={() => setEducationOpen((open) => !open)}
             >
-              Non Answered Ticket
-            </NavLink>
-            <NavLink
-              to="/admin/support/answered"
-              onClick={onClose}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
+              <span>Educational Management</span>
+              <span
+                className={`nav-chevron ${educationOpen ? "open" : ""}`}
+                aria-hidden="true"
+              >
+                ›
+              </span>
+            </button>
+            {educationOpen && (
+              <div className="admin-nav-submenu">
+                <NavLink
+                  to="/admin/education/courses"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Manage Course
+                </NavLink>
+                <NavLink
+                  to="/admin/education/subjects"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Manage Subject
+                </NavLink>
+                <NavLink
+                  to="/admin/education/lessons/add"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Manage Lessons
+                </NavLink>
+                <NavLink
+                  to="/admin/education/lessons"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  All Lessons
+                </NavLink>
+              </div>
+            )}
+
+            <div className="nav-section">EXAM MANAGEMENT</div>
+            <button
+              type="button"
+              className={`admin-nav-item admin-nav-toggle ${isExamActive ? "active" : ""}`}
+              aria-expanded={examOpen}
+              onClick={() => setExamOpen((open) => !open)}
             >
-              Answered Ticket
-            </NavLink>
-          </div>
-        )}
+              <span>Exam Management</span>
+              <span
+                className={`nav-chevron ${examOpen ? "open" : ""}`}
+                aria-hidden="true"
+              >
+                ›
+              </span>
+            </button>
+            {examOpen && (
+              <div className="admin-nav-submenu">
+                <NavLink
+                  to="/admin/exam/manage"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Manage Exam
+                </NavLink>
+                <NavLink
+                  to="/admin/exam/questions"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Manage Question
+                </NavLink>
+                <NavLink
+                  to="/admin/exam/results"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Manage Result
+                </NavLink>
+                <NavLink
+                  to="/admin/exam/non-printed"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Non Printed Result
+                </NavLink>
+                <NavLink
+                  to="/admin/exam/printed"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Printed Result
+                </NavLink>
+              </div>
+            )}
+
+            <div className="nav-section">SUPPORT</div>
+            <button
+              type="button"
+              className={`admin-nav-item admin-nav-toggle ${isSupportActive ? "active" : ""}`}
+              aria-expanded={supportOpen}
+              onClick={() => setSupportOpen((open) => !open)}
+            >
+              <span>Support</span>
+              <span
+                className={`nav-chevron ${supportOpen ? "open" : ""}`}
+                aria-hidden="true"
+              >
+                ›
+              </span>
+            </button>
+            {supportOpen && (
+              <div className="admin-nav-submenu">
+                <NavLink
+                  to="/admin/support/non-answered"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Non Answered Ticket
+                </NavLink>
+                <NavLink
+                  to="/admin/support/answered"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Answered Ticket
+                </NavLink>
+              </div>
+            )}
 
             <div className="nav-section">ACCOUNT</div>
             <NavLink
               to="/admin/change-password"
               onClick={onClose}
-              className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
             >
               Change Password
             </NavLink>
             <NavLink
               to="/admin/contact-details"
               onClick={onClose}
-              className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
             >
               Add Contact Details
             </NavLink>
@@ -241,25 +319,67 @@ export default function AdminSidebar({ isOpen, onClose }) {
         ) : (
           <>
             <div className="nav-section">MAIN NAVIGATION</div>
-            <NavLink to="/user/dashboard" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+            <NavLink
+              to="/user/dashboard"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
               Dashboard
             </NavLink>
-            <NavLink to="/user/account" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+            <NavLink
+              to="/user/account"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
               My Account
             </NavLink>
-            <NavLink to="/user/class" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+            <NavLink
+              to="/user/class"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
               My Class
             </NavLink>
-            <NavLink to="/user/network" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+            <NavLink
+              to="/user/network"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
               My Network
             </NavLink>
-            <NavLink to="/user/scholarship" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+            <NavLink
+              to="/user/scholarship"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
               Scholarship
             </NavLink>
-            <NavLink to="/user/change-password" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+            <NavLink
+              to="/user/change-password"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
               Change Password
             </NavLink>
-            <NavLink to="/user/support" onClick={onClose} className={({ isActive }) => `admin-nav-item ${isActive ? "active" : ""}`}>
+            <NavLink
+              to="/user/support"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
               Support
             </NavLink>
           </>

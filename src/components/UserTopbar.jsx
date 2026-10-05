@@ -27,7 +27,7 @@ export default function UserTopbar({ onMenuClick }) {
 
       <div className="admin-topbar-right">
         <div className="breadcrumb">
-          <Link to="/user/dashboard">🏠 Home</Link>
+          <Link to="/user/dashboard">Home</Link>
           <span>›</span>
           <span>{title}</span>
         </div>
