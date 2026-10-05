@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import UserSidebar from "../components/UserSidebar";
 import UserTopbar from "../components/UserTopbar";
 import { getUserExams, getUserExamById, submitUserExam } from "../utils/api";
 
 const questionTypes = [
-  { type: "Fill in the Blank", icon: "✏️", color: "#22c55e" },
-  { type: "True / False", icon: "✓", color: "#f59e0b" },
-  { type: "MCQ", icon: "◉", color: "#3b82f6" },
-  { type: "Written", icon: "✍️", color: "#a855f7" },
+  { type: "Fill in the Blank", icon: "", color: "#22c55e" },
+  { type: "True / False", icon: "", color: "#f59e0b" },
+  { type: "MCQ", icon: "", color: "#3b82f6" },
+  { type: "Written", icon: "", color: "#a855f7" },
 ];
 
 export default function UserExam() {
@@ -21,9 +21,38 @@ export default function UserExam() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
+  // Timer
+  const [timeLeft, setTimeLeft] = useState(0); // seconds
+  const timerRef = useRef(null);
+  const autoSubmitRef = useRef(false);
+
   useEffect(() => {
     loadExams();
+    return () => clearInterval(timerRef.current);
   }, []);
+
+  // Timer countdown
+  useEffect(() => {
+    if (!selectedExam || result) return;
+
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          // Auto submit
+          if (!autoSubmitRef.current) {
+            autoSubmitRef.current = true;
+            handleAutoSubmit();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [selectedExam, result]);
 
   const loadExams = async () => {
     try {
@@ -45,6 +74,9 @@ export default function UserExam() {
       setSelectedExam(data);
       setAnswers({});
       setResult(null);
+      autoSubmitRef.current = false;
+      // Timer set: duration minutes -> seconds
+      setTimeLeft((data.duration || 30) * 60);
     } catch (err) {
       setMessage({ text: err.message, type: "error" });
     } finally {
@@ -54,6 +86,33 @@ export default function UserExam() {
 
   const handleAnswerChange = (qId, value) => {
     setAnswers({ ...answers, [qId]: value });
+  };
+
+  const submitAnswers = async (auto = false) => {
+    try {
+      setSubmitting(true);
+      setMessage({ text: "", type: "" });
+
+      const answersPayload = selectedExam.questions.map((q) => ({
+        questionId: q._id,
+        userAnswer: answers[q._id] || "",
+      }));
+
+      const data = await submitUserExam(selectedExam._id, answersPayload);
+      setResult(data.data);
+      clearInterval(timerRef.current);
+
+      if (auto) {
+        setMessage({
+          text: "Time up! Exam auto-submitted.",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      setMessage({ text: err.message, type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -73,39 +132,34 @@ export default function UserExam() {
         return;
     }
 
-    try {
-      setSubmitting(true);
-      setMessage({ text: "", type: "" });
+    await submitAnswers(false);
+  };
 
-      const answersPayload = selectedExam.questions.map((q) => ({
-        questionId: q._id,
-        userAnswer: answers[q._id] || "",
-      }));
-
-      const data = await submitUserExam(selectedExam._id, answersPayload);
-      setResult(data.data);
-    } catch (err) {
-      setMessage({ text: err.message, type: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+  const handleAutoSubmit = async () => {
+    await submitAnswers(true);
   };
 
   const handleBackToExams = () => {
+    clearInterval(timerRef.current);
     setSelectedExam(null);
     setAnswers({});
     setResult(null);
     setMessage({ text: "", type: "" });
+    setTimeLeft(0);
+    autoSubmitRef.current = false;
   };
 
-  const handleRetry = () => {
-    setAnswers({});
-    setResult(null);
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  // ---------- helpers ----------
-  const isPassed = result && result.status === "Pass";
-  const isPending = result && result.status === "pending";
+  const getTimerColor = () => {
+    if (timeLeft <= 60) return "#ef4444";
+    if (timeLeft <= 300) return "#f59e0b";
+    return "var(--gold)";
+  };
 
   return (
     <div className="admin-layout">
@@ -199,15 +253,15 @@ export default function UserExam() {
                       <h3 className="exam-title">{exam.title}</h3>
                       <p className="exam-subject">{exam.description}</p>
                       <div className="exam-meta">
-                        <span>⏱️ {exam.duration} min</span>
-                        <span>📝 {exam.questionCount} Qs</span>
-                        <span>🎯 {exam.passPercentage}% Pass</span>
+                        <span>Duration {exam.duration} min</span>
+                        <span>{exam.questionCount} Qs</span>
+                        <span>{exam.passPercentage}% Pass</span>
                       </div>
                       <button
                         className="exam-start-btn"
                         onClick={() => startExam(exam._id)}
                       >
-                        Start Exam →
+                        Start Exam
                       </button>
                     </div>
                   ))}
@@ -223,14 +277,45 @@ export default function UserExam() {
                   onClick={handleBackToExams}
                   style={{ padding: "8px 16px", fontSize: "13px" }}
                 >
-                  ← Back
+                  Back
                 </button>
-                <span
-                  style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
+
+                {/* Timer display */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    background:
+                      timeLeft <= 60
+                        ? "rgba(239,68,68,0.15)"
+                        : "rgba(0,0,0,0.4)",
+                    border: `1px solid ${getTimerColor()}`,
+                    borderRadius: "8px",
+                  }}
                 >
-                  {selectedExam.duration} min • {selectedExam.passPercentage}%
-                  Pass
-                </span>
+                  <span
+                    style={{
+                      color: "rgba(255,255,255,0.5)",
+                      fontSize: "11px",
+                      letterSpacing: "1px",
+                    }}
+                  >
+                    TIME LEFT
+                  </span>
+                  <span
+                    style={{
+                      color: getTimerColor(),
+                      fontSize: "20px",
+                      fontWeight: 800,
+                      fontFamily: "monospace",
+                      letterSpacing: "2px",
+                    }}
+                  >
+                    {formatTime(timeLeft)}
+                  </span>
+                </div>
               </div>
 
               <h2
@@ -247,7 +332,7 @@ export default function UserExam() {
                 style={{ color: "rgba(255,255,255,0.6)", marginBottom: "24px" }}
               >
                 {selectedExam.courseName} • {selectedExam.questions.length}{" "}
-                Questions
+                Questions • {selectedExam.passPercentage}% Pass
               </p>
 
               <div className="exam-questions-preview">
@@ -291,14 +376,14 @@ export default function UserExam() {
                           className={`tf-btn ${answers[q._id] === "True" ? "active" : ""}`}
                           onClick={() => handleAnswerChange(q._id, "True")}
                         >
-                          ✓ True
+                          True
                         </button>
                         <button
                           type="button"
                           className={`tf-btn ${answers[q._id] === "False" ? "active" : ""}`}
                           onClick={() => handleAnswerChange(q._id, "False")}
                         >
-                          ✗ False
+                          False
                         </button>
                       </div>
                     )}
@@ -352,7 +437,7 @@ export default function UserExam() {
                     disabled={submitting}
                     style={{ padding: "14px 40px", fontSize: "15px" }}
                   >
-                    {submitting ? "Submitting..." : "📤 Submit Exam"}
+                    {submitting ? "Submitting..." : "Submit Exam"}
                   </button>
                 </div>
               </div>
@@ -372,7 +457,9 @@ export default function UserExam() {
                   margin: "40px auto",
                 }}
               >
-                <div style={{ fontSize: "72px", marginBottom: "16px" }}>✅</div>
+                <div style={{ fontSize: "72px", marginBottom: "16px" }}>
+                  &#10003;
+                </div>
                 <h2
                   style={{
                     color: "var(--gold)",
@@ -409,7 +496,7 @@ export default function UserExam() {
                   onClick={handleBackToExams}
                   style={{ padding: "14px 40px", fontSize: "15px" }}
                 >
-                  ← Back to Exams
+                  Back to Exams
                 </button>
               </div>
             </div>
@@ -627,49 +714,6 @@ export default function UserExam() {
           background: rgba(245,158,11,0.2);
           border-color: #f59e0b;
           color: #f59e0b;
-        }
-
-        .result-summary {
-          text-align: center;
-          padding: 40px 20px;
-          background: linear-gradient(135deg, rgba(139,0,0,0.15), rgba(212,175,55,0.05));
-          border: 1px solid rgba(212,175,55,0.3);
-          border-radius: 12px;
-          margin-bottom: 24px;
-        }
-        .result-icon { font-size: 60px; margin-bottom: 12px; }
-        .result-summary h3 {
-          color: var(--gold);
-          font-family: 'Rajdhani', sans-serif;
-          letter-spacing: 2px;
-          font-size: 22px;
-          margin: 0 0 20px;
-        }
-        .result-score {
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 6px;
-          margin: 16px 0;
-        }
-        .score-value {
-          font-size: 64px;
-          font-weight: 800;
-          color: var(--gold);
-          font-family: 'Rajdhani', sans-serif;
-          line-height: 1;
-        }
-        .score-divider { font-size: 40px; color: rgba(255,255,255,0.3); }
-        .score-total {
-          font-size: 40px;
-          color: rgba(255,255,255,0.5);
-          font-family: 'Rajdhani', sans-serif;
-        }
-        .score-percent {
-          font-size: 18px;
-          color: rgba(255,255,255,0.7);
-          font-weight: 600;
-          letter-spacing: 1px;
         }
       `}</style>
     </div>
