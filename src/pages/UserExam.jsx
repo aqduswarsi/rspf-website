@@ -20,11 +20,22 @@ export default function UserExam() {
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  // Timer
-  const [timeLeft, setTimeLeft] = useState(0); // seconds
+  // Refs
   const timerRef = useRef(null);
   const autoSubmitRef = useRef(false);
+  const answersRef = useRef({});
+  const selectedExamRef = useRef(null);
+
+  // Sync refs with state
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    selectedExamRef.current = selectedExam;
+  }, [selectedExam]);
 
   useEffect(() => {
     loadExams();
@@ -40,10 +51,9 @@ export default function UserExam() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
-          // Auto submit
           if (!autoSubmitRef.current) {
             autoSubmitRef.current = true;
-            handleAutoSubmit();
+            submitAnswers(true);
           }
           return 0;
         }
@@ -75,7 +85,6 @@ export default function UserExam() {
       setAnswers({});
       setResult(null);
       autoSubmitRef.current = false;
-      // Timer set: duration minutes -> seconds
       setTimeLeft((data.duration || 30) * 60);
     } catch (err) {
       setMessage({ text: err.message, type: "error" });
@@ -85,28 +94,29 @@ export default function UserExam() {
   };
 
   const handleAnswerChange = (qId, value) => {
-    setAnswers({ ...answers, [qId]: value });
+    setAnswers((prev) => ({ ...prev, [qId]: value }));
   };
 
   const submitAnswers = async (auto = false) => {
+    const exam = selectedExamRef.current;
+    const currentAnswers = answersRef.current;
+    if (!exam) return;
+
     try {
       setSubmitting(true);
       setMessage({ text: "", type: "" });
-
-      const answersPayload = selectedExam.questions.map((q) => ({
-        questionId: q._id,
-        userAnswer: answers[q._id] || "",
-      }));
-
-      const data = await submitUserExam(selectedExam._id, answersPayload);
-      setResult(data.data);
       clearInterval(timerRef.current);
 
+      const answersPayload = exam.questions.map((q) => ({
+        questionId: q._id,
+        userAnswer: currentAnswers[q._id] || "",
+      }));
+
+      const data = await submitUserExam(exam._id, answersPayload);
+      setResult(data.data);
+
       if (auto) {
-        setMessage({
-          text: "Time up! Exam auto-submitted.",
-          type: "error",
-        });
+        setMessage({ text: "Time up! Exam auto-submitted.", type: "error" });
       }
     } catch (err) {
       setMessage({ text: err.message, type: "error" });
@@ -116,8 +126,12 @@ export default function UserExam() {
   };
 
   const handleSubmit = async () => {
-    const unanswered = selectedExam.questions.filter(
-      (q) => !answers[q._id] || !answers[q._id].toString().trim(),
+    const exam = selectedExamRef.current;
+    const currentAnswers = answersRef.current;
+    if (!exam) return;
+
+    const unanswered = exam.questions.filter(
+      (q) => !currentAnswers[q._id] || !currentAnswers[q._id].toString().trim(),
     );
 
     if (unanswered.length > 0) {
@@ -133,10 +147,6 @@ export default function UserExam() {
     }
 
     await submitAnswers(false);
-  };
-
-  const handleAutoSubmit = async () => {
-    await submitAnswers(true);
   };
 
   const handleBackToExams = () => {
@@ -207,7 +217,6 @@ export default function UserExam() {
               Loading exam...
             </div>
           ) : !selectedExam ? (
-            /* ================= EXAM LIST ================= */
             <div className="users-page">
               <div className="users-header">
                 <h2>Available Exams</h2>
@@ -269,7 +278,6 @@ export default function UserExam() {
               )}
             </div>
           ) : !result ? (
-            /* ================= EXAM VIEW ================= */
             <div className="users-page">
               <div className="users-header">
                 <button
@@ -280,7 +288,6 @@ export default function UserExam() {
                   Back
                 </button>
 
-                {/* Timer display */}
                 <div
                   style={{
                     display: "flex",
@@ -443,7 +450,6 @@ export default function UserExam() {
               </div>
             </div>
           ) : (
-            /* ================= SUBMITTED ================= */
             <div className="users-page">
               <div
                 style={{
