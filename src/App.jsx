@@ -36,6 +36,7 @@ import UserOpenTicket from "./pages/UserOpenTicket";
 import UserSupportTicket from "./pages/UserSupportTicket";
 import PublicRegister from "./pages/PublicRegister";
 import AdminReattemptRequests from "./pages/AdminReattemptRequests";
+import AdminDataEntry from "./pages/AdminDataEntry";
 
 function PublicLayout({ children }) {
   return (
@@ -86,6 +87,9 @@ export default function App() {
           <Route path="users/unverified" element={<UsersUnverified />} />
           <Route path="users/verified" element={<UsersVerified />} />
           <Route path="users/add" element={<AddUser />} />
+
+          {/* Data Entry */}
+          <Route path="data-entry" element={<AdminDataEntry />} />
 
           {/* Content Management */}
           <Route path="events" element={<AddEvents />} />

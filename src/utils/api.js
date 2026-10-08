@@ -1002,3 +1002,50 @@ export async function respondToReattemptRequest(id, status, adminNote) {
   if (!res.ok) throw new Error(data.message || "Failed to respond");
   return data;
 }
+
+// ==================== COURSE PROFORMA ====================
+
+export async function createCourseProforma(data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/course-proforma`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to create record");
+  return result;
+}
+
+export async function getAllCourseProforma() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/course-proforma`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load records");
+  return data;
+}
+
+export async function updateCourseProforma(id, updates) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/course-proforma/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to update record");
+  return data;
+}
+
+export async function deleteCourseProforma(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/course-proforma/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to delete record");
+  return data;
+}

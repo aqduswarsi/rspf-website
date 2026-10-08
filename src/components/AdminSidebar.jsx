@@ -63,6 +63,16 @@ export default function AdminSidebar({ isOpen, onClose }) {
               Dashboard
             </NavLink>
 
+            <NavLink
+              to="/admin/data-entry"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
+              Data Entry
+            </NavLink>
+
             <div className="nav-section">USERS MANAGEMENT</div>
             <button
               type="button"
