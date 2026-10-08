@@ -387,7 +387,10 @@ export async function createCourse(name) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/courses`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ name }),
   });
   const data = await res.json().catch(() => ({}));
@@ -406,7 +409,10 @@ export async function updateCourse(id, name) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/courses/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ name }),
   });
   const data = await res.json().catch(() => ({}));
@@ -431,7 +437,10 @@ export async function createSubject(name, courseId) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/subjects`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ name, courseId }),
   });
   const data = await res.json().catch(() => ({}));
@@ -453,7 +462,10 @@ export async function updateSubject(id, name, courseId) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/subjects/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ name, courseId }),
   });
   const data = await res.json().catch(() => ({}));
@@ -478,7 +490,10 @@ export async function createLesson(title, content, courseId, subjectId) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/lessons`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ title, content, courseId, subjectId }),
   });
   const data = await res.json().catch(() => ({}));
@@ -503,7 +518,10 @@ export async function updateLesson(id, updates) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/lessons/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(updates),
   });
   const data = await res.json().catch(() => ({}));
@@ -528,7 +546,10 @@ export async function createQuestion(data) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/exam/questions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(data),
   });
   const result = await res.json().catch(() => ({}));
@@ -552,11 +573,17 @@ export async function getAllQuestions(filters = {}) {
 
 export async function updateQuestion(id, updates) {
   const token = localStorage.getItem("rpsf_login_token");
-  const res = await fetch(`${API_BASE_URL}/api/education/exam/questions/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(updates),
-  });
+  const res = await fetch(
+    `${API_BASE_URL}/api/education/exam/questions/${id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updates),
+    },
+  );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Failed to update question");
   return data;
@@ -564,10 +591,13 @@ export async function updateQuestion(id, updates) {
 
 export async function deleteQuestion(id) {
   const token = localStorage.getItem("rpsf_login_token");
-  const res = await fetch(`${API_BASE_URL}/api/education/exam/questions/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_BASE_URL}/api/education/exam/questions/${id}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Failed to delete");
   return data;
@@ -576,10 +606,15 @@ export async function deleteQuestion(id) {
 // ==================== EXAM RESULTS ====================
 
 export async function submitExam(data) {
-  const token = localStorage.getItem("rpsf_login_token") || localStorage.getItem("rpsf_user_token");
+  const token =
+    localStorage.getItem("rpsf_login_token") ||
+    localStorage.getItem("rpsf_user_token");
   const res = await fetch(`${API_BASE_URL}/api/education/exam/submit`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(data),
   });
   const result = await res.json().catch(() => ({}));
@@ -594,7 +629,8 @@ export async function getAllResults(filters = {}) {
   if (filters.userId) params.push(`userId=${filters.userId}`);
   if (filters.courseId) params.push(`courseId=${filters.courseId}`);
   if (filters.status) params.push(`status=${filters.status}`);
-  if (filters.isPrinted !== undefined) params.push(`isPrinted=${filters.isPrinted}`);
+  if (filters.isPrinted !== undefined)
+    params.push(`isPrinted=${filters.isPrinted}`);
   if (params.length) url += `?${params.join("&")}`;
 
   const res = await fetch(url, {
@@ -619,7 +655,10 @@ export async function updateResult(id, updates) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/exam/results/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(updates),
   });
   const data = await res.json().catch(() => ({}));
@@ -641,10 +680,15 @@ export async function deleteResult(id) {
 // ==================== SUPPORT TICKETS ====================
 
 export async function createTicket(userId, question) {
-  const token = localStorage.getItem("rpsf_login_token") || localStorage.getItem("rpsf_user_token");
+  const token =
+    localStorage.getItem("rpsf_login_token") ||
+    localStorage.getItem("rpsf_user_token");
   const res = await fetch(`${API_BASE_URL}/api/support/tickets`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ userId, question }),
   });
   const data = await res.json().catch(() => ({}));
@@ -672,7 +716,10 @@ export async function replyTicket(id, answer) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/support/tickets/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ answer }),
   });
   const data = await res.json().catch(() => ({}));
@@ -704,7 +751,10 @@ export async function updateContactDetails(data) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/contact/details`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(data),
   });
   const result = await res.json().catch(() => ({}));
@@ -809,14 +859,16 @@ export async function createUserTicket(question) {
   return data;
 }
 
-
 // ==================== ADMIN EXAMS ====================
 
 export async function createExam(data) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/exams`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(data),
   });
   const result = await res.json().catch(() => ({}));
@@ -853,7 +905,10 @@ export async function updateExam(id, updates) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/exams/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(updates),
   });
   const data = await res.json().catch(() => ({}));
@@ -874,12 +929,76 @@ export async function deleteExam(id) {
 
 export async function attachQuestionsToExam(examId, questionIds) {
   const token = localStorage.getItem("rpsf_login_token");
-  const res = await fetch(`${API_BASE_URL}/api/education/exams/${examId}/questions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ questionIds }),
-  });
+  const res = await fetch(
+    `${API_BASE_URL}/api/education/exams/${examId}/questions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ questionIds }),
+    },
+  );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Failed to attach questions");
+  return data;
+}
+
+export async function submitReattemptRequest(examId, reason) {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(
+    `${API_BASE_URL}/api/user/exams/${examId}/reattempt-request`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ reason }),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to submit request");
+  return data;
+}
+
+export async function getMyReattemptRequests() {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/reattempt-requests`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load requests");
+  return data;
+}
+
+export async function getAdminReattemptRequests(status) {
+  const token = localStorage.getItem("rpsf_login_token");
+  let url = `${API_BASE_URL}/api/admin/reattempt-requests`;
+  if (status) url += `?status=${status}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load requests");
+  return data;
+}
+
+export async function respondToReattemptRequest(id, status, adminNote) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(
+    `${API_BASE_URL}/api/admin/reattempt-requests/${id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status, adminNote }),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to respond");
   return data;
 }

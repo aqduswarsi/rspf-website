@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import UserSidebar from "../components/UserSidebar";
 import UserTopbar from "../components/UserTopbar";
-import { getUserExams, getUserExamById, submitUserExam } from "../utils/api";
+import {
+  getUserExams,
+  getUserExamById,
+  submitUserExam,
+  submitReattemptRequest,
+} from "../utils/api";
 
 const questionTypes = [
-  { type: "Fill in the Blank", icon: "", color: "#22c55e" },
-  { type: "True / False", icon: "", color: "#f59e0b" },
-  { type: "MCQ", icon: "", color: "#3b82f6" },
-  { type: "Written", icon: "", color: "#a855f7" },
+  { type: "Fill in the Blank", color: "#22c55e" },
+  { type: "True / False", color: "#f59e0b" },
+  { type: "MCQ", color: "#3b82f6" },
+  { type: "Written", color: "#a855f7" },
 ];
 
 export default function UserExam() {
@@ -21,14 +26,21 @@ export default function UserExam() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [timeLeft, setTimeLeft] = useState(0);
+  const [violations, setViolations] = useState(0);
+  const [showWarning, setShowWarning] = useState(false);
 
-  // Refs
+  // Reattempt modal
+  const [reattemptExam, setReattemptExam] = useState(null);
+  const [reason, setReason] = useState("");
+  const [reasonSaving, setReasonSaving] = useState(false);
+  const [reasonMessage, setReasonMessage] = useState("");
+
   const timerRef = useRef(null);
   const autoSubmitRef = useRef(false);
   const answersRef = useRef({});
   const selectedExamRef = useRef(null);
+  const violationsRef = useRef(0);
 
-  // Sync refs with state
   useEffect(() => {
     answersRef.current = answers;
   }, [answers]);
@@ -42,7 +54,6 @@ export default function UserExam() {
     return () => clearInterval(timerRef.current);
   }, []);
 
-  // Timer countdown
   useEffect(() => {
     if (!selectedExam || result) return;
 
@@ -62,6 +73,72 @@ export default function UserExam() {
     }, 1000);
 
     return () => clearInterval(timerRef.current);
+  }, [selectedExam, result]);
+
+  // ============ TAB SWITCH DETECTION ============
+  useEffect(() => {
+    if (!selectedExam || result) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && !autoSubmitRef.current) {
+        violationsRef.current += 1;
+        setViolations(violationsRef.current);
+
+        if (violationsRef.current >= 3) {
+          setShowWarning(true);
+          setTimeout(() => {
+            if (!autoSubmitRef.current) {
+              autoSubmitRef.current = true;
+              clearInterval(timerRef.current);
+              setMessage({
+                text: "Exam auto-submitted due to repeated tab switching.",
+                type: "error",
+              });
+              submitAnswers(true);
+            }
+          }, 2000);
+        } else {
+          setShowWarning(true);
+          setTimeout(() => setShowWarning(false), 4000);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [selectedExam, result]);
+
+  // ============ BLOCK COPY / PASTE / RIGHT-CLICK ============
+  useEffect(() => {
+    if (!selectedExam || result) return;
+
+    const prevent = (e) => e.preventDefault();
+
+    const preventKeys = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key.toLowerCase();
+        if (["c", "v", "x", "a", "u", "s", "p"].includes(key)) {
+          e.preventDefault();
+        }
+      }
+      if (e.key === "F12") e.preventDefault();
+    };
+
+    document.addEventListener("copy", prevent);
+    document.addEventListener("cut", prevent);
+    document.addEventListener("paste", prevent);
+    document.addEventListener("contextmenu", prevent);
+    document.addEventListener("keydown", preventKeys);
+
+    return () => {
+      document.removeEventListener("copy", prevent);
+      document.removeEventListener("cut", prevent);
+      document.removeEventListener("paste", prevent);
+      document.removeEventListener("contextmenu", prevent);
+      document.removeEventListener("keydown", preventKeys);
+    };
   }, [selectedExam, result]);
 
   const loadExams = async () => {
@@ -85,9 +162,17 @@ export default function UserExam() {
       setAnswers({});
       setResult(null);
       autoSubmitRef.current = false;
+      violationsRef.current = 0;
+      setViolations(0);
+      setShowWarning(false);
       setTimeLeft((data.duration || 30) * 60);
     } catch (err) {
-      setMessage({ text: err.message, type: "error" });
+      if (err.message.toLowerCase().includes("already attempt")) {
+        const exam = exams.find((e) => e._id === examId);
+        if (exam) openReattemptModal(exam);
+      } else {
+        setMessage({ text: err.message, type: "error" });
+      }
     } finally {
       setLoadingExam(false);
     }
@@ -116,37 +201,13 @@ export default function UserExam() {
       setResult(data.data);
 
       if (auto) {
-        setMessage({ text: "Time up! Exam auto-submitted.", type: "error" });
+        setMessage({ text: "Time is up! Exam auto-submitted.", type: "error" });
       }
     } catch (err) {
       setMessage({ text: err.message, type: "error" });
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleSubmit = async () => {
-    const exam = selectedExamRef.current;
-    const currentAnswers = answersRef.current;
-    if (!exam) return;
-
-    const unanswered = exam.questions.filter(
-      (q) => !currentAnswers[q._id] || !currentAnswers[q._id].toString().trim(),
-    );
-
-    if (unanswered.length > 0) {
-      if (
-        !window.confirm(
-          `${unanswered.length} questions unanswered. Submit anyway?`,
-        )
-      )
-        return;
-    } else {
-      if (!window.confirm("Submit exam? You cannot change answers after this."))
-        return;
-    }
-
-    await submitAnswers(false);
   };
 
   const handleBackToExams = () => {
@@ -157,6 +218,10 @@ export default function UserExam() {
     setMessage({ text: "", type: "" });
     setTimeLeft(0);
     autoSubmitRef.current = false;
+    violationsRef.current = 0;
+    setViolations(0);
+    setShowWarning(false);
+    loadExams();
   };
 
   const formatTime = (secs) => {
@@ -169,6 +234,76 @@ export default function UserExam() {
     if (timeLeft <= 60) return "#ef4444";
     if (timeLeft <= 300) return "#f59e0b";
     return "var(--gold)";
+  };
+
+  // ============ REATTEMPT MODAL ============
+  const openReattemptModal = (exam) => {
+    setReattemptExam(exam);
+    setReason("");
+    setReasonMessage("");
+  };
+
+  const closeReattemptModal = () => {
+    setReattemptExam(null);
+    setReason("");
+    setReasonMessage("");
+  };
+
+  const handleReattemptSubmit = async () => {
+    if (!reason.trim()) {
+      setReasonMessage("Reason is required");
+      return;
+    }
+
+    try {
+      setReasonSaving(true);
+      setReasonMessage("");
+      await submitReattemptRequest(reattemptExam._id, reason.trim());
+      setReasonMessage(
+        "Request submitted successfully. It will be reviewed by the admin.",
+      );
+      setTimeout(() => {
+        closeReattemptModal();
+        loadExams();
+      }, 1500);
+    } catch (err) {
+      setReasonMessage(err.message);
+    } finally {
+      setReasonSaving(false);
+    }
+  };
+
+  const getExamBadge = (exam) => {
+    if (exam.requestStatus === "pending") {
+      return {
+        text: "Reattempt Pending",
+        bg: "rgba(245,158,11,0.15)",
+        color: "#f59e0b",
+        border: "rgba(245,158,11,0.4)",
+      };
+    }
+    if (exam.requestStatus === "approved") {
+      return {
+        text: "Reattempt Approved",
+        bg: "rgba(74,222,128,0.15)",
+        color: "#4ade80",
+        border: "rgba(74,222,128,0.4)",
+      };
+    }
+    if (exam.attempted) {
+      return {
+        text: "Attempted",
+        bg: "rgba(239,68,68,0.15)",
+        color: "#ef4444",
+        border: "rgba(239,68,68,0.4)",
+      };
+    }
+    return {
+      text: "Available",
+      bg: "rgba(74,222,128,0.15)",
+      color: "#4ade80",
+      border: "rgba(74,222,128,0.3)",
+    };
   };
 
   return (
@@ -232,10 +367,9 @@ export default function UserExam() {
                 <div className="question-types-grid">
                   {questionTypes.map((qt) => (
                     <div key={qt.type} className="qtype-card">
-                      <span className="qtype-icon" style={{ color: qt.color }}>
-                        {qt.icon}
+                      <span className="qtype-label" style={{ color: qt.color }}>
+                        {qt.type}
                       </span>
-                      <span className="qtype-label">{qt.type}</span>
                     </div>
                   ))}
                 </div>
@@ -253,27 +387,68 @@ export default function UserExam() {
                 </p>
               ) : (
                 <div className="exam-list-grid">
-                  {exams.map((exam) => (
-                    <div key={exam._id} className="exam-list-card">
-                      <div className="exam-card-top">
-                        <span className="exam-badge">Available</span>
-                        <span className="exam-id">{exam.step}</span>
+                  {exams.map((exam) => {
+                    const badge = getExamBadge(exam);
+                    return (
+                      <div key={exam._id} className="exam-list-card">
+                        <div className="exam-card-top">
+                          <span
+                            className="exam-badge"
+                            style={{
+                              background: badge.bg,
+                              color: badge.color,
+                              border: `1px solid ${badge.border}`,
+                            }}
+                          >
+                            {badge.text}
+                          </span>
+                          <span className="exam-id">{exam.step}</span>
+                        </div>
+                        <h3 className="exam-title">{exam.title}</h3>
+                        <p className="exam-subject">{exam.description}</p>
+                        <div className="exam-meta">
+                          <span>Duration {exam.duration} min</span>
+                          <span>{exam.questionCount} Qs</span>
+                          <span>{exam.passPercentage}% Pass</span>
+                        </div>
+
+                        {exam.canAttempt ? (
+                          <button
+                            className="exam-start-btn"
+                            onClick={() => startExam(exam._id)}
+                          >
+                            Start Exam
+                          </button>
+                        ) : exam.requestStatus === "pending" ? (
+                          <button
+                            className="exam-start-btn"
+                            disabled
+                            style={{ opacity: 0.5, cursor: "not-allowed" }}
+                          >
+                            Request Pending
+                          </button>
+                        ) : exam.requestStatus === "approved" ? (
+                          <button
+                            className="exam-start-btn"
+                            onClick={() => startExam(exam._id)}
+                          >
+                            Start Reattempt
+                          </button>
+                        ) : (
+                          <button
+                            className="exam-start-btn"
+                            onClick={() => openReattemptModal(exam)}
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #78350f, #b45309)",
+                            }}
+                          >
+                            Request Reattempt
+                          </button>
+                        )}
                       </div>
-                      <h3 className="exam-title">{exam.title}</h3>
-                      <p className="exam-subject">{exam.description}</p>
-                      <div className="exam-meta">
-                        <span>Duration {exam.duration} min</span>
-                        <span>{exam.questionCount} Qs</span>
-                        <span>{exam.passPercentage}% Pass</span>
-                      </div>
-                      <button
-                        className="exam-start-btn"
-                        onClick={() => startExam(exam._id)}
-                      >
-                        Start Exam
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -438,14 +613,21 @@ export default function UserExam() {
                 ))}
 
                 <div style={{ textAlign: "center", marginTop: "30px" }}>
-                  <button
-                    className="btn-copy"
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    style={{ padding: "14px 40px", fontSize: "15px" }}
+                  <p
+                    style={{
+                      padding: "14px 30px",
+                      background: "rgba(245,158,11,0.1)",
+                      border: "1px solid rgba(245,158,11,0.4)",
+                      borderRadius: "8px",
+                      color: "#f59e0b",
+                      fontSize: "13px",
+                      display: "inline-block",
+                      margin: 0,
+                    }}
                   >
-                    {submitting ? "Submitting..." : "Submit Exam"}
-                  </button>
+                    The exam will be submitted automatically when the timer
+                    ends. Please wait.
+                  </p>
                 </div>
               </div>
             </div>
@@ -475,7 +657,7 @@ export default function UserExam() {
                     margin: "0 0 12px",
                   }}
                 >
-                  Exam Submitted Successfully!
+                  Exam Submitted Successfully
                 </h2>
                 <p
                   style={{
@@ -485,7 +667,7 @@ export default function UserExam() {
                     margin: "0 0 8px",
                   }}
                 >
-                  Aapka exam successfully submit ho gaya hai.
+                  Your exam has been submitted successfully.
                 </p>
                 <p
                   style={{
@@ -494,7 +676,7 @@ export default function UserExam() {
                     margin: "0 0 30px",
                   }}
                 >
-                  Result admin review ke baad available hoga.
+                  Your result will be available after admin review.
                 </p>
 
                 <button
@@ -505,6 +687,171 @@ export default function UserExam() {
                   Back to Exams
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* ============ REATTEMPT MODAL ============ */}
+          {reattemptExam && (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.85)",
+                zIndex: 1000,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "20px",
+              }}
+              onClick={closeReattemptModal}
+            >
+              <div
+                style={{
+                  background: "var(--dark-bg)",
+                  border: "1px solid rgba(212,175,55,0.4)",
+                  borderRadius: "16px",
+                  padding: "28px",
+                  maxWidth: "540px",
+                  width: "100%",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3
+                  style={{
+                    color: "var(--gold)",
+                    margin: "0 0 8px",
+                    fontFamily: "'Rajdhani', sans-serif",
+                    letterSpacing: "2px",
+                  }}
+                >
+                  Request Reattempt
+                </h3>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: "13px",
+                    margin: "0 0 20px",
+                  }}
+                >
+                  {reattemptExam.title}
+                </p>
+
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: "13px",
+                    lineHeight: 1.6,
+                    marginBottom: "16px",
+                  }}
+                >
+                  You have already attempted this exam. To request another
+                  attempt, please provide a valid reason. Your request will be
+                  reviewed by the admin.
+                </p>
+
+                <label
+                  style={{
+                    color: "var(--gold)",
+                    fontSize: "12px",
+                    letterSpacing: "1px",
+                    display: "block",
+                    marginBottom: "8px",
+                  }}
+                >
+                  REASON
+                </label>
+                <textarea
+                  rows="4"
+                  value={reason}
+                  onChange={(e) => {
+                    setReason(e.target.value);
+                    setReasonMessage("");
+                  }}
+                  placeholder="Enter your reason..."
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    background: "rgba(0,0,0,0.4)",
+                    border: "1px solid rgba(212,175,55,0.3)",
+                    borderRadius: "8px",
+                    color: "white",
+                    fontSize: "14px",
+                    fontFamily: "'Outfit', sans-serif",
+                    outline: "none",
+                    resize: "vertical",
+                    boxSizing: "border-box",
+                  }}
+                />
+
+                {reasonMessage && (
+                  <p
+                    style={{
+                      marginTop: "12px",
+                      fontSize: "13px",
+                      color: reasonMessage.toLowerCase().includes("submitted")
+                        ? "#4ade80"
+                        : "#ef4444",
+                    }}
+                  >
+                    {reasonMessage}
+                  </p>
+                )}
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    marginTop: "20px",
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="table-action"
+                    onClick={closeReattemptModal}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={handleReattemptSubmit}
+                    disabled={reasonSaving}
+                    style={{ padding: "10px 24px" }}
+                  >
+                    {reasonSaving ? "Submitting..." : "Submit Request"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ============ WARNING BANNER ============ */}
+          {showWarning && (
+            <div
+              style={{
+                position: "fixed",
+                top: "20px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background:
+                  violations >= 3
+                    ? "rgba(239,68,68,0.98)"
+                    : "rgba(245,158,11,0.95)",
+                color: "white",
+                padding: "14px 28px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: 700,
+                zIndex: 2000,
+                boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+                maxWidth: "90%",
+                textAlign: "center",
+              }}
+            >
+              {violations >= 3
+                ? "Tab switch limit exceeded. Submitting your exam..."
+                : `Warning ${violations}/3 — Tab switching is not allowed. Your exam will auto-submit after 3 violations.`}
             </div>
           )}
         </main>
@@ -540,14 +887,12 @@ export default function UserExam() {
           border: 1px solid rgba(212,175,55,0.15);
           border-radius: 8px;
           font-size: 13px;
-          color: rgba(255,255,255,0.8);
           transition: all 0.2s;
         }
         .qtype-card:hover {
           border-color: rgba(212,175,55,0.4);
           background: rgba(139,0,0,0.15);
         }
-        .qtype-icon { font-size: 20px; }
         .qtype-label { font-weight: 500; }
 
         .exam-list-grid {
@@ -580,9 +925,6 @@ export default function UserExam() {
           padding: 4px 10px;
           border-radius: 12px;
           font-weight: 700;
-          background: rgba(74,222,128,0.15);
-          color: #4ade80;
-          border: 1px solid rgba(74,222,128,0.3);
         }
         .exam-id {
           color: rgba(255,255,255,0.3);
@@ -627,7 +969,7 @@ export default function UserExam() {
           letter-spacing: 1px;
           transition: all 0.3s;
         }
-        .exam-start-btn:hover {
+        .exam-start-btn:hover:not(:disabled) {
           background: linear-gradient(135deg, var(--gold-dark), var(--gold));
           color: var(--dark-bg);
         }
@@ -673,6 +1015,7 @@ export default function UserExam() {
           margin: 0 0 14px;
           line-height: 1.6;
           font-size: 14px;
+          white-space: pre-wrap;
         }
 
         .q-fill-blank input,

@@ -35,6 +35,7 @@ import UserExamResult from "./pages/UserExamResult";
 import UserOpenTicket from "./pages/UserOpenTicket";
 import UserSupportTicket from "./pages/UserSupportTicket";
 import PublicRegister from "./pages/PublicRegister";
+import AdminReattemptRequests from "./pages/AdminReattemptRequests";
 
 function PublicLayout({ children }) {
   return (
@@ -103,6 +104,10 @@ export default function App() {
           <Route path="exam/results" element={<ManageResult />} />
           <Route path="exam/non-printed" element={<NonPrintedResult />} />
           <Route path="exam/printed" element={<PrintedResult />} />
+          <Route
+            path="exam/reattempt-requests"
+            element={<AdminReattemptRequests />}
+          />
 
           {/* Support */}
           <Route path="support/non-answered" element={<SupportTickets />} />

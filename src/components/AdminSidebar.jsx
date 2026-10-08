@@ -229,6 +229,15 @@ export default function AdminSidebar({ isOpen, onClose }) {
                   Manage Question
                 </NavLink>
                 <NavLink
+                  to="/admin/exam/reattempt-requests"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `admin-nav-item ${isActive ? "active" : ""}`
+                  }
+                >
+                  Reattempt Requests
+                </NavLink>
+                <NavLink
                   to="/admin/exam/results"
                   onClick={onClose}
                   className={({ isActive }) =>
