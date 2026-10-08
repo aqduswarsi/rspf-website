@@ -37,6 +37,7 @@ import UserSupportTicket from "./pages/UserSupportTicket";
 import PublicRegister from "./pages/PublicRegister";
 import AdminReattemptRequests from "./pages/AdminReattemptRequests";
 import AdminDataEntry from "./pages/AdminDataEntry";
+import AdminCertificate from "./pages/AdminCertificate";
 
 function PublicLayout({ children }) {
   return (
@@ -90,6 +91,8 @@ export default function App() {
 
           {/* Data Entry */}
           <Route path="data-entry" element={<AdminDataEntry />} />
+
+          <Route path="certificates" element={<AdminCertificate />} />
 
           {/* Content Management */}
           <Route path="events" element={<AddEvents />} />

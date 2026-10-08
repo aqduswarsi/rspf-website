@@ -1049,3 +1049,48 @@ export async function deleteCourseProforma(id) {
   if (!res.ok) throw new Error(data.message || "Failed to delete record");
   return data;
 }
+
+// ==================== CERTIFICATES ====================
+
+export async function createCertificate(data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/certificates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to create certificate");
+  return result;
+}
+
+export async function getAllCertificates() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/certificates`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load certificates");
+  return data;
+}
+
+export async function getCertificateById(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/certificates/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to load certificate");
+  return data;
+}
+
+export async function deleteCertificate(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/certificates/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to delete certificate");
+  return data;
+}
