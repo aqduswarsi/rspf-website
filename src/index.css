@@ -3568,6 +3568,21 @@ body {
   color: var(--ink);
 }
 
+.public-register-wrapper .public-form .bio-section,
+.public-register-wrapper .public-form .bio-section:hover {
+  background: linear-gradient(135deg, #F2E3DC 0%, #F8F4EE 100%);
+  border-color: #EAD7C7;
+  box-shadow: 0 2px 8px rgba(11, 37, 69, 0.04);
+}
+
+.public-register-wrapper .public-form .bio-form-actions {
+  position: static;
+  bottom: auto;
+  background: transparent;
+  border-top-color: var(--line);
+  box-shadow: none;
+}
+
 .public-register-wrapper .public-register-card h2,
 .public-register-wrapper .public-register-header h1,
 .public-register-wrapper .bio-form-header h2,
@@ -3635,6 +3650,12 @@ body {
   color: #FFFFFF;
   box-shadow: none;
   animation: none;
+}
+
+.public-register-wrapper .public-form .bio-form-actions button.btn-reset {
+  color: var(--navy);
+  border-color: var(--line);
+  background: #FFFFFF;
 }
 
 .public-register-wrapper .public-form .bio-form-actions button.primary::before {
