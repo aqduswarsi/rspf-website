@@ -588,9 +588,11 @@ export default function AdminTrainingCertificate() {
 
 // =========================================================
 //           TRAINING CERTIFICATE PREVIEW
-//   Redesigned to match the original printed certificate:
-//   stamp-pattern border, top-center emblem, arched Hindi +
-//   English heading, bold CERTIFICATE, italic body text,
+//   Colorful redesign of the original certificate:
+//   floral (phool-patti) border, top emblem + faded background
+//   watermark (uploaded image + RPSF Training Centre), round arched
+//   bold Hindi + English heading of equal length, gold CERTIFICATE,
+//   highlighted body text,
 //   Place / Date of Issue below the body, signatures at the bottom.
 // =========================================================
 
@@ -684,11 +686,26 @@ function TrainingCertificatePreview({ cert, onClose }) {
       <div onClick={(e) => e.stopPropagation()}>
         <div className="training-cert-area">
           <div className="training-cert-inner">
-            {/* Stamp-pattern border (4 sides) */}
+            {/* Floral (phool-patti) border */}
             <div className="tc-border tc-border-top" />
             <div className="tc-border tc-border-bottom" />
             <div className="tc-border tc-border-left" />
             <div className="tc-border tc-border-right" />
+            <div className="tc-corner tc-corner-tl" />
+            <div className="tc-corner tc-corner-tr" />
+            <div className="tc-corner tc-corner-bl" />
+            <div className="tc-corner tc-corner-br" />
+
+            {/* Background watermark: uploaded image + RPSF Training Centre */}
+            <div className="tc-watermark">
+              {cert.watermark && (
+                <img src={cert.watermark} alt="" className="tc-watermark-img" />
+              )}
+              <div className="tc-watermark-text">RPSF</div>
+              <div className="tc-watermark-text tc-watermark-sub">
+                TRAINING CENTRE
+              </div>
+            </div>
 
             <div className="tc-content">
               {/* Emblem / logo - top center */}
@@ -698,10 +715,10 @@ function TrainingCertificatePreview({ cert, onClose }) {
                 </div>
               )}
 
-              {/* Arched heading + CERTIFICATE */}
+              {/* Round arched heading (Hindi + English same length) + CERTIFICATE */}
               <svg
                 className="tc-heading"
-                viewBox="0 15 1000 280"
+                viewBox="0 12 1000 345"
                 preserveAspectRatio="xMidYMid meet"
                 role="img"
                 aria-label="Railway Protection Special Force, Training Centre, Rajahi Camp, Gorakhpur - Certificate"
@@ -709,19 +726,25 @@ function TrainingCertificatePreview({ cert, onClose }) {
                 <defs>
                   <path
                     id="tcArcHindi"
-                    d="M 25 313.3 A 560 560 0 0 1 975 313.3"
+                    d="M 7.2 296.6 A 653 653 0 0 1 992.8 296.6"
                   />
                   <path
                     id="tcArcEnglish"
-                    d="M 69 340.8 A 508 508 0 0 1 931 340.8"
+                    d="M 51 334.6 A 595 595 0 0 1 949 334.6"
                   />
+                  <linearGradient id="tcTitle" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#b8325f" />
+                    <stop offset="50%" stopColor="#8b1d45" />
+                    <stop offset="100%" stopColor="#5e1030" />
+                  </linearGradient>
                 </defs>
 
                 <text className="tc-arc-hi">
                   <textPath
                     href="#tcArcHindi"
-                    startOffset="50%"
-                    textAnchor="middle"
+                    startOffset="22.5"
+                    textLength="1072"
+                    lengthAdjust="spacingAndGlyphs"
                   >
                     रेलवे सुरक्षा विशेष बल, प्रशिक्षण केन्द्र, राजही कैम्प,
                     गोरखपुर
@@ -731,8 +754,9 @@ function TrainingCertificatePreview({ cert, onClose }) {
                 <text className="tc-arc-en">
                   <textPath
                     href="#tcArcEnglish"
-                    startOffset="50%"
-                    textAnchor="middle"
+                    startOffset="20.8"
+                    textLength="976"
+                    lengthAdjust="spacingAndGlyphs"
                   >
                     Railway Protection Special Force, Training Centre, Rajahi
                     Camp, Gorakhpur
@@ -741,7 +765,7 @@ function TrainingCertificatePreview({ cert, onClose }) {
 
                 <text
                   x="500"
-                  y="252"
+                  y="275"
                   textAnchor="middle"
                   className="tc-main-title"
                 >
@@ -749,18 +773,51 @@ function TrainingCertificatePreview({ cert, onClose }) {
                 </text>
               </svg>
 
+              <div className="tc-divider" />
+
               {/* Body */}
               <p className="tc-body">
-                This is to certify that {cert.traineeName}
-                {cert.unit ? ` of ${cert.unit}` : ""} has successfully undergone
-                the &ldquo;{cert.trainingCourse}
-                {cert.grade ? ` with grading \u2018${cert.grade}\u2019` : ""}
+                This is to certify that{" "}
+                <span className="tc-hl">{cert.traineeName}</span>
+                {cert.unit ? (
+                  <>
+                    {" "}
+                    of <span className="tc-hl2">{cert.unit}</span>
+                  </>
+                ) : null}{" "}
+                has successfully undergone the &ldquo;
+                <span className="tc-hl">{cert.trainingCourse}</span>
+                {cert.grade ? (
+                  <>
+                    {" "}
+                    with grading &lsquo;
+                    <span className="tc-hl2">{cert.grade}</span>&rsquo;
+                  </>
+                ) : null}
                 &rdquo;
-                {cert.batch ? <> in {renderBatch(cert.batch)}</> : null}
-                {hasDates
-                  ? ` conducted from ${formatDate(cert.fromDate)} to ${formatDate(cert.toDate)}`
-                  : ""}
-                {cert.place ? ` at ${cert.place}` : ""}.
+                {cert.batch ? (
+                  <>
+                    {" "}
+                    in <span className="tc-hl2">{renderBatch(cert.batch)}</span>
+                  </>
+                ) : null}
+                {hasDates ? (
+                  <>
+                    {" "}
+                    conducted from{" "}
+                    <span className="tc-hl2">
+                      {formatDate(cert.fromDate)}
+                    </span>{" "}
+                    to <span className="tc-hl2">{formatDate(cert.toDate)}</span>
+                  </>
+                ) : null}
+                {cert.place ? (
+                  <>
+                    {" "}
+                    at <span className="tc-hl2">{cert.place}</span>
+                  </>
+                ) : null}
+                .
               </p>
 
               {/* Footer: Place + Date of Issue */}
@@ -801,77 +858,171 @@ function TrainingCertificatePreview({ cert, onClose }) {
         }
         .training-cert-inner {
           position: relative;
-          background: white;
           min-height: 700px;
-          padding: 34px 48px 30px;
+          padding: 50px 66px 38px;
           box-sizing: border-box;
           font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
-          color: #262626;
+          color: #2a3a9c;
+          background: radial-gradient(circle at 50% 0%, #ffffff 0%, #fffdf7 60%, #fff6e3 100%);
+        }
+        /* thin gold + navy frame inside the floral border */
+        .training-cert-inner::before {
+          content: "";
+          position: absolute;
+          inset: 30px;
+          border: 2px solid #c62828;
+          border-radius: 6px;
+          pointer-events: none;
+        }
+        .training-cert-inner::after {
+          content: "";
+          position: absolute;
+          inset: 36px;
+          border: 1px solid #f4b400;
+          border-radius: 4px;
+          pointer-events: none;
         }
 
-        /* ---------- Stamp-pattern border ---------- */
+        /* ---------- Floral (phool-patti) border ---------- */
         .tc-border {
           position: absolute;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='1.5' y='1.5' width='13' height='13' rx='3' fill='%23ffffff' stroke='%23333333' stroke-width='2'/%3E%3Crect x='5' y='5' width='6' height='6' rx='1' fill='%23777777'/%3E%3C/svg%3E");
-          background-size: 16px 16px;
+          background-size: auto;
         }
-        .tc-border-top    { top: 0; left: 0; right: 0; height: 16px; background-repeat: space no-repeat; }
-        .tc-border-bottom { bottom: 0; left: 0; right: 0; height: 16px; background-repeat: space no-repeat; }
-        .tc-border-left   { top: 16px; bottom: 16px; left: 0; width: 16px; background-repeat: no-repeat space; }
-        .tc-border-right  { top: 16px; bottom: 16px; right: 0; width: 16px; background-repeat: no-repeat space; }
+        .tc-border-top, .tc-border-bottom {
+          left: 24px; right: 24px; height: 24px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='24'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/svg%3E");
+          background-repeat: space no-repeat;
+        }
+        .tc-border-top { top: 0; }
+        .tc-border-bottom { bottom: 0; transform: scaleY(-1); }
+        .tc-border-left, .tc-border-right {
+          top: 24px; bottom: 24px; width: 24px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='36'%3E%3Cg transform='translate(24 0) rotate(90)'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/g%3E%3C/svg%3E");
+          background-repeat: no-repeat space;
+        }
+        .tc-border-left { left: 0; }
+        .tc-border-right { right: 0; transform: scaleX(-1); }
+        .tc-corner {
+          position: absolute;
+          width: 24px; height: 24px;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='18.20' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='18.20' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='5.80' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='5.80' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12' cy='12' r='4.2' fill='%23c62828'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='%23ffd54f'/%3E%3C/svg%3E") center / 24px 24px no-repeat;
+        }
+        .tc-corner-tl { top: 0; left: 0; }
+        .tc-corner-tr { top: 0; right: 0; }
+        .tc-corner-bl { bottom: 0; left: 0; }
+        .tc-corner-br { bottom: 0; right: 0; }
 
         .tc-content { position: relative; z-index: 1; }
 
-        /* ---------- Emblem ---------- */
-        .tc-logo-wrap { text-align: center; }
-        .tc-logo {
-          height: 110px;
-          max-width: 200px;
+        /* ---------- Background watermark (image + RPSF TRAINING CENTRE) ---------- */
+        .tc-watermark {
+          position: absolute;
+          top: 58%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          opacity: 0.12;
+          z-index: 0;
+          pointer-events: none;
+          text-align: center;
+        }
+        .tc-watermark-img {
+          width: 300px;
+          height: 300px;
           object-fit: contain;
-          filter: grayscale(1) contrast(1.05);
+          margin-bottom: 6px;
+        }
+        .tc-watermark-text {
+          font-family: 'Arial Black', Impact, Arial, sans-serif;
+          font-weight: 900;
+          font-size: 64px;
+          letter-spacing: 8px;
+          line-height: 1;
+          color: #1c3bbf;
+        }
+        .tc-watermark-sub {
+          font-size: 34px;
+          letter-spacing: 6px;
+          margin-top: 6px;
+          color: #c62828;
         }
 
-        /* ---------- Arched heading ---------- */
+        /* ---------- Emblem (top) ---------- */
+        .tc-logo-wrap { text-align: center; }
+        .tc-logo {
+          height: 100px;
+          max-width: 200px;
+          object-fit: contain;
+          filter: drop-shadow(0 2px 4px rgba(31, 58, 110, 0.35));
+        }
+
+        /* ---------- Round arched heading ---------- */
         .tc-heading {
           display: block;
           width: 100%;
           height: auto;
-          margin: 6px 0 0;
+          margin: 2px 0 0;
           overflow: visible;
         }
         .tc-arc-hi {
           font-family: 'Noto Sans Devanagari', 'Mangal', 'Nirmala UI', 'Kohinoor Devanagari', sans-serif;
-          font-size: 38px;
-          font-weight: 700;
-          fill: #262626;
+          font-size: 53px;
+          font-weight: 800;
+          fill: #1c3bbf;
+          stroke: #1c3bbf;
+          stroke-width: 0.9px;
         }
         .tc-arc-en {
           font-family: Arial, Helvetica, sans-serif;
           font-size: 27px;
-          font-weight: 700;
-          fill: #262626;
+          font-weight: 900;
+          fill: #8e24aa;
+          stroke: #8e24aa;
+          stroke-width: 0.6px;
         }
         .tc-main-title {
           font-family: 'Arial Black', Impact, 'Helvetica Neue', Arial, sans-serif;
-          font-size: 56px;
+          font-size: 68px;
           font-weight: 900;
-          letter-spacing: 1px;
-          fill: #4a4a4a;
-          stroke: #111111;
-          stroke-width: 1.6px;
+          letter-spacing: 2px;
+          fill: url(#tcTitle);
+          stroke: #3d0a1f;
+          stroke-width: 1.4px;
           paint-order: stroke fill;
+          filter: drop-shadow(3px 3px 0 #5b5bd6);
+        }
+        .tc-divider {
+          width: 60%;
+          height: 3px;
+          margin: 8px auto 0;
+          border-radius: 3px;
+          background: linear-gradient(90deg, transparent, #1c3bbf, #8e24aa, #1c3bbf, transparent);
         }
 
         /* ---------- Body ---------- */
         .tc-body {
           font-style: italic;
           font-size: 21px;
-          line-height: 1.95;
+          line-height: 1.9;
           text-align: justify;
-          color: #262626;
-          margin: 42px 0 0;
+          color: #2a3a9c;
+          margin: 20px 0 0;
         }
         .tc-body sup { font-size: 0.6em; line-height: 0; }
+        .tc-hl  { color: #a01535; font-weight: 700; }
+        .tc-hl2 { color: #17228a; font-weight: 700; }
+
+        /* ---------- Footer (Place / Date) ---------- */
+        .tc-footer {
+          margin-top: 14px;
+          text-align: left;
+          font-style: italic;
+          font-size: 17px;
+          color: #2a3a9c;
+        }
+        .tc-footer p { margin: 2px 0; }
 
         /* ---------- Signatures ---------- */
         .tc-signatures {
@@ -879,7 +1030,7 @@ function TrainingCertificatePreview({ cert, onClose }) {
           justify-content: space-between;
           align-items: flex-end;
           gap: 30px;
-          margin-top: 60px;
+          margin-top: 34px;
         }
         .tc-sign-slot {
           flex: 1;
@@ -903,19 +1054,10 @@ function TrainingCertificatePreview({ cert, onClose }) {
           font-size: 17px;
           font-weight: 700;
           line-height: 1.3;
-          color: #262626;
           transform: scaleX(0.92);
         }
-
-        /* ---------- Footer ---------- */
-        .tc-footer {
-          margin-top: 22px;
-          text-align: left;
-          font-style: italic;
-          font-size: 17px;
-          color: #262626;
-        }
-        .tc-footer p { margin: 2px 0; }
+        .tc-sign-name { color: #1c3bbf; }
+        .tc-sign-rank { color: #1c3bbf; }
 
         /* ---------- Print ---------- */
         @page { size: A4 landscape; margin: 8mm; }
@@ -928,7 +1070,7 @@ function TrainingCertificatePreview({ cert, onClose }) {
             left: 0;
             width: 100%;
             max-width: none;
-            zoom: 0.9;
+            zoom: 0.8;
           }
           .training-cert-area button { display: none; }
         }
