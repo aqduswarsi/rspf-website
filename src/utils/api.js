@@ -486,7 +486,7 @@ export async function deleteSubject(id) {
 
 // ==================== LESSONS ====================
 
-export async function createLesson(title, content, courseId, subjectId) {
+export async function createLesson(data) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/education/lessons`, {
     method: "POST",
@@ -494,11 +494,11 @@ export async function createLesson(title, content, courseId, subjectId) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ title, content, courseId, subjectId }),
+    body: JSON.stringify(data),
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "Failed to create lesson");
-  return data;
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to create lesson");
+  return result;
 }
 
 export async function getAllLessons(courseId, subjectId) {
@@ -1093,4 +1093,66 @@ export async function deleteCertificate(id) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Failed to delete certificate");
   return data;
+}
+
+// ==================== TRAINING CERTIFICATES ====================
+
+export async function createTrainingCertificate(data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/training-certificates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to create certificate");
+  return result;
+}
+
+export async function getAllTrainingCertificates() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/training-certificates`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load certificates");
+  return data;
+}
+
+export async function getTrainingCertificateById(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/training-certificates/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to load certificate");
+  return data;
+}
+
+export async function deleteTrainingCertificate(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/training-certificates/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to delete certificate");
+  return data;
+}
+
+// ==================== TRANSLATE ====================
+
+export async function translateText(text, target = "hi") {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/translate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ text, target }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Translation failed");
+  return data.translated;
 }

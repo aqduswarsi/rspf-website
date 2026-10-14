@@ -231,14 +231,14 @@ export default function AdminDataEntry() {
   };
 
   const fieldStyle = { display: "grid", gap: "6px" };
-  const labelStyle = { color: "rgba(255,255,255,0.6)", fontSize: "12px" };
+  const labelStyle = { color: "var(--ink)", fontSize: "12px" };
   const inputStyle = {
     width: "100%",
     padding: "10px 12px",
-    background: "rgba(0,0,0,0.4)",
-    border: "1px solid rgba(212,175,55,0.25)",
+    background: "#FFFFFF",
+    border: "1px solid var(--line)",
     borderRadius: "6px",
-    color: "white",
+    color: "var(--ink)",
     fontSize: "13px",
     outline: "none",
     boxSizing: "border-box",
@@ -246,8 +246,8 @@ export default function AdminDataEntry() {
   const sectionStyle = {
     marginBottom: "24px",
     padding: "16px",
-    background: "rgba(255,255,255,0.02)",
-    border: "1px solid rgba(212,175,55,0.15)",
+    background: "#FFFFFF",
+    border: "1px solid var(--line)",
     borderRadius: "10px",
   };
   const sectionTitleStyle = {

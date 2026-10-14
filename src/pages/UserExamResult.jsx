@@ -107,17 +107,17 @@ export default function UserExamResult() {
   const statusColor = (status) => {
     if (status === "Pass")
       return {
-        bg: "rgba(74,222,128,0.15)",
-        color: "#4ade80",
-        border: "#4ade80",
+        bg: "#F0F8F1",
+        color: "#15803D",
+        border: "#A7DDB2",
       };
     if (status === "Fail")
       return {
-        bg: "rgba(239,68,68,0.15)",
-        color: "#ef4444",
-        border: "#ef4444",
+        bg: "#FEF2F2",
+        color: "#B91C1C",
+        border: "#FECACA",
       };
-    return { bg: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "#f59e0b" };
+    return { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A" };
   };
 
   return (
@@ -134,8 +134,8 @@ export default function UserExamResult() {
               style={{
                 marginBottom: "16px",
                 background: "rgba(239,68,68,0.15)",
-                borderColor: "#ef4444",
-                color: "#ef4444",
+                borderColor: "#FECACA",
+                color: "#B91C1C",
               }}
             >
               {message.text}
@@ -145,17 +145,15 @@ export default function UserExamResult() {
           <div className="users-page">
             <div className="users-header">
               <h2>My Exam Results</h2>
-              <span
-                style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
-              >
+              <span style={{ color: "var(--muted)", fontSize: "13px" }}>
                 {results.length} {results.length === 1 ? "record" : "records"}
               </span>
             </div>
 
             <div
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(212,175,55,0.15)",
+                background: "#FFFFFF",
+                border: "1px solid var(--line)",
                 borderRadius: "10px",
                 padding: "20px",
               }}
@@ -163,7 +161,7 @@ export default function UserExamResult() {
               <h3
                 style={{
                   margin: "0 0 16px",
-                  color: "var(--gold)",
+                  color: "var(--navy)",
                   fontSize: "14px",
                   fontFamily: "'Rajdhani', sans-serif",
                   letterSpacing: "1.5px",
@@ -189,7 +187,7 @@ export default function UserExamResult() {
                     style={{
                       padding: "40px",
                       textAlign: "center",
-                      color: "rgba(255,255,255,0.5)",
+                      color: "var(--muted)",
                     }}
                   >
                     No results yet. Exam submit karo pehle.
@@ -322,8 +320,8 @@ export default function UserExamResult() {
             >
               <div
                 style={{
-                  background: "var(--dark-bg)",
-                  border: "1px solid rgba(212,175,55,0.4)",
+                  background: "#FFFFFF",
+                  border: "1px solid var(--line)",
                   borderRadius: "16px",
                   padding: "28px",
                   maxWidth: "800px",
@@ -343,7 +341,7 @@ export default function UserExamResult() {
                 >
                   <h3
                     style={{
-                      color: "var(--gold)",
+                      color: "var(--navy)",
                       margin: 0,
                       fontFamily: "'Rajdhani', sans-serif",
                       letterSpacing: "2px",
@@ -355,8 +353,8 @@ export default function UserExamResult() {
                     onClick={handleCloseDetail}
                     style={{
                       background: "transparent",
-                      border: "1px solid rgba(212,175,55,0.4)",
-                      color: "var(--gold)",
+                      border: "1px solid var(--line)",
+                      color: "var(--navy)",
                       width: "32px",
                       height: "32px",
                       borderRadius: "50%",
@@ -372,8 +370,8 @@ export default function UserExamResult() {
                 <div
                   style={{
                     padding: "16px",
-                    background: "rgba(139,0,0,0.15)",
-                    border: "1px solid rgba(212,175,55,0.25)",
+                    background: "#FCEDE5",
+                    border: "1px solid #F5D1BE",
                     borderRadius: "10px",
                     marginBottom: "20px",
                     display: "grid",
@@ -385,7 +383,7 @@ export default function UserExamResult() {
                   <div>
                     <p
                       style={{
-                        color: "rgba(255,255,255,0.5)",
+                        color: "var(--muted)",
                         margin: "0 0 4px",
                         fontSize: "11px",
                         letterSpacing: "1px",
@@ -393,14 +391,14 @@ export default function UserExamResult() {
                     >
                       COURSE
                     </p>
-                    <p style={{ color: "white", margin: 0 }}>
+                    <p style={{ color: "var(--ink)", margin: 0 }}>
                       {selectedResult.courseId?.name || "—"}
                     </p>
                   </div>
                   <div>
                     <p
                       style={{
-                        color: "rgba(255,255,255,0.5)",
+                        color: "var(--muted)",
                         margin: "0 0 4px",
                         fontSize: "11px",
                         letterSpacing: "1px",
@@ -408,14 +406,14 @@ export default function UserExamResult() {
                     >
                       SUBJECT
                     </p>
-                    <p style={{ color: "white", margin: 0 }}>
+                    <p style={{ color: "var(--ink)", margin: 0 }}>
                       {selectedResult.subjectId?.name || "—"}
                     </p>
                   </div>
                   <div>
                     <p
                       style={{
-                        color: "rgba(255,255,255,0.5)",
+                        color: "var(--muted)",
                         margin: "0 0 4px",
                         fontSize: "11px",
                         letterSpacing: "1px",
@@ -425,7 +423,7 @@ export default function UserExamResult() {
                     </p>
                     <p
                       style={{
-                        color: "var(--gold)",
+                        color: "var(--navy)",
                         margin: 0,
                         fontWeight: 700,
                       }}
@@ -437,7 +435,7 @@ export default function UserExamResult() {
                   <div>
                     <p
                       style={{
-                        color: "rgba(255,255,255,0.5)",
+                        color: "var(--muted)",
                         margin: 0,
                         fontSize: "11px",
                         letterSpacing: "1px",
@@ -459,7 +457,7 @@ export default function UserExamResult() {
 
                 <h4
                   style={{
-                    color: "var(--gold)",
+                    color: "var(--navy)",
                     fontFamily: "'Rajdhani', sans-serif",
                     letterSpacing: "1.5px",
                     marginBottom: "14px",
@@ -477,14 +475,14 @@ export default function UserExamResult() {
                       key={a.questionId}
                       style={{
                         padding: "14px",
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(212,175,55,0.15)",
+                        background: "var(--paper)",
+                        border: "1px solid var(--line)",
                         borderLeft: `3px solid ${
                           isWritten
-                            ? "#f59e0b"
+                            ? "#92400e"
                             : isCorrect
-                              ? "#4ade80"
-                              : "#ef4444"
+                              ? "#15803d"
+                              : "#b91c1c"
                         }`,
                         borderRadius: "8px",
                         marginBottom: "12px",
@@ -499,7 +497,7 @@ export default function UserExamResult() {
                       >
                         <span
                           style={{
-                            color: "var(--gold)",
+                            color: "var(--navy)",
                             fontSize: "12px",
                             fontWeight: 700,
                           }}
@@ -510,10 +508,10 @@ export default function UserExamResult() {
                           style={{
                             fontSize: "11px",
                             color: isWritten
-                              ? "#f59e0b"
+                              ? "#92400e"
                               : isCorrect
-                                ? "#4ade80"
-                                : "#ef4444",
+                                ? "#15803d"
+                                : "#b91c1c",
                           }}
                         >
                           {isWritten
@@ -528,7 +526,7 @@ export default function UserExamResult() {
 
                       <p
                         style={{
-                          color: "rgba(255,255,255,0.85)",
+                          color: "var(--ink)",
                           fontSize: "13px",
                           margin: "6px 0",
                         }}
@@ -540,11 +538,11 @@ export default function UserExamResult() {
                         <p
                           style={{
                             margin: "4px 0",
-                            color: "rgba(255,255,255,0.6)",
+                            color: "var(--muted)",
                           }}
                         >
                           <strong>Your Answer:</strong>{" "}
-                          <span style={{ color: "rgba(255,255,255,0.9)" }}>
+                          <span style={{ color: "var(--ink)" }}>
                             {a.userAnswer || "(Not answered)"}
                           </span>
                         </p>
@@ -552,11 +550,11 @@ export default function UserExamResult() {
                           <p
                             style={{
                               margin: "4px 0",
-                              color: "rgba(255,255,255,0.6)",
+                              color: "var(--muted)",
                             }}
                           >
                             <strong>Correct Answer:</strong>{" "}
-                            <span style={{ color: "#4ade80" }}>
+                            <span style={{ color: "#15803D" }}>
                               {a.correctAnswer}
                             </span>
                           </p>

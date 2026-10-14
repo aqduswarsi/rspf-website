@@ -125,7 +125,7 @@ export default function Login() {
                   name="input"
                   value={form.input}
                   onChange={handleChange}
-                  placeholder="admin@rpsf.com or 9876543210"
+                  placeholder="Enter login ID"
                   autoComplete="username"
                   required
                 />

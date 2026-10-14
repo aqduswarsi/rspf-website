@@ -27,7 +27,9 @@ export default function Navbar() {
           <img src="/rpsf-logo.jpg" alt="RPSF" className="nav-logo" />
           <div className="nav-brand-text">
             <span className="nav-title">RPSF</span>
-            <span className="nav-subtitle">Security Force</span>
+            <span className="nav-subtitle">
+              RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR
+            </span>
           </div>
         </Link>
 
@@ -37,7 +39,9 @@ export default function Navbar() {
               key={link.to}
               to={link.to}
               end={link.to === "/"}
-              className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+              className={({ isActive }) =>
+                `nav-link ${isActive ? "active" : ""}`
+              }
               onClick={closeMenu}
             >
               {link.label}
@@ -69,7 +73,9 @@ export default function Navbar() {
             key={link.to}
             to={link.to}
             end={link.to === "/"}
-            className={({ isActive }) => `mobile-link ${isActive ? "active" : ""}`}
+            className={({ isActive }) =>
+              `mobile-link ${isActive ? "active" : ""}`
+            }
             onClick={closeMenu}
           >
             {link.label}

@@ -82,6 +82,15 @@ export default function AdminSidebar({ isOpen, onClose }) {
             >
               Certificates
             </NavLink>
+            <NavLink
+              to="/admin/training-certificates"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
+              Training Certificate
+            </NavLink>
 
             <div className="nav-section">USERS MANAGEMENT</div>
             <button

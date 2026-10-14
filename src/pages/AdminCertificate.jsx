@@ -95,16 +95,16 @@ export default function AdminCertificate() {
   const inputStyle = {
     width: "100%",
     padding: "10px 12px",
-    background: "rgba(0,0,0,0.4)",
-    border: "1px solid rgba(212,175,55,0.25)",
+    background: "#FFFFFF",
+    border: "1px solid var(--line)",
     borderRadius: "6px",
-    color: "white",
+    color: "var(--ink)",
     fontSize: "13px",
     outline: "none",
     boxSizing: "border-box",
   };
   const labelStyle = {
-    color: "rgba(255,255,255,0.6)",
+    color: "var(--muted)",
     fontSize: "12px",
     marginBottom: "6px",
     display: "block",

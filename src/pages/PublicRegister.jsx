@@ -765,7 +765,8 @@ export default function PublicRegister() {
                 <option>SWR</option>
                 <option>ER</option>
                 <option>ECR</option>
-                <option>ECOR</option>
+                <option>ECoR</option>
+                <option>SCoR</option>
                 <option>Metro</option>
                 <option>RPSF</option>
               </select>

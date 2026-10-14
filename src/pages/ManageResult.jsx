@@ -110,7 +110,7 @@ export default function ManageResult() {
           {loading ? (
             <p style={{ padding: "20px", color: "var(--gold)" }}>Loading...</p>
           ) : results.length === 0 ? (
-            <p style={{ padding: "20px", color: "rgba(255,255,255,0.5)" }}>
+            <p style={{ padding: "20px", color: "var(--muted)" }}>
               No results yet.
             </p>
           ) : (
@@ -160,16 +160,16 @@ export default function ManageResult() {
                                 : "rgba(239,68,68,0.15)",
                           color:
                             r.status === "Pass"
-                              ? "#4ade80"
+                              ? "#15803D"
                               : r.status === "pending"
-                                ? "#f59e0b"
-                                : "#ef4444",
+                                ? "#92400E"
+                                : "#B91C1C",
                           border: `1px solid ${
                             r.status === "Pass"
-                              ? "#4ade80"
+                              ? "#A7DDB2"
                               : r.status === "pending"
-                                ? "#f59e0b"
-                                : "#ef4444"
+                                ? "#FDE68A"
+                                : "#FECACA"
                           }`,
                           whiteSpace: "nowrap",
                         }}
@@ -224,8 +224,8 @@ export default function ManageResult() {
         >
           <div
             style={{
-              background: "var(--dark-bg)",
-              border: "1px solid rgba(212,175,55,0.4)",
+              background: "#FFFFFF",
+              border: "1px solid var(--line)",
               borderRadius: "16px",
               padding: "28px",
               maxWidth: "800px",
@@ -245,7 +245,7 @@ export default function ManageResult() {
             >
               <h3
                 style={{
-                  color: "var(--gold)",
+                  color: "var(--navy)",
                   margin: 0,
                   fontFamily: "'Rajdhani', sans-serif",
                   letterSpacing: "2px",
@@ -257,8 +257,8 @@ export default function ManageResult() {
                 onClick={handleCloseModal}
                 style={{
                   background: "transparent",
-                  border: "1px solid rgba(212,175,55,0.4)",
-                  color: "var(--gold)",
+                  border: "1px solid var(--line)",
+                  color: "var(--navy)",
                   width: "32px",
                   height: "32px",
                   borderRadius: "50%",
@@ -274,8 +274,8 @@ export default function ManageResult() {
             <div
               style={{
                 padding: "16px",
-                background: "rgba(139,0,0,0.15)",
-                border: "1px solid rgba(212,175,55,0.25)",
+                background: "#FCEDE5",
+                border: "1px solid #F5D1BE",
                 borderRadius: "10px",
                 marginBottom: "20px",
                 display: "grid",
@@ -287,7 +287,7 @@ export default function ManageResult() {
               <div>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     margin: "0 0 4px",
                     fontSize: "11px",
                     letterSpacing: "1px",
@@ -295,14 +295,14 @@ export default function ManageResult() {
                 >
                   COURSE
                 </p>
-                <p style={{ color: "white", margin: 0 }}>
+                <p style={{ color: "var(--ink)", margin: 0 }}>
                   {selectedResult.courseId?.name}
                 </p>
               </div>
               <div>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     margin: "0 0 4px",
                     fontSize: "11px",
                     letterSpacing: "1px",
@@ -310,14 +310,14 @@ export default function ManageResult() {
                 >
                   SUBJECT
                 </p>
-                <p style={{ color: "white", margin: 0 }}>
+                <p style={{ color: "var(--ink)", margin: 0 }}>
                   {selectedResult.subjectId?.name}
                 </p>
               </div>
               <div>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     margin: "0 0 4px",
                     fontSize: "11px",
                     letterSpacing: "1px",
@@ -325,7 +325,7 @@ export default function ManageResult() {
                 >
                   SCORE
                 </p>
-                <p style={{ color: "var(--gold)", margin: 0, fontWeight: 700 }}>
+                <p style={{ color: "var(--navy)", margin: 0, fontWeight: 700 }}>
                   {selectedResult.totalScore}/{selectedResult.maxScore} (
                   {selectedResult.percentage}%)
                 </p>
@@ -333,7 +333,7 @@ export default function ManageResult() {
               <div>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     margin: "0 0 4px",
                     fontSize: "11px",
                     letterSpacing: "1px",
@@ -345,10 +345,10 @@ export default function ManageResult() {
                   style={{
                     color:
                       selectedResult.status === "Pass"
-                        ? "#4ade80"
+                        ? "#15803D"
                         : selectedResult.status === "pending"
-                          ? "#f59e0b"
-                          : "#ef4444",
+                          ? "#92400E"
+                          : "#B91C1C",
                     margin: 0,
                     fontWeight: 700,
                   }}
@@ -359,7 +359,7 @@ export default function ManageResult() {
               <div>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     margin: "0 0 4px",
                     fontSize: "11px",
                     letterSpacing: "1px",
@@ -367,7 +367,7 @@ export default function ManageResult() {
                 >
                   WRITTEN PENDING
                 </p>
-                <p style={{ color: "white", margin: 0 }}>
+                <p style={{ color: "var(--ink)", margin: 0 }}>
                   {selectedResult.writtenPending}
                 </p>
               </div>
@@ -376,7 +376,7 @@ export default function ManageResult() {
             {/* Answers */}
             <h4
               style={{
-                color: "var(--gold)",
+                color: "var(--navy)",
                 fontFamily: "'Rajdhani', sans-serif",
                 letterSpacing: "1.5px",
                 marginBottom: "14px",
@@ -390,14 +390,14 @@ export default function ManageResult() {
                 key={a.questionId}
                 style={{
                   padding: "14px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(212,175,55,0.15)",
+                  background: "var(--paper)",
+                  border: "1px solid var(--line)",
                   borderLeft: `3px solid ${
                     a.type === "Written"
-                      ? "#f59e0b"
+                      ? "#92400e"
                       : a.isCorrect
-                        ? "#4ade80"
-                        : "#ef4444"
+                        ? "#15803d"
+                        : "#b91c1c"
                   }`,
                   borderRadius: "8px",
                   marginBottom: "12px",
@@ -412,7 +412,7 @@ export default function ManageResult() {
                 >
                   <span
                     style={{
-                      color: "var(--gold)",
+                      color: "var(--navy)",
                       fontSize: "12px",
                       fontWeight: 700,
                     }}
@@ -424,10 +424,10 @@ export default function ManageResult() {
                       fontSize: "11px",
                       color:
                         a.type === "Written"
-                          ? "#f59e0b"
+                          ? "#92400e"
                           : a.isCorrect
-                            ? "#4ade80"
-                            : "#ef4444",
+                            ? "#15803d"
+                            : "#b91c1c",
                     }}
                   >
                     {a.type === "Written"
@@ -442,7 +442,7 @@ export default function ManageResult() {
 
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.85)",
+                    color: "var(--ink)",
                     fontSize: "13px",
                     margin: "6px 0",
                   }}
@@ -452,10 +452,10 @@ export default function ManageResult() {
 
                 <div style={{ marginTop: "10px", fontSize: "12.5px" }}>
                   <p
-                    style={{ margin: "4px 0", color: "rgba(255,255,255,0.6)" }}
+                    style={{ margin: "4px 0", color: "var(--muted)" }}
                   >
                     <strong>User Answer:</strong>{" "}
-                    <span style={{ color: "rgba(255,255,255,0.9)" }}>
+                    <span style={{ color: "var(--ink)" }}>
                       {a.userAnswer || "(Not answered)"}
                     </span>
                   </p>
@@ -463,11 +463,11 @@ export default function ManageResult() {
                     <p
                       style={{
                         margin: "4px 0",
-                        color: "rgba(255,255,255,0.6)",
+                        color: "var(--muted)",
                       }}
                     >
                       <strong>Correct Answer:</strong>{" "}
-                      <span style={{ color: "#4ade80" }}>
+                      <span style={{ color: "#15803D" }}>
                         {a.correctAnswer}
                       </span>
                     </p>
@@ -484,7 +484,7 @@ export default function ManageResult() {
                       gap: "10px",
                     }}
                   >
-                    <label style={{ color: "var(--gold)", fontSize: "12px" }}>
+                    <label style={{ color: "var(--navy)", fontSize: "12px" }}>
                       Marks:
                     </label>
                     <input
@@ -498,16 +498,16 @@ export default function ManageResult() {
                       style={{
                         width: "80px",
                         padding: "6px 10px",
-                        background: "rgba(0,0,0,0.4)",
-                        border: "1px solid rgba(212,175,55,0.3)",
+                        background: "#FFFFFF",
+                        border: "1px solid var(--line)",
                         borderRadius: "6px",
-                        color: "white",
+                        color: "var(--ink)",
                         fontSize: "13px",
                       }}
                     />
                     <span
                       style={{
-                        color: "rgba(255,255,255,0.5)",
+                        color: "var(--muted)",
                         fontSize: "12px",
                       }}
                     >
@@ -522,7 +522,7 @@ export default function ManageResult() {
               <p
                 style={{
                   marginTop: "16px",
-                  color: message.includes("✅") ? "#4ade80" : "#ef4444",
+                  color: message.includes("✅") ? "#15803D" : "#B91C1C",
                   fontSize: "13px",
                   textAlign: "center",
                 }}

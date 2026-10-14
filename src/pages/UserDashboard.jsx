@@ -156,11 +156,16 @@ export default function UserDashboard() {
           {/* ============ Welcome Banner ============ */}
           <div
             className="referral-block"
-            style={{ textAlign: "center", padding: "30px 20px" }}
+            style={{
+              textAlign: "center",
+              padding: "30px 20px",
+              background: "rgba(11, 37, 69, 0.04)",
+              border: "1px solid rgba(11, 37, 69, 0.08)",
+            }}
           >
             <h2
               style={{
-                color: "var(--gold)",
+                color: "var(--navy)",
                 margin: "0 0 8px",
                 fontFamily: "'Rajdhani', sans-serif",
                 letterSpacing: "2px",
@@ -171,10 +176,14 @@ export default function UserDashboard() {
             </h2>
             <p
               style={{
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--navy)",
                 margin: 0,
                 fontSize: "14px",
                 letterSpacing: "1px",
+                background: "rgba(255, 153, 102, 0.12)",
+                display: "inline-block",
+                padding: "8px 18px",
+                borderRadius: "6px",
               }}
             >
               RPSF MEMBER DASHBOARD
@@ -219,46 +228,46 @@ export default function UserDashboard() {
               <table className="users-table" style={{ minWidth: 0 }}>
                 <tbody>
                   <tr>
-                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                    <td style={{ color: "var(--navy)", fontWeight: 600 }}>
                       Roll Number
                     </td>
-                    <td>{user?.rollNumber || "—"}</td>
+                    <td style={{ color: "var(--ink)" }}>{user?.rollNumber || "—"}</td>
                   </tr>
                   <tr>
-                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                    <td style={{ color: "var(--navy)", fontWeight: 600 }}>
                       Name
                     </td>
-                    <td>{user?.nameEnglish || "—"}</td>
+                    <td style={{ color: "var(--ink)" }}>{user?.nameEnglish || "—"}</td>
                   </tr>
                   <tr>
-                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                    <td style={{ color: "var(--navy)", fontWeight: 600 }}>
                       Rank
                     </td>
-                    <td>{user?.rank || "—"}</td>
+                    <td style={{ color: "var(--ink)" }}>{user?.rank || "—"}</td>
                   </tr>
                   <tr>
-                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                    <td style={{ color: "var(--navy)", fontWeight: 600 }}>
                       Phone
                     </td>
-                    <td>{user?.mobileNumber || "—"}</td>
+                    <td style={{ color: "var(--ink)" }}>{user?.mobileNumber || "—"}</td>
                   </tr>
                   <tr>
-                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                    <td style={{ color: "var(--navy)", fontWeight: 600 }}>
                       Email
                     </td>
-                    <td>{user?.email || "—"}</td>
+                    <td style={{ color: "var(--ink)" }}>{user?.email || "—"}</td>
                   </tr>
                   <tr>
-                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                    <td style={{ color: "var(--navy)", fontWeight: 600 }}>
                       Blood Group
                     </td>
-                    <td>{user?.bloodGroup || "—"}</td>
+                    <td style={{ color: "var(--ink)" }}>{user?.bloodGroup || "—"}</td>
                   </tr>
                   <tr>
-                    <td style={{ color: "var(--gold)", fontWeight: 600 }}>
+                    <td style={{ color: "var(--navy)", fontWeight: 600 }}>
                       Zone
                     </td>
-                    <td>{user?.zone || "—"}</td>
+                    <td style={{ color: "var(--ink)" }}>{user?.zone || "—"}</td>
                   </tr>
                 </tbody>
               </table>
@@ -300,7 +309,7 @@ export default function UserDashboard() {
                       }}
                     >
                       <strong
-                        style={{ color: "var(--gold)", fontSize: "13px" }}
+                        style={{ color: "var(--navy)", fontSize: "13px" }}
                       >
                         {r.examId?.title || "Exam"}
                       </strong>
@@ -318,11 +327,11 @@ export default function UserDashboard() {
                       style={{
                         margin: 0,
                         fontSize: "12px",
-                        color: "rgba(255,255,255,0.7)",
+                        color: "var(--ink)",
                       }}
                     >
                       Score:{" "}
-                      <strong style={{ color: "var(--gold)" }}>
+                      <strong style={{ color: "var(--navy)" }}>
                         {r.totalScore}/{r.maxScore}
                       </strong>{" "}
                       ({r.percentage}%) • {formatDate(r.createdAt)}
@@ -362,7 +371,7 @@ export default function UserDashboard() {
                   >
                     <strong
                       style={{
-                        color: "var(--gold)",
+                        color: "var(--navy)",
                         fontSize: "13px",
                         display: "block",
                         marginBottom: "4px",
@@ -374,7 +383,7 @@ export default function UserDashboard() {
                       style={{
                         margin: 0,
                         fontSize: "12px",
-                        color: "rgba(255,255,255,0.7)",
+                        color: "var(--ink)",
                         lineHeight: 1.6,
                       }}
                     >

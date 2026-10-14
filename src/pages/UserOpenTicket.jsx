@@ -121,29 +121,26 @@ export default function UserOpenTicket() {
                     flex: 1,
                     minWidth: "280px",
                     padding: "14px",
-                    background: "rgba(0,0,0,0.4)",
-                    border: "1px solid rgba(212,175,55,0.25)",
+                    background: "#FFFFFF",
+                    border: "1px solid var(--line)",
                     borderRadius: "10px",
-                    color: "var(--white)",
+                    color: "var(--ink)",
                     fontSize: "14px",
                     fontFamily: "'Outfit', sans-serif",
                     outline: "none",
                     resize: "vertical",
                   }}
                   onFocus={(e) => (e.target.style.borderColor = "var(--gold)")}
-                  onBlur={(e) =>
-                    (e.target.style.borderColor = "rgba(212,175,55,0.25)")
-                  }
+                  onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
                 />
 
                 <button
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background:
-                      "linear-gradient(135deg, var(--maroon), var(--maroon-light))",
-                    color: "var(--gold)",
-                    border: "1px solid rgba(212,175,55,0.4)",
+                    background: "var(--signal)",
+                    color: "#FFFFFF",
+                    border: "1px solid var(--signal)",
                     padding: "14px 32px",
                     borderRadius: "10px",
                     fontSize: "14px",
@@ -157,14 +154,13 @@ export default function UserOpenTicket() {
                   onMouseEnter={(e) => {
                     if (!submitting) {
                       e.currentTarget.style.background =
-                        "linear-gradient(135deg, var(--gold-dark), var(--gold))";
-                      e.currentTarget.style.color = "var(--dark-bg)";
+                        "#C94D0A";
+                      e.currentTarget.style.color = "#FFFFFF";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background =
-                      "linear-gradient(135deg, var(--maroon), var(--maroon-light))";
-                    e.currentTarget.style.color = "var(--gold)";
+                    e.currentTarget.style.background = "var(--signal)";
+                    e.currentTarget.style.color = "#FFFFFF";
                   }}
                 >
                   {submitting ? "Submitting..." : "Submit"}
@@ -189,9 +185,7 @@ export default function UserOpenTicket() {
           <div className="users-page">
             <div className="users-header">
               <h2>Support Questions List</h2>
-              <span
-                style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
-              >
+              <span style={{ color: "var(--muted)", fontSize: "13px" }}>
                 {tickets.length} {tickets.length === 1 ? "ticket" : "tickets"}
               </span>
             </div>
@@ -212,7 +206,7 @@ export default function UserOpenTicket() {
                   style={{
                     padding: "40px",
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                   }}
                 >
                   No tickets yet. Submit your first question above.
@@ -244,11 +238,11 @@ export default function UserOpenTicket() {
                         <td>{t.question}</td>
                         <td>
                           {t.status === "answered" ? (
-                            <span style={{ color: "#4ade80", fontWeight: 600 }}>
+                            <span style={{ color: "#15803D", fontWeight: 600 }}>
                               Answered
                             </span>
                           ) : (
-                            <span style={{ color: "#f59e0b", fontWeight: 600 }}>
+                            <span style={{ color: "#92400E", fontWeight: 600 }}>
                               Pending
                             </span>
                           )}

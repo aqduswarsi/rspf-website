@@ -6,6 +6,7 @@ import {
   deleteQuestion,
   getAllCourses,
   getAllSubjects,
+  translateText,
 } from "../utils/api";
 
 const QUESTION_TYPES = ["MCQ", "Fill in the Blank", "True / False", "Written"];
@@ -13,8 +14,10 @@ const QUESTION_TYPES = ["MCQ", "Fill in the Blank", "True / False", "Written"];
 export default function ManageQuestion() {
   const [form, setForm] = useState({
     question: "",
+    questionHindi: "",
     type: "MCQ",
     options: ["", "", "", ""],
+    optionsHindi: ["", "", "", ""],
     correctAnswer: "",
     courseId: "",
     subjectId: "",
@@ -27,6 +30,8 @@ export default function ManageQuestion() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [translating, setTranslating] = useState(false);
+  const [translatingOptions, setTranslatingOptions] = useState(false);
 
   // Filters
   const [filterCourseId, setFilterCourseId] = useState("");
@@ -90,11 +95,61 @@ export default function ManageQuestion() {
     setForm({ ...form, options: newOptions });
   };
 
+  const handleOptionHindiChange = (index, value) => {
+    const newOptions = [...form.optionsHindi];
+    newOptions[index] = value;
+    setForm({ ...form, optionsHindi: newOptions });
+  };
+
+  const handleTranslateQuestion = async () => {
+    if (!form.question.trim()) {
+      setMessage("English question is required to translate");
+      return;
+    }
+    try {
+      setTranslating(true);
+      setMessage("");
+      const hindi = await translateText(form.question);
+      setForm((prev) => ({ ...prev, questionHindi: hindi }));
+      setMessage("Question translated to Hindi");
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const handleTranslateOptions = async () => {
+    const validOptions = form.options.filter((o) => o.trim());
+    if (validOptions.length < 2) {
+      setMessage("Fill at least 2 English options first");
+      return;
+    }
+    try {
+      setTranslatingOptions(true);
+      setMessage("");
+      const translated = await Promise.all(
+        form.options.map(async (opt) => {
+          if (!opt.trim()) return "";
+          return await translateText(opt);
+        }),
+      );
+      setForm((prev) => ({ ...prev, optionsHindi: translated }));
+      setMessage("Options translated to Hindi");
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setTranslatingOptions(false);
+    }
+  };
+
   const resetForm = () => {
     setForm({
       question: "",
+      questionHindi: "",
       type: "MCQ",
       options: ["", "", "", ""],
+      optionsHindi: ["", "", "", ""],
       correctAnswer: "",
       courseId: "",
       subjectId: "",
@@ -137,8 +192,11 @@ export default function ManageQuestion() {
 
     const payload = {
       question: form.question.trim(),
+      questionHindi: form.questionHindi.trim(),
       type: form.type,
       options: form.type === "MCQ" ? form.options.filter((o) => o.trim()) : [],
+      optionsHindi:
+        form.type === "MCQ" ? form.optionsHindi.filter((o) => o.trim()) : [],
       correctAnswer:
         form.type === "Written"
           ? ""
@@ -172,10 +230,15 @@ export default function ManageQuestion() {
 
     setForm({
       question: q.question || "",
+      questionHindi: q.questionHindi || "",
       type: q.type || "MCQ",
       options:
         q.type === "MCQ" && q.options?.length
           ? [...q.options, "", "", "", ""].slice(0, 4)
+          : ["", "", "", ""],
+      optionsHindi:
+        q.type === "MCQ" && q.optionsHindi?.length
+          ? [...q.optionsHindi, "", "", "", ""].slice(0, 4)
           : ["", "", "", ""],
       correctAnswer: q.correctAnswer || "",
       courseId: cid,
@@ -265,14 +328,42 @@ export default function ManageQuestion() {
             ))}
           </select>
 
-          <label>Enter Your Question</label>
+          <label>Enter Your Question (English)</label>
           <textarea
             name="question"
             rows="3"
             value={form.question}
             onChange={handleChange}
-            placeholder="Enter question"
+            placeholder="Enter question in English"
             required
+          />
+          <div style={{ marginTop: "6px", marginBottom: "8px" }}>
+            <button
+              type="button"
+              onClick={handleTranslateQuestion}
+              disabled={translating || !form.question.trim()}
+              style={{
+                padding: "6px 14px",
+                background: "#FFF7ED",
+                color: "#C2410C",
+                border: "1px solid #FDBA74",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: translating ? "wait" : "pointer",
+              }}
+            >
+              {translating ? "Translating..." : "Auto-Translate to Hindi"}
+            </button>
+          </div>
+
+          <label>Enter Your Question (Hindi)</label>
+          <textarea
+            name="questionHindi"
+            rows="3"
+            value={form.questionHindi}
+            onChange={handleChange}
+            placeholder="हिंदी में प्रश्न लिखें (optional)"
           />
 
           <label>Question Type</label>
@@ -285,7 +376,35 @@ export default function ManageQuestion() {
           {/* MCQ Options */}
           {form.type === "MCQ" && (
             <>
-              <label>Options (Select correct one)</label>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                }}
+              >
+                <label style={{ margin: 0 }}>
+                  Options (Select correct one)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleTranslateOptions}
+                  disabled={translatingOptions}
+                  style={{
+                    padding: "6px 14px",
+                    background: "#FFF7ED",
+                    color: "#C2410C",
+                    border: "1px solid #FDBA74",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: translatingOptions ? "wait" : "pointer",
+                  }}
+                >
+                  {translatingOptions ? "Translating..." : "Translate Options"}
+                </button>
+              </div>
               {form.options.map((opt, idx) => (
                 <div
                   key={idx}
@@ -304,7 +423,14 @@ export default function ManageQuestion() {
                   <input
                     value={opt}
                     onChange={(e) => handleOptionChange(idx, e.target.value)}
-                    placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                    placeholder={`Option ${String.fromCharCode(65 + idx)} (English)`}
+                  />
+                  <input
+                    value={form.optionsHindi[idx] || ""}
+                    onChange={(e) =>
+                      handleOptionHindiChange(idx, e.target.value)
+                    }
+                    placeholder={`Option ${String.fromCharCode(65 + idx)} (Hindi)`}
                   />
                 </div>
               ))}
@@ -501,7 +627,20 @@ export default function ManageQuestion() {
                     <td>{index + 1}</td>
                     <td>{q.courseId?.name || "-"}</td>
                     <td>{q.subjectId?.name || "-"}</td>
-                    <td style={{ maxWidth: "400px" }}>{q.question}</td>
+                    <td style={{ maxWidth: "400px" }}>
+                      <div>{q.question}</div>
+                      {q.questionHindi && (
+                        <div
+                          style={{
+                            color: "rgba(255,255,255,0.5)",
+                            fontSize: "12px",
+                            marginTop: "4px",
+                          }}
+                        >
+                          {q.questionHindi}
+                        </div>
+                      )}
+                    </td>
                     <td>
                       <span
                         style={{

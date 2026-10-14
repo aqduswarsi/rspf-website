@@ -38,6 +38,7 @@ import PublicRegister from "./pages/PublicRegister";
 import AdminReattemptRequests from "./pages/AdminReattemptRequests";
 import AdminDataEntry from "./pages/AdminDataEntry";
 import AdminCertificate from "./pages/AdminCertificate";
+import AdminTrainingCertificate from "./pages/AdminTrainingCertificate";
 
 function PublicLayout({ children }) {
   return (
@@ -91,8 +92,8 @@ export default function App() {
 
           {/* Data Entry */}
           <Route path="data-entry" element={<AdminDataEntry />} />
-
           <Route path="certificates" element={<AdminCertificate />} />
+          <Route path="training-certificates" element={<AdminTrainingCertificate />} />
 
           {/* Content Management */}
           <Route path="events" element={<AddEvents />} />

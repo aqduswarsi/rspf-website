@@ -432,8 +432,8 @@ export default function ManageExam() {
         >
           <div
             style={{
-              background: "var(--dark-bg)",
-              border: "1px solid rgba(212,175,55,0.4)",
+              background: "#FFFFFF",
+              border: "1px solid var(--line)",
               borderRadius: "16px",
               padding: "28px",
               maxWidth: "800px",
@@ -454,7 +454,7 @@ export default function ManageExam() {
               <div>
                 <h3
                   style={{
-                    color: "var(--gold)",
+                    color: "var(--navy)",
                     margin: 0,
                     fontFamily: "'Rajdhani', sans-serif",
                     letterSpacing: "2px",
@@ -465,7 +465,7 @@ export default function ManageExam() {
                 <p
                   style={{
                     margin: "4px 0 0",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     fontSize: "13px",
                   }}
                 >
@@ -476,8 +476,8 @@ export default function ManageExam() {
                 onClick={closeAttachModal}
                 style={{
                   background: "transparent",
-                  border: "1px solid rgba(212,175,55,0.4)",
-                  color: "var(--gold)",
+                  border: "1px solid var(--line)",
+                  color: "var(--navy)",
                   width: "32px",
                   height: "32px",
                   borderRadius: "50%",
@@ -493,8 +493,8 @@ export default function ManageExam() {
             <div
               style={{
                 padding: "12px 16px",
-                background: "rgba(139,0,0,0.15)",
-                border: "1px solid rgba(212,175,55,0.25)",
+                background: "#FCEDE5",
+                border: "1px solid #F5D1BE",
                 borderRadius: "10px",
                 marginBottom: "16px",
                 fontSize: "13px",
@@ -503,21 +503,21 @@ export default function ManageExam() {
               <p
                 style={{
                   margin: "0 0 4px",
-                  color: "rgba(255,255,255,0.5)",
+                  color: "var(--muted)",
                   fontSize: "11px",
                   letterSpacing: "1px",
                 }}
               >
                 SUBJECT (LOCKED)
               </p>
-              <p style={{ margin: 0, color: "var(--gold)", fontWeight: 600 }}>
+              <p style={{ margin: 0, color: "var(--navy)", fontWeight: 600 }}>
                 {attachExam.subjectId?.name}
               </p>
               <p
                 style={{
                   margin: "6px 0 0",
                   fontSize: "11px",
-                  color: "rgba(255,255,255,0.4)",
+                  color: "var(--muted)",
                 }}
               >
                 ⚠️ Sirf isi subject ke questions attach ho sakte hain
@@ -539,7 +539,7 @@ export default function ManageExam() {
                 style={{
                   padding: "40px",
                   textAlign: "center",
-                  color: "rgba(255,255,255,0.5)",
+                  color: "var(--muted)",
                 }}
               >
                 Is subject me koi question nahi mila. Pehle Manage Question se
@@ -549,7 +549,7 @@ export default function ManageExam() {
               <>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     fontSize: "12px",
                     marginBottom: "12px",
                   }}
@@ -569,12 +569,12 @@ export default function ManageExam() {
                         alignItems: "flex-start",
                         padding: "12px 14px",
                         background: checked
-                          ? "rgba(74,222,128,0.08)"
-                          : "rgba(255,255,255,0.03)",
+                          ? "#F0F8F1"
+                          : "#FFFFFF",
                         border: `1px solid ${
                           checked
-                            ? "rgba(74,222,128,0.4)"
-                            : "rgba(212,175,55,0.15)"
+                            ? "#A7DDB2"
+                            : "var(--line)"
                         }`,
                         borderRadius: "8px",
                         marginBottom: "10px",
@@ -591,7 +591,7 @@ export default function ManageExam() {
                         <p
                           style={{
                             margin: "0 0 6px",
-                            color: "rgba(255,255,255,0.9)",
+                            color: "var(--ink)",
                             fontSize: "13.5px",
                             lineHeight: 1.5,
                           }}
@@ -604,8 +604,8 @@ export default function ManageExam() {
                             padding: "2px 8px",
                             borderRadius: "10px",
                             background: "rgba(60,141,188,0.15)",
-                            color: "#60a5fa",
-                            border: "1px solid rgba(60,141,188,0.4)",
+                            color: "#1D4ED8",
+                            border: "1px solid #BFDBFE",
                           }}
                         >
                           {q.type}

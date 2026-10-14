@@ -9,10 +9,10 @@ import {
 } from "../utils/api";
 
 const questionTypes = [
-  { type: "Fill in the Blank", color: "#22c55e" },
-  { type: "True / False", color: "#f59e0b" },
-  { type: "MCQ", color: "#3b82f6" },
-  { type: "Written", color: "#a855f7" },
+  { type: "Fill in the Blank", color: "#15803d" },
+  { type: "True / False", color: "#92400e" },
+  { type: "MCQ", color: "#1d4ed8" },
+  { type: "Written", color: "#7e22ce" },
 ];
 
 export default function UserExam() {
@@ -210,6 +210,34 @@ export default function UserExam() {
     }
   };
 
+    const handleSubmit = async () => {
+      const exam = selectedExamRef.current;
+      const currentAnswers = answersRef.current;
+      if (!exam) return;
+
+      const unanswered = exam.questions.filter(
+        (q) =>
+          !currentAnswers[q._id] || !currentAnswers[q._id].toString().trim(),
+      );
+
+      if (unanswered.length > 0) {
+        if (
+          !window.confirm(
+            `${unanswered.length} questions unanswered. Submit anyway?`,
+          )
+        )
+          return;
+      } else {
+        if (
+          !window.confirm("Submit exam? You cannot change answers after this.")
+        )
+          return;
+      }
+
+      await submitAnswers(false);
+    };
+
+
   const handleBackToExams = () => {
     clearInterval(timerRef.current);
     setSelectedExam(null);
@@ -231,9 +259,9 @@ export default function UserExam() {
   };
 
   const getTimerColor = () => {
-    if (timeLeft <= 60) return "#ef4444";
-    if (timeLeft <= 300) return "#f59e0b";
-    return "var(--gold)";
+    if (timeLeft <= 60) return "#b91c1c";
+    if (timeLeft <= 300) return "#92400e";
+    return "var(--navy)";
   };
 
   // ============ REATTEMPT MODAL ============
@@ -277,32 +305,32 @@ export default function UserExam() {
     if (exam.requestStatus === "pending") {
       return {
         text: "Reattempt Pending",
-        bg: "rgba(245,158,11,0.15)",
-        color: "#f59e0b",
-        border: "rgba(245,158,11,0.4)",
+        bg: "#fffbeb",
+        color: "#92400e",
+        border: "#fde68a",
       };
     }
     if (exam.requestStatus === "approved") {
       return {
         text: "Reattempt Approved",
-        bg: "rgba(74,222,128,0.15)",
-        color: "#4ade80",
-        border: "rgba(74,222,128,0.4)",
+        bg: "#f0f8f1",
+        color: "#15803d",
+        border: "#a7ddb2",
       };
     }
     if (exam.attempted) {
       return {
         text: "Attempted",
-        bg: "rgba(239,68,68,0.15)",
-        color: "#ef4444",
-        border: "rgba(239,68,68,0.4)",
+        bg: "#fef2f2",
+        color: "#b91c1c",
+        border: "#fecaca",
       };
     }
     return {
       text: "Available",
-      bg: "rgba(74,222,128,0.15)",
-      color: "#4ade80",
-      border: "rgba(74,222,128,0.3)",
+      bg: "#f0f8f1",
+      color: "#15803d",
+      border: "#a7ddb2",
     };
   };
 
@@ -323,8 +351,8 @@ export default function UserExam() {
                   message.type === "success"
                     ? "rgba(74,222,128,0.15)"
                     : "rgba(239,68,68,0.15)",
-                borderColor: message.type === "success" ? "#4ade80" : "#ef4444",
-                color: message.type === "success" ? "#4ade80" : "#ef4444",
+                borderColor: message.type === "success" ? "#a7ddb2" : "#fecaca",
+                color: message.type === "success" ? "#15803d" : "#b91c1c",
               }}
             >
               {message.text}
@@ -355,9 +383,7 @@ export default function UserExam() {
             <div className="users-page">
               <div className="users-header">
                 <h2>Available Exams</h2>
-                <span
-                  style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
-                >
+                <span style={{ color: "var(--muted)", fontSize: "13px" }}>
                   {exams.length} exam{exams.length !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -380,7 +406,7 @@ export default function UserExam() {
                   style={{
                     padding: "40px",
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                   }}
                 >
                   No exams available yet.
@@ -423,7 +449,7 @@ export default function UserExam() {
                           <button
                             className="exam-start-btn"
                             disabled
-                            style={{ opacity: 0.5, cursor: "not-allowed" }}
+                            style={{ cursor: "not-allowed" }}
                           >
                             Request Pending
                           </button>
@@ -469,17 +495,14 @@ export default function UserExam() {
                     alignItems: "center",
                     gap: "8px",
                     padding: "8px 16px",
-                    background:
-                      timeLeft <= 60
-                        ? "rgba(239,68,68,0.15)"
-                        : "rgba(0,0,0,0.4)",
+                    background: timeLeft <= 60 ? "#FEF2F2" : "#FFFFFF",
                     border: `1px solid ${getTimerColor()}`,
                     borderRadius: "8px",
                   }}
                 >
                   <span
                     style={{
-                      color: "rgba(255,255,255,0.5)",
+                      color: "var(--muted)",
                       fontSize: "11px",
                       letterSpacing: "1px",
                     }}
@@ -510,9 +533,7 @@ export default function UserExam() {
               >
                 {selectedExam.title}
               </h2>
-              <p
-                style={{ color: "rgba(255,255,255,0.6)", marginBottom: "24px" }}
-              >
+              <p style={{ color: "var(--muted)", marginBottom: "24px" }}>
                 {selectedExam.courseName} • {selectedExam.questions.length}{" "}
                 Questions • {selectedExam.passPercentage}% Pass
               </p>
@@ -597,10 +618,10 @@ export default function UserExam() {
                           style={{
                             width: "100%",
                             padding: "12px",
-                            background: "rgba(0,0,0,0.4)",
-                            border: "1px solid rgba(168,85,247,0.4)",
+                            background: "#FFFFFF",
+                            border: "1px solid var(--line)",
                             borderRadius: "6px",
-                            color: "white",
+                            color: "var(--ink)",
                             fontSize: "14px",
                             fontFamily: "'Outfit', sans-serif",
                             outline: "none",
@@ -615,19 +636,28 @@ export default function UserExam() {
                 <div style={{ textAlign: "center", marginTop: "30px" }}>
                   <p
                     style={{
-                      padding: "14px 30px",
+                      padding: "12px 24px",
                       background: "rgba(245,158,11,0.1)",
                       border: "1px solid rgba(245,158,11,0.4)",
                       borderRadius: "8px",
                       color: "#f59e0b",
                       fontSize: "13px",
                       display: "inline-block",
-                      margin: 0,
+                      margin: "0 0 16px",
                     }}
                   >
-                    The exam will be submitted automatically when the timer
-                    ends. Please wait.
+                    The exam will also auto-submit when the timer ends.
                   </p>
+                  <div>
+                    <button
+                      className="btn-copy"
+                      onClick={handleSubmit}
+                      disabled={submitting}
+                      style={{ padding: "14px 40px", fontSize: "15px" }}
+                    >
+                      {submitting ? "Submitting..." : "Submit Exam"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -661,7 +691,7 @@ export default function UserExam() {
                 </h2>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.7)",
+                    color: "var(--ink)",
                     fontSize: "14px",
                     lineHeight: 1.7,
                     margin: "0 0 8px",
@@ -671,7 +701,7 @@ export default function UserExam() {
                 </p>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     fontSize: "13px",
                     margin: "0 0 30px",
                   }}
@@ -707,8 +737,8 @@ export default function UserExam() {
             >
               <div
                 style={{
-                  background: "var(--dark-bg)",
-                  border: "1px solid rgba(212,175,55,0.4)",
+                  background: "#FFFFFF",
+                  border: "1px solid var(--line)",
                   borderRadius: "16px",
                   padding: "28px",
                   maxWidth: "540px",
@@ -718,7 +748,7 @@ export default function UserExam() {
               >
                 <h3
                   style={{
-                    color: "var(--gold)",
+                    color: "var(--navy)",
                     margin: "0 0 8px",
                     fontFamily: "'Rajdhani', sans-serif",
                     letterSpacing: "2px",
@@ -728,7 +758,7 @@ export default function UserExam() {
                 </h3>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.6)",
+                    color: "var(--muted)",
                     fontSize: "13px",
                     margin: "0 0 20px",
                   }}
@@ -738,7 +768,7 @@ export default function UserExam() {
 
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.7)",
+                    color: "var(--ink)",
                     fontSize: "13px",
                     lineHeight: 1.6,
                     marginBottom: "16px",
@@ -751,7 +781,7 @@ export default function UserExam() {
 
                 <label
                   style={{
-                    color: "var(--gold)",
+                    color: "var(--navy)",
                     fontSize: "12px",
                     letterSpacing: "1px",
                     display: "block",
@@ -771,10 +801,10 @@ export default function UserExam() {
                   style={{
                     width: "100%",
                     padding: "12px",
-                    background: "rgba(0,0,0,0.4)",
-                    border: "1px solid rgba(212,175,55,0.3)",
+                    background: "#FFFFFF",
+                    border: "1px solid var(--line)",
                     borderRadius: "8px",
-                    color: "white",
+                    color: "var(--ink)",
                     fontSize: "14px",
                     fontFamily: "'Outfit', sans-serif",
                     outline: "none",
@@ -789,8 +819,8 @@ export default function UserExam() {
                       marginTop: "12px",
                       fontSize: "13px",
                       color: reasonMessage.toLowerCase().includes("submitted")
-                        ? "#4ade80"
-                        : "#ef4444",
+                        ? "#15803D"
+                        : "#B91C1C",
                     }}
                   >
                     {reasonMessage}
@@ -861,13 +891,13 @@ export default function UserExam() {
         .exam-types-info {
           margin-bottom: 24px;
           padding: 20px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(212,175,55,0.15);
+          background: #FFFFFF;
+          border: 1px solid var(--line);
           border-radius: 12px;
         }
         .exam-types-info h3 {
           margin: 0 0 16px;
-          color: var(--gold);
+          color: var(--navy);
           font-family: 'Rajdhani', sans-serif;
           font-size: 15px;
           letter-spacing: 1.5px;
@@ -883,15 +913,15 @@ export default function UserExam() {
           align-items: center;
           gap: 10px;
           padding: 14px 16px;
-          background: rgba(0,0,0,0.3);
-          border: 1px solid rgba(212,175,55,0.15);
+          background: #FFFFFF;
+          border: 1px solid var(--line);
           border-radius: 8px;
           font-size: 13px;
           transition: all 0.2s;
         }
         .qtype-card:hover {
-          border-color: rgba(212,175,55,0.4);
-          background: rgba(139,0,0,0.15);
+          border-color: var(--signal);
+          background: #FCEDE5;
         }
         .qtype-label { font-weight: 500; }
 
@@ -902,15 +932,14 @@ export default function UserExam() {
         }
         .exam-list-card {
           padding: 20px;
-          background: linear-gradient(135deg, rgba(139,0,0,0.15), rgba(212,175,55,0.04));
-          border: 1px solid rgba(212,175,55,0.25);
+          background: #FFFFFF;
+          border: 1px solid var(--line);
           border-radius: 12px;
           transition: all 0.3s;
         }
         .exam-list-card:hover {
-          transform: translateY(-4px);
-          border-color: rgba(212,175,55,0.5);
-          box-shadow: 0 10px 30px rgba(139,0,0,0.3);
+          border-color: var(--signal);
+          box-shadow: 0 4px 12px rgba(11,37,69,0.08);
         }
         .exam-card-top {
           display: flex;
@@ -927,20 +956,20 @@ export default function UserExam() {
           font-weight: 700;
         }
         .exam-id {
-          color: rgba(255,255,255,0.3);
+          color: var(--muted);
           font-size: 12px;
           font-family: 'Courier New', monospace;
         }
         .exam-title {
           margin: 0 0 6px;
-          color: var(--gold);
+          color: var(--navy);
           font-size: 16px;
           font-family: 'Rajdhani', sans-serif;
           letter-spacing: 1px;
         }
         .exam-subject {
           margin: 0 0 16px;
-          color: rgba(255,255,255,0.5);
+          color: var(--muted);
           font-size: 12px;
         }
         .exam-meta {
@@ -949,19 +978,19 @@ export default function UserExam() {
           flex-wrap: wrap;
           margin-bottom: 16px;
           font-size: 12px;
-          color: rgba(255,255,255,0.6);
+          color: var(--muted);
         }
         .exam-meta span {
           padding: 4px 8px;
-          background: rgba(0,0,0,0.3);
+          background: var(--paper);
           border-radius: 4px;
         }
         .exam-start-btn {
           width: 100%;
           padding: 11px;
-          background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
-          color: var(--gold);
-          border: 1px solid rgba(212,175,55,0.35);
+          background: var(--signal);
+          color: #FFFFFF;
+          border: 1px solid var(--signal);
           border-radius: 8px;
           cursor: pointer;
           font-weight: 700;
@@ -970,21 +999,26 @@ export default function UserExam() {
           transition: all 0.3s;
         }
         .exam-start-btn:hover:not(:disabled) {
-          background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-          color: var(--dark-bg);
+          background: #C94D0A;
+          color: #FFFFFF;
+        }
+        .exam-start-btn:disabled {
+          background: var(--paper);
+          border-color: var(--line);
+          color: var(--muted);
         }
 
         .exam-questions-preview {
           padding: 20px;
-          background: rgba(0,0,0,0.25);
+          background: #FFFFFF;
           border-radius: 12px;
           border: 1px solid rgba(212,175,55,0.15);
         }
         .question-preview-card {
           padding: 18px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(212,175,55,0.12);
-          border-left: 3px solid var(--gold);
+          background: #FFFFFF;
+          border: 1px solid var(--line);
+          border-left: 3px solid var(--signal);
           border-radius: 8px;
           margin-bottom: 14px;
           transition: all 0.3s;
@@ -996,7 +1030,7 @@ export default function UserExam() {
           margin-bottom: 10px;
         }
         .q-num {
-          color: var(--gold);
+          color: var(--navy);
           font-weight: 700;
           font-size: 14px;
           font-family: 'Rajdhani', sans-serif;
@@ -1011,7 +1045,7 @@ export default function UserExam() {
           font-weight: 700;
         }
         .q-text {
-          color: rgba(255,255,255,0.9);
+          color: var(--ink);
           margin: 0 0 14px;
           line-height: 1.6;
           font-size: 14px;
@@ -1023,10 +1057,10 @@ export default function UserExam() {
           width: 100%;
           max-width: 400px;
           padding: 12px 14px;
-          background: rgba(0,0,0,0.4);
-          border: 1px solid rgba(34,197,94,0.4);
+          background: #FFFFFF;
+          border: 1px solid var(--line);
           border-radius: 6px;
-          color: rgba(255,255,255,0.9);
+          color: var(--ink);
           font-size: 14px;
           outline: none;
           transition: all 0.2s;
@@ -1035,20 +1069,20 @@ export default function UserExam() {
         .q-fill-blank textarea { max-width: 100%; resize: vertical; }
         .q-fill-blank input:focus,
         .q-fill-blank textarea:focus {
-          border-color: #22c55e;
-          box-shadow: 0 0 0 3px rgba(34,197,94,0.15);
+          border-color: var(--navy);
+          box-shadow: 0 0 0 3px rgba(11,37,69,0.12);
         }
         .q-fill-blank input::placeholder,
         .q-fill-blank textarea::placeholder {
-          color: rgba(255,255,255,0.3);
+          color: var(--muted);
         }
 
         .q-tf { display: flex; gap: 12px; flex-wrap: wrap; }
         .tf-btn {
           padding: 10px 24px;
-          background: rgba(0,0,0,0.3);
-          border: 1px solid rgba(245,158,11,0.3);
-          color: rgba(255,255,255,0.6);
+          background: #FFFFFF;
+          border: 1px solid var(--line);
+          color: var(--ink);
           border-radius: 8px;
           cursor: pointer;
           font-size: 14px;
@@ -1056,13 +1090,13 @@ export default function UserExam() {
           transition: all 0.2s;
         }
         .tf-btn:hover {
-          border-color: rgba(245,158,11,0.6);
-          color: rgba(245,158,11,0.9);
+          border-color: var(--signal);
+          color: var(--signal);
         }
         .tf-btn.active {
-          background: rgba(245,158,11,0.2);
-          border-color: #f59e0b;
-          color: #f59e0b;
+          background: #FCEDE5;
+          border-color: var(--signal);
+          color: var(--navy);
         }
       `}</style>
     </div>
