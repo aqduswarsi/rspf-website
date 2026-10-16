@@ -39,6 +39,8 @@ import AdminReattemptRequests from "./pages/AdminReattemptRequests";
 import AdminDataEntry from "./pages/AdminDataEntry";
 import AdminCertificate from "./pages/AdminCertificate";
 import AdminTrainingCertificate from "./pages/AdminTrainingCertificate";
+import AdminFeedback from "./pages/AdminFeedback";
+import UserFeedback from "./pages/UserFeedback";
 
 function PublicLayout({ children }) {
   return (
@@ -80,7 +82,8 @@ export default function App() {
           }
         />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<PublicRegister />} /> {/* ← नया */}
+        <Route path="/register" element={<PublicRegister />} />
+
         {/* ============ ADMIN ============ */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
@@ -93,7 +96,11 @@ export default function App() {
           {/* Data Entry */}
           <Route path="data-entry" element={<AdminDataEntry />} />
           <Route path="certificates" element={<AdminCertificate />} />
-          <Route path="training-certificates" element={<AdminTrainingCertificate />} />
+          <Route
+            path="training-certificates"
+            element={<AdminTrainingCertificate />}
+          />
+          <Route path="feedback" element={<AdminFeedback />} />
 
           {/* Content Management */}
           <Route path="events" element={<AddEvents />} />
@@ -128,15 +135,19 @@ export default function App() {
           {/* Catch-all — jo bhi route miss ho */}
           <Route path="*" element={<AdminDashboard />} />
         </Route>
+
         {/* ============ USER ============ */}
         <Route path="/user/dashboard" element={<UserDashboard />} />
+        <Route path="/user/feedback" element={<UserFeedback />} />
         <Route path="/user/account/profile" element={<UserProfileUpdate />} />
         <Route path="/user/account/id-card" element={<UserIdCard />} />
         <Route path="/user/change-password" element={<UserChangePassword />} />
+
         {/* ============ USER COURSE ============ */}
         <Route path="/user/course/read" element={<UserReadCourse />} />
         <Route path="/user/course/exam" element={<UserExam />} />
         <Route path="/user/course/result" element={<UserExamResult />} />
+
         {/* ============ USER SUPPORT ============ */}
         <Route path="/user/support/open" element={<UserOpenTicket />} />
         <Route path="/user/support/tickets" element={<UserSupportTicket />} />

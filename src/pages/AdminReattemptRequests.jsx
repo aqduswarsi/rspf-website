@@ -12,6 +12,9 @@ export default function AdminReattemptRequests() {
   const [adminNote, setAdminNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
 
   useEffect(() => {
     load();
@@ -67,6 +70,34 @@ export default function AdminReattemptRequests() {
     });
   };
 
+  const filteredRequests = requests.filter((request) => {
+    const query = searchText.trim().toLowerCase();
+    if (
+      query &&
+      ![
+        request.userId?.nameEnglish,
+        request.userId?.rollNumber,
+        request.examId?.title,
+        request.reason,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    ) {
+      return false;
+    }
+
+    const requestDate = request.createdAt
+      ? String(request.createdAt).slice(0, 10)
+      : "";
+    if (filterFromDate && (!requestDate || requestDate < filterFromDate))
+      return false;
+    if (filterToDate && (!requestDate || requestDate > filterToDate))
+      return false;
+
+    return true;
+  });
+  const hasActiveFilters = searchText || filterFromDate || filterToDate;
+
   const getStatusStyle = (status) => {
     if (status === "approved")
       return {
@@ -88,7 +119,9 @@ export default function AdminReattemptRequests() {
       <div className="users-header">
         <h2>Reattempt Requests</h2>
         <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
-          {requests.length} {requests.length === 1 ? "request" : "requests"}
+          {filteredRequests.length}
+          {filteredRequests.length !== requests.length && ` of ${requests.length}`}{" "}
+          {filteredRequests.length === 1 ? "request" : "requests"}
         </span>
       </div>
 
@@ -110,6 +143,119 @@ export default function AdminReattemptRequests() {
             {s}
           </button>
         ))}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "12px",
+          alignItems: "end",
+          padding: "16px",
+          marginBottom: "16px",
+          background: "var(--panel, rgba(255,255,255,0.04))",
+          border: "1px solid var(--line)",
+          borderRadius: "10px",
+        }}
+      >
+        <div>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              color: "var(--ink)",
+              fontSize: "12px",
+            }}
+          >
+            Search (User, Roll Number, Exam, Reason)
+          </label>
+          <input
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Type any keyword..."
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              background: "#FFFFFF",
+              border: "1px solid var(--line)",
+              borderRadius: "6px",
+              color: "var(--ink)",
+              fontSize: "13px",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+        <div>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              color: "var(--ink)",
+              fontSize: "12px",
+            }}
+          >
+            Request Date From
+          </label>
+          <input
+            type="date"
+            value={filterFromDate}
+            onChange={(e) => setFilterFromDate(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              background: "#FFFFFF",
+              border: "1px solid var(--line)",
+              borderRadius: "6px",
+              color: "var(--ink)",
+              fontSize: "13px",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+        <div>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              color: "var(--ink)",
+              fontSize: "12px",
+            }}
+          >
+            Request Date To
+          </label>
+          <input
+            type="date"
+            value={filterToDate}
+            onChange={(e) => setFilterToDate(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              background: "#FFFFFF",
+              border: "1px solid var(--line)",
+              borderRadius: "6px",
+              color: "var(--ink)",
+              fontSize: "13px",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="table-action"
+          onClick={() => {
+            setSearchText("");
+            setFilterFromDate("");
+            setFilterToDate("");
+          }}
+          disabled={!hasActiveFilters}
+          style={{
+            padding: "10px 16px",
+            cursor: hasActiveFilters ? "pointer" : "not-allowed",
+            opacity: hasActiveFilters ? 1 : 0.5,
+          }}
+        >
+          Clear Filters
+        </button>
       </div>
 
       {message && !selected && (
@@ -148,6 +294,16 @@ export default function AdminReattemptRequests() {
           >
             No {filter} requests.
           </p>
+        ) : filteredRequests.length === 0 ? (
+          <p
+            style={{
+              padding: "40px",
+              textAlign: "center",
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            No requests match your filters.
+          </p>
         ) : (
           <table className="users-table">
             <thead>
@@ -162,7 +318,7 @@ export default function AdminReattemptRequests() {
               </tr>
             </thead>
             <tbody>
-              {requests.map((r, i) => {
+              {filteredRequests.map((r, i) => {
                 const sc = getStatusStyle(r.status);
                 return (
                   <tr key={r._id}>

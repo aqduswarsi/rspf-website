@@ -28,6 +28,8 @@ export default function UserExam() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [violations, setViolations] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [filterAvailability, setFilterAvailability] = useState("");
 
   // Reattempt modal
   const [reattemptExam, setReattemptExam] = useState(null);
@@ -334,6 +336,29 @@ export default function UserExam() {
     };
   };
 
+  const filteredExams = exams.filter((exam) => {
+    const query = searchText.trim().toLowerCase();
+    if (
+      query &&
+      ![exam.title, exam.description, exam.step]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    ) {
+      return false;
+    }
+    if (
+      filterAvailability &&
+      getExamBadge(exam).text !== filterAvailability
+    ) {
+      return false;
+    }
+    return true;
+  });
+  const examAvailabilities = [
+    ...new Set(exams.map((exam) => getExamBadge(exam).text)),
+  ].sort();
+  const hasActiveFilters = searchText || filterAvailability;
+
   return (
     <div className="admin-layout">
       <UserSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -384,7 +409,9 @@ export default function UserExam() {
               <div className="users-header">
                 <h2>Available Exams</h2>
                 <span style={{ color: "var(--muted)", fontSize: "13px" }}>
-                  {exams.length} exam{exams.length !== 1 ? "s" : ""}
+                  {filteredExams.length}
+                  {filteredExams.length !== exams.length && ` of ${exams.length}`}{" "}
+                  exam{filteredExams.length !== 1 ? "s" : ""}
                 </span>
               </div>
 
@@ -401,6 +428,56 @@ export default function UserExam() {
                 </div>
               </div>
 
+              {exams.length > 0 && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: "12px",
+                    marginBottom: "18px",
+                  }}
+                >
+                  <input
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    placeholder="Search exam, description, step..."
+                    aria-label="Search available exams"
+                    className="search-input"
+                    style={{ width: "100%", boxSizing: "border-box" }}
+                  />
+                  <select
+                    value={filterAvailability}
+                    onChange={(e) => setFilterAvailability(e.target.value)}
+                    aria-label="Filter exams by availability"
+                    className="search-input"
+                  >
+                    <option value="">All Exam Statuses</option>
+                    {examAvailabilities.map((availability) => (
+                      <option key={availability} value={availability}>
+                        {availability}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="table-action"
+                    onClick={() => {
+                      setSearchText("");
+                      setFilterAvailability("");
+                    }}
+                    disabled={!hasActiveFilters}
+                    style={{
+                      padding: "10px 16px",
+                      cursor: hasActiveFilters ? "pointer" : "not-allowed",
+                      opacity: hasActiveFilters ? 1 : 0.5,
+                    }}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              )}
+
               {exams.length === 0 ? (
                 <p
                   style={{
@@ -411,9 +488,19 @@ export default function UserExam() {
                 >
                   No exams available yet.
                 </p>
+              ) : filteredExams.length === 0 ? (
+                <p
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    color: "var(--muted)",
+                  }}
+                >
+                  No exams match your filters.
+                </p>
               ) : (
                 <div className="exam-list-grid">
-                  {exams.map((exam) => {
+                  {filteredExams.map((exam) => {
                     const badge = getExamBadge(exam);
                     return (
                       <div key={exam._id} className="exam-list-card">

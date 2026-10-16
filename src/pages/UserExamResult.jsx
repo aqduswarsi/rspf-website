@@ -10,6 +10,10 @@ export default function UserExamResult() {
   const [selectedResult, setSelectedResult] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [searchText, setSearchText] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
 
   useEffect(() => {
     loadResults();
@@ -120,6 +124,42 @@ export default function UserExamResult() {
     return { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A" };
   };
 
+  const filteredResults = results.filter((result) => {
+    const query = searchText.trim().toLowerCase();
+    if (
+      query &&
+      [
+        result.examId?.title,
+        result.courseId?.name,
+        result.subjectId?.name,
+        result.status,
+      ]
+        .filter(Boolean)
+        .every((value) => !String(value).toLowerCase().includes(query))
+    ) {
+      return false;
+    }
+
+    if (
+      filterStatus &&
+      (result.status || "").toLowerCase() !== filterStatus.toLowerCase()
+    ) {
+      return false;
+    }
+
+    const resultDate = result.submittedAt || result.createdAt;
+    const date = resultDate ? String(resultDate).slice(0, 10) : "";
+    if (filterFromDate && (!date || date < filterFromDate)) return false;
+    if (filterToDate && (!date || date > filterToDate)) return false;
+
+    return true;
+  });
+  const resultStatuses = [
+    ...new Set(results.map((result) => result.status).filter(Boolean)),
+  ].sort();
+  const hasActiveFilters =
+    searchText || filterStatus || filterFromDate || filterToDate;
+
   return (
     <div className="admin-layout">
       <UserSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -146,7 +186,10 @@ export default function UserExamResult() {
             <div className="users-header">
               <h2>My Exam Results</h2>
               <span style={{ color: "var(--muted)", fontSize: "13px" }}>
-                {results.length} {results.length === 1 ? "record" : "records"}
+                {filteredResults.length}
+                {filteredResults.length !== results.length &&
+                  ` of ${results.length}`}{" "}
+                {filteredResults.length === 1 ? "record" : "records"}
               </span>
             </div>
 
@@ -171,6 +214,70 @@ export default function UserExamResult() {
                 Result Records
               </h3>
 
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "12px",
+                  alignItems: "end",
+                  marginBottom: "16px",
+                }}
+              >
+                <input
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="Search exam, course, subject..."
+                  aria-label="Search exam results"
+                  className="search-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  aria-label="Filter results by status"
+                  className="search-input"
+                >
+                  <option value="">All Statuses</option>
+                  {resultStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="date"
+                  value={filterFromDate}
+                  onChange={(e) => setFilterFromDate(e.target.value)}
+                  aria-label="Results submitted from"
+                  className="search-input"
+                />
+                <input
+                  type="date"
+                  value={filterToDate}
+                  onChange={(e) => setFilterToDate(e.target.value)}
+                  aria-label="Results submitted to"
+                  className="search-input"
+                />
+                <button
+                  type="button"
+                  className="table-action"
+                  onClick={() => {
+                    setSearchText("");
+                    setFilterStatus("");
+                    setFilterFromDate("");
+                    setFilterToDate("");
+                  }}
+                  disabled={!hasActiveFilters}
+                  style={{
+                    padding: "10px 16px",
+                    cursor: hasActiveFilters ? "pointer" : "not-allowed",
+                    opacity: hasActiveFilters ? 1 : 0.5,
+                  }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+
               <div className="table-wrap">
                 {loading ? (
                   <p
@@ -192,6 +299,16 @@ export default function UserExamResult() {
                   >
                     No results yet. Exam submit karo pehle.
                   </p>
+                ) : filteredResults.length === 0 ? (
+                  <p
+                    style={{
+                      padding: "40px",
+                      textAlign: "center",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    No results match your filters.
+                  </p>
                 ) : (
                   <table className="users-table">
                     <thead>
@@ -208,7 +325,7 @@ export default function UserExamResult() {
                       </tr>
                     </thead>
                     <tbody>
-                      {results.map((r, i) => {
+                      {filteredResults.map((r, i) => {
                         const sc = statusColor(r.status);
                         return (
                           <tr key={r._id}>

@@ -11,6 +11,10 @@ export default function UserOpenTicket() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [searchText, setSearchText] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +76,35 @@ export default function UserOpenTicket() {
     if (!id) return "-";
     return "TKT#" + id.slice(-3).toUpperCase();
   };
+
+  const filteredTickets = tickets.filter((ticket) => {
+    const query = searchText.trim().toLowerCase();
+    if (
+      query &&
+      ![
+        getTicketNo(ticket._id),
+        ticket.question,
+        ticket.answer,
+        ticket.status,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    ) {
+      return false;
+    }
+
+    if (filterStatus && ticket.status !== filterStatus) return false;
+    const ticketDate = ticket.createdAt
+      ? String(ticket.createdAt).slice(0, 10)
+      : "";
+    if (filterFromDate && (!ticketDate || ticketDate < filterFromDate))
+      return false;
+    if (filterToDate && (!ticketDate || ticketDate > filterToDate)) return false;
+
+    return true;
+  });
+  const hasActiveFilters =
+    searchText || filterStatus || filterFromDate || filterToDate;
 
   return (
     <div className="admin-layout">
@@ -186,9 +219,76 @@ export default function UserOpenTicket() {
             <div className="users-header">
               <h2>Support Questions List</h2>
               <span style={{ color: "var(--muted)", fontSize: "13px" }}>
-                {tickets.length} {tickets.length === 1 ? "ticket" : "tickets"}
+                {filteredTickets.length}
+                {filteredTickets.length !== tickets.length &&
+                  ` of ${tickets.length}`}{" "}
+                {filteredTickets.length === 1 ? "ticket" : "tickets"}
               </span>
             </div>
+
+            {tickets.length > 0 && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "12px",
+                  alignItems: "end",
+                  marginBottom: "16px",
+                }}
+              >
+                <input
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="Search ticket, question, reply..."
+                  aria-label="Search support tickets"
+                  className="search-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  aria-label="Filter tickets by status"
+                  className="search-input"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="answered">Answered</option>
+                  <option value="pending">Pending</option>
+                </select>
+                <input
+                  type="date"
+                  value={filterFromDate}
+                  onChange={(e) => setFilterFromDate(e.target.value)}
+                  aria-label="Tickets from date"
+                  className="search-input"
+                />
+                <input
+                  type="date"
+                  value={filterToDate}
+                  onChange={(e) => setFilterToDate(e.target.value)}
+                  aria-label="Tickets to date"
+                  className="search-input"
+                />
+                <button
+                  type="button"
+                  className="table-action"
+                  onClick={() => {
+                    setSearchText("");
+                    setFilterStatus("");
+                    setFilterFromDate("");
+                    setFilterToDate("");
+                  }}
+                  disabled={!hasActiveFilters}
+                  style={{
+                    padding: "10px 16px",
+                    cursor: hasActiveFilters ? "pointer" : "not-allowed",
+                    opacity: hasActiveFilters ? 1 : 0.5,
+                  }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
 
             <div className="table-wrap">
               {loading ? (
@@ -211,6 +311,16 @@ export default function UserOpenTicket() {
                 >
                   No tickets yet. Submit your first question above.
                 </p>
+              ) : filteredTickets.length === 0 ? (
+                <p
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    color: "var(--muted)",
+                  }}
+                >
+                  No tickets match your filters.
+                </p>
               ) : (
                 <table className="users-table">
                   <thead>
@@ -223,7 +333,7 @@ export default function UserOpenTicket() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tickets.map((t, i) => (
+                    {filteredTickets.map((t, i) => (
                       <tr key={t._id}>
                         <td>{i + 1}</td>
                         <td

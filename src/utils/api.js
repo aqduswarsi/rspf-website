@@ -1009,7 +1009,10 @@ export async function createCourseProforma(data) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/course-proforma`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(data),
   });
   const result = await res.json().catch(() => ({}));
@@ -1031,7 +1034,10 @@ export async function updateCourseProforma(id, updates) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/course-proforma/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(updates),
   });
   const data = await res.json().catch(() => ({}));
@@ -1056,11 +1062,15 @@ export async function createCertificate(data) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/certificates`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(data),
   });
   const result = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(result.message || "Failed to create certificate");
+  if (!res.ok)
+    throw new Error(result.message || "Failed to create certificate");
   return result;
 }
 
@@ -1101,11 +1111,15 @@ export async function createTrainingCertificate(data) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/training-certificates`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(data),
   });
   const result = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(result.message || "Failed to create certificate");
+  if (!res.ok)
+    throw new Error(result.message || "Failed to create certificate");
   return result;
 }
 
@@ -1155,4 +1169,145 @@ export async function translateText(text, target = "hi") {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Translation failed");
   return data.translated;
+}
+
+export async function bulkCreateTrainingCertificates(certificates) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/training-certificates/bulk`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ certificates }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Bulk create failed");
+  return data;
+}
+
+// ==================== FEEDBACK ====================
+
+export async function createFeedback(data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to submit feedback");
+  return result;
+}
+
+export async function getAllFeedback() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/feedback`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load feedback");
+  return data;
+}
+
+export async function getFeedbackById(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/feedback/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to load feedback");
+  return data;
+}
+
+export async function deleteFeedback(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/feedback/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to delete feedback");
+  return data;
+}
+
+export async function updateFeedbackAdmin(id, data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/feedback/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to update feedback");
+  return result;
+}
+
+// ==================== USER FEEDBACK ====================
+
+export async function createUserFeedback(data) {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to submit feedback");
+  return result;
+}
+
+export async function getMyFeedback() {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/feedback`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load feedback");
+  return data;
+}
+
+export async function updateMyFeedback(id, data) {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/feedback/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to update feedback");
+  return result;
+}
+
+export async function deleteMyFeedback(id) {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/feedback/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to delete feedback");
+  return data;
+}
+
+export async function getAdminDashboard() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/admin/dashboard`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to load dashboard");
+  return data;
 }

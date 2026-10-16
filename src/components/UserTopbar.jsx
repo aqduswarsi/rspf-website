@@ -6,6 +6,7 @@ export default function UserTopbar({ onMenuClick }) {
 
   const titleMap = {
     "/user/dashboard": "Dashboard",
+    "/user/feedback": "Training Feedback",
     "/user/profile": "My Profile",
     "/user/news": "News",
     "/user/events": "Events",

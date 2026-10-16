@@ -21,6 +21,11 @@ export default function AdminCertificate() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [previewCert, setPreviewCert] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filterCourse, setFilterCourse] = useState("");
+  const [filterQuiz, setFilterQuiz] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
 
   useEffect(() => {
     load();
@@ -90,6 +95,46 @@ export default function AdminCertificate() {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const filteredCerts = certs.filter((cert) => {
+    const query = searchText.trim().toLowerCase();
+    if (
+      query &&
+      ![cert.name, cert.certificateId, cert.quizName, cert.courseName]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    ) {
+      return false;
+    }
+
+    if (filterCourse && cert.courseName !== filterCourse) return false;
+    if (filterQuiz && cert.quizName !== filterQuiz) return false;
+
+    const completedDate = cert.completedOn
+      ? String(cert.completedOn).slice(0, 10)
+      : "";
+    if (filterFromDate && (!completedDate || completedDate < filterFromDate))
+      return false;
+    if (filterToDate && (!completedDate || completedDate > filterToDate))
+      return false;
+
+    return true;
+  });
+  const certificateCourses = [
+    ...new Set(certs.map((cert) => cert.courseName).filter(Boolean)),
+  ].sort();
+  const certificateQuizzes = [
+    ...new Set(certs.map((cert) => cert.quizName).filter(Boolean)),
+  ].sort();
+  const hasActiveFilters =
+    searchText || filterCourse || filterQuiz || filterFromDate || filterToDate;
+  const clearFilters = () => {
+    setSearchText("");
+    setFilterCourse("");
+    setFilterQuiz("");
+    setFilterFromDate("");
+    setFilterToDate("");
   };
 
   const inputStyle = {
@@ -239,7 +284,91 @@ export default function AdminCertificate() {
       {/* Table */}
       <div className="education-panel">
         <div className="panel-heading">
-          <h3>All Certificates ({certs.length})</h3>
+          <h3>
+            All Certificates ({filteredCerts.length}
+            {filteredCerts.length !== certs.length && ` of ${certs.length}`})
+          </h3>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "12px",
+            alignItems: "end",
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--line)",
+          }}
+        >
+          <div>
+            <label style={labelStyle}>Search (Name, Certificate ID, Course)</label>
+            <input
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Type any keyword..."
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Course</label>
+            <select
+              value={filterCourse}
+              onChange={(e) => setFilterCourse(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">All Courses</option>
+              {certificateCourses.map((course) => (
+                <option key={course} value={course}>
+                  {course}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Quiz</label>
+            <select
+              value={filterQuiz}
+              onChange={(e) => setFilterQuiz(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">All Quizzes</option>
+              {certificateQuizzes.map((quiz) => (
+                <option key={quiz} value={quiz}>
+                  {quiz}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Completed From</label>
+            <input
+              type="date"
+              value={filterFromDate}
+              onChange={(e) => setFilterFromDate(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Completed To</label>
+            <input
+              type="date"
+              value={filterToDate}
+              onChange={(e) => setFilterToDate(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <button
+            type="button"
+            className="table-action"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            style={{
+              padding: "10px 16px",
+              cursor: hasActiveFilters ? "pointer" : "not-allowed",
+              opacity: hasActiveFilters ? 1 : 0.5,
+            }}
+          >
+            Clear Filters
+          </button>
         </div>
         <div className="education-table-wrap">
           {loading ? (
@@ -247,6 +376,10 @@ export default function AdminCertificate() {
           ) : certs.length === 0 ? (
             <p style={{ padding: "20px", color: "rgba(255,255,255,0.5)" }}>
               No certificates found.
+            </p>
+          ) : filteredCerts.length === 0 ? (
+            <p style={{ padding: "20px", color: "rgba(255,255,255,0.5)" }}>
+              No certificates match your filters.
             </p>
           ) : (
             <table className="education-table">
@@ -263,7 +396,7 @@ export default function AdminCertificate() {
                 </tr>
               </thead>
               <tbody>
-                {certs.map((c, i) => (
+                {filteredCerts.map((c, i) => (
                   <tr key={c._id}>
                     <td>{i + 1}</td>
                     <td style={{ color: "var(--gold)" }}>{c.name}</td>

@@ -13,6 +13,7 @@ export default function UserReadCourse() {
   const [loading, setLoading] = useState(true);
   const [loadingLessons, setLoadingLessons] = useState(false);
   const [message, setMessage] = useState("");
+  const [lessonSearch, setLessonSearch] = useState("");
 
   useEffect(() => {
     loadCourses();
@@ -33,6 +34,7 @@ export default function UserReadCourse() {
   const handleCourseChange = async (cid) => {
     setCourseId(cid);
     setSubjectId("");
+    setLessonSearch("");
     setSubjects([]);
     setLessons([]);
     if (!cid) return;
@@ -47,6 +49,7 @@ export default function UserReadCourse() {
 
   const handleSubjectChange = async (sid) => {
     setSubjectId(sid);
+    setLessonSearch("");
     setLessons([]);
     if (!sid || !courseId) return;
 
@@ -65,6 +68,16 @@ export default function UserReadCourse() {
     if (!str) return false;
     return /^https?:\/\//i.test(str.trim());
   };
+
+  const filteredLessons = lessons.filter((lesson) => {
+    const query = lessonSearch.trim().toLowerCase();
+    return (
+      !query ||
+      [lesson.title, lesson.content]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    );
+  });
 
   return (
     <div className="admin-layout">
@@ -208,14 +221,47 @@ export default function UserReadCourse() {
                 No study material available for this subject yet.
               </p>
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                {lessons.map((lesson, i) => (
+              <>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(220px, 1fr) auto",
+                    gap: "12px",
+                    alignItems: "center",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <input
+                    value={lessonSearch}
+                    onChange={(e) => setLessonSearch(e.target.value)}
+                    placeholder="Search lesson title or content..."
+                    aria-label="Search study materials"
+                    className="search-input"
+                    style={{ width: "100%", boxSizing: "border-box" }}
+                  />
+                  <span style={{ color: "var(--muted)", fontSize: "13px" }}>
+                    {filteredLessons.length} of {lessons.length} lessons
+                  </span>
+                </div>
+                {filteredLessons.length === 0 ? (
+                  <p
+                    style={{
+                      padding: "40px",
+                      textAlign: "center",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    No lessons match your search.
+                  </p>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                    }}
+                  >
+                    {filteredLessons.map((lesson, i) => (
                   <div
                     key={lesson._id}
                     style={{
@@ -360,8 +406,10 @@ export default function UserReadCourse() {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>

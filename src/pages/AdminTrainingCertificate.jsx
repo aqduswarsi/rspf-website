@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import * as XLSX from "xlsx";
 import {
   createTrainingCertificate,
+  bulkCreateTrainingCertificates,
   getAllTrainingCertificates,
   deleteTrainingCertificate,
 } from "../utils/api";
@@ -32,6 +34,28 @@ export default function AdminTrainingCertificate() {
   const [message, setMessage] = useState("");
   const [previewCert, setPreviewCert] = useState(null);
   const [showForm, setShowForm] = useState(false);
+
+  // Filters
+  const [searchText, setSearchText] = useState("");
+  const [filterUnit, setFilterUnit] = useState("");
+  const [filterCourse, setFilterCourse] = useState("");
+  const [filterBatch, setFilterBatch] = useState("");
+  const [filterGrade, setFilterGrade] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
+
+  // Bulk upload states
+  const [showBulk, setShowBulk] = useState(false);
+  const [bulkRows, setBulkRows] = useState([]);
+  const [bulkFile, setBulkFile] = useState("");
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkWatermark, setBulkWatermark] = useState("");
+  const [bulkSignatures, setBulkSignatures] = useState([
+    { image: "", officerName: "", rank: "" },
+    { image: "", officerName: "", rank: "" },
+    { image: "", officerName: "", rank: "" },
+  ]);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     load();
@@ -130,6 +154,251 @@ export default function AdminTrainingCertificate() {
     });
   };
 
+  // ============ FILTERS ============
+  const filteredCerts = certs.filter((c) => {
+    // Search: trainee, certId, unit, course, batch
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      const fields = [
+        c.traineeName,
+        c.certificateId,
+        c.unit,
+        c.trainingCourse,
+        c.batch,
+      ]
+        .filter(Boolean)
+        .map((v) => String(v).toLowerCase());
+      if (!fields.some((f) => f.includes(q))) return false;
+    }
+
+    if (filterUnit && (c.unit || "") !== filterUnit) return false;
+    if (filterCourse && (c.trainingCourse || "") !== filterCourse) return false;
+    if (filterBatch && (c.batch || "") !== filterBatch) return false;
+    if (filterGrade && (c.grade || "") !== filterGrade) return false;
+
+    // Date range on dateOfIssue
+    const issueDate = c.dateOfIssue ? String(c.dateOfIssue).slice(0, 10) : "";
+    if (filterFromDate && (!issueDate || issueDate < filterFromDate))
+      return false;
+    if (filterToDate && (!issueDate || issueDate > filterToDate)) return false;
+
+    return true;
+  });
+
+  const uniqueUnits = [
+    ...new Set(certs.map((c) => c.unit).filter(Boolean)),
+  ].sort();
+  const uniqueCourses = [
+    ...new Set(certs.map((c) => c.trainingCourse).filter(Boolean)),
+  ].sort();
+  const uniqueBatches = [
+    ...new Set(certs.map((c) => c.batch).filter(Boolean)),
+  ].sort();
+  const uniqueGrades = [
+    ...new Set(certs.map((c) => c.grade).filter(Boolean)),
+  ].sort();
+
+  const hasActiveFilters =
+    searchText ||
+    filterUnit ||
+    filterCourse ||
+    filterBatch ||
+    filterGrade ||
+    filterFromDate ||
+    filterToDate;
+
+  const clearFilters = () => {
+    setSearchText("");
+    setFilterUnit("");
+    setFilterCourse("");
+    setFilterBatch("");
+    setFilterGrade("");
+    setFilterFromDate("");
+    setFilterToDate("");
+  };
+
+  // ==================== BULK UPLOAD ====================
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setBulkFile(file.name);
+    setMessage("");
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        if (json.length === 0) {
+          setMessage("Excel file is empty");
+          return;
+        }
+
+        // Map columns (case-insensitive, ignore spaces/special chars)
+        const mapped = json.map((row) => {
+          const get = (keys) => {
+            for (const k of keys) {
+              const found = Object.keys(row).find(
+                (rk) => rk.toLowerCase().replace(/[^a-z0-9]/g, "") === k,
+              );
+              if (found) return String(row[found] || "");
+            }
+            return "";
+          };
+          return {
+            traineeName: get(["traineename", "name"]),
+            unit: get(["unit"]),
+            trainingCourse: get(["trainingcourse", "course"]),
+            grade: get(["grade"]),
+            batch: get(["batch", "batchname"]),
+            fromDate: get(["fromdate", "from"]),
+            toDate: get(["todate", "to"]),
+            place: get(["place"]) || "RPSF/TC/GKP",
+            dateOfIssue:
+              get(["dateofissue", "issue", "dateofissued"]) ||
+              new Date().toISOString().split("T")[0],
+            certificateId: get(["certificateid", "certid", "id"]),
+          };
+        });
+
+        setBulkRows(mapped);
+        setMessage(
+          `${mapped.length} rows detected. Verify below and click Generate.`,
+        );
+      } catch (err) {
+        setMessage("Failed to read Excel: " + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleBulkImageUpload = (e, type, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setMessage("Only image files allowed");
+      return;
+    }
+    if (file.size > 1 * 1024 * 1024) {
+      setMessage("Max 1MB image allowed");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (type === "watermark") {
+        setBulkWatermark(reader.result);
+      } else {
+        const updated = [...bulkSignatures];
+        updated[index] = { ...updated[index], image: reader.result };
+        setBulkSignatures(updated);
+      }
+      setMessage("");
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleBulkSignatureChange = (index, field, value) => {
+    const updated = [...bulkSignatures];
+    updated[index] = { ...updated[index], [field]: value };
+    setBulkSignatures(updated);
+  };
+
+  const handleBulkGenerate = async () => {
+    if (bulkRows.length === 0) {
+      setMessage("Please upload an Excel file first");
+      return;
+    }
+
+    const cleanSignatures = bulkSignatures.filter(
+      (s) => s.image || s.officerName || s.rank,
+    );
+
+    const payload = bulkRows.map((row) => ({
+      ...row,
+      watermark: bulkWatermark,
+      signatures: cleanSignatures,
+    }));
+
+    try {
+      setBulkSaving(true);
+      setMessage("");
+      const result = await bulkCreateTrainingCertificates(payload);
+      setMessage(
+        `${result.created} certificates generated successfully${
+          result.failed?.length ? `, ${result.failed.length} failed` : ""
+        }`,
+      );
+      setBulkRows([]);
+      setBulkFile("");
+      setBulkWatermark("");
+      setBulkSignatures([
+        { image: "", officerName: "", rank: "" },
+        { image: "", officerName: "", rank: "" },
+        { image: "", officerName: "", rank: "" },
+      ]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setShowBulk(false);
+      load();
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  const resetBulk = () => {
+    setShowBulk(false);
+    setBulkRows([]);
+    setBulkFile("");
+    setBulkWatermark("");
+    setBulkSignatures([
+      { image: "", officerName: "", rank: "" },
+      { image: "", officerName: "", rank: "" },
+      { image: "", officerName: "", rank: "" },
+    ]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setMessage("");
+  };
+
+  const downloadSampleExcel = () => {
+    const sample = [
+      {
+        traineeName: "CT-Jitender Singh",
+        unit: "9BN/RPSF",
+        trainingCourse: "CTI Course (IT & WT)",
+        grade: "AX",
+        batch: "9th Batch",
+        fromDate: "2016-08-01",
+        toDate: "2016-10-07",
+        place: "RPSF/TC/GKP",
+        dateOfIssue: "2026-05-20",
+        certificateId: "RPSF2016001",
+      },
+      {
+        traineeName: "CT-Ramesh Kumar",
+        unit: "2BN/RPSF",
+        trainingCourse: "Basic Training",
+        grade: "A",
+        batch: "10th Batch",
+        fromDate: "2017-01-10",
+        toDate: "2017-04-15",
+        place: "RPSF/TC/GKP",
+        dateOfIssue: "2026-05-20",
+        certificateId: "RPSF2017002",
+      },
+    ];
+    const ws = XLSX.utils.json_to_sheet(sample);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Certificates");
+    XLSX.writeFile(wb, "training-certificates-sample.xlsx");
+  };
+
   const inputStyle = {
     width: "100%",
     padding: "10px 12px",
@@ -163,34 +432,58 @@ export default function AdminTrainingCertificate() {
           <h2>Training Certificate</h2>
           <p>Issue training completion certificates for officers.</p>
         </div>
-        <button
-          type="button"
-          className="primary"
-          onClick={() => {
-            if (showForm) {
-              resetForm();
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="table-action"
+            onClick={() => {
+              setShowBulk((prev) => !prev);
               setShowForm(false);
-            } else {
-              setShowForm(true);
-            }
-          }}
-          style={{ padding: "10px 24px" }}
-        >
-          {showForm ? "Close Form" : "New Certificate"}
-        </button>
+              setMessage("");
+            }}
+            style={{ padding: "10px 20px" }}
+          >
+            {showBulk ? "Close Bulk" : "Bulk Upload (Excel)"}
+          </button>
+          <button
+            type="button"
+            className="primary"
+            onClick={() => {
+              if (showForm) {
+                resetForm();
+                setShowForm(false);
+              } else {
+                setShowForm(true);
+                setShowBulk(false);
+              }
+            }}
+            style={{ padding: "10px 24px" }}
+          >
+            {showForm ? "Close Form" : "New Certificate"}
+          </button>
+        </div>
       </div>
 
       {message && (
         <p
           style={{
             padding: "12px",
-            background: message.toLowerCase().includes("success")
-              ? "#f0f8f1"
-              : "#FEF2F2",
-            border: `1px solid ${message.toLowerCase().includes("success") ? "#a7ddb2" : "#FECACA"}`,
-            color: message.toLowerCase().includes("success")
-              ? "#15803D"
-              : "#B91C1C",
+            background:
+              message.toLowerCase().includes("success") ||
+              message.toLowerCase().includes("generated")
+                ? "#f0f8f1"
+                : "#FEF2F2",
+            border: `1px solid ${
+              message.toLowerCase().includes("success") ||
+              message.toLowerCase().includes("generated")
+                ? "#a7ddb2"
+                : "#FECACA"
+            }`,
+            color:
+              message.toLowerCase().includes("success") ||
+              message.toLowerCase().includes("generated")
+                ? "#15803D"
+                : "#B91C1C",
             borderRadius: "8px",
             marginBottom: "16px",
           }}
@@ -199,6 +492,320 @@ export default function AdminTrainingCertificate() {
         </p>
       )}
 
+      {/* ==================== BULK UPLOAD ==================== */}
+      {showBulk && (
+        <div
+          className="education-panel"
+          style={{ padding: "20px", marginBottom: "24px" }}
+        >
+          <h3 style={{ color: "var(--navy)", marginTop: 0 }}>
+            Bulk Upload from Excel
+          </h3>
+
+          <div
+            style={{
+              padding: "16px",
+              background: "#F8F7F4",
+              border: "1px solid var(--line)",
+              borderRadius: "10px",
+              marginBottom: "20px",
+            }}
+          >
+            <p
+              style={{
+                margin: "0 0 12px",
+                color: "var(--ink)",
+                fontSize: "13px",
+              }}
+            >
+              Excel columns required:{" "}
+              <strong>
+                traineeName, unit, trainingCourse, grade, batch, fromDate,
+                toDate, place, dateOfIssue, certificateId
+              </strong>
+            </p>
+            <button
+              type="button"
+              onClick={downloadSampleExcel}
+              style={{
+                padding: "8px 16px",
+                background: "#FFF7ED",
+                color: "#C2410C",
+                border: "1px solid #FDBA74",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Download Sample Excel
+            </button>
+          </div>
+
+          <div style={{ marginBottom: "20px" }}>
+            <label style={labelStyle}>
+              Upload Excel File (.xlsx, .xls, .csv)
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleExcelUpload}
+              style={{
+                padding: "10px",
+                background: "#FFFFFF",
+                border: "1px solid var(--line)",
+                borderRadius: "8px",
+                width: "100%",
+                fontSize: "13px",
+                boxSizing: "border-box",
+                cursor: "pointer",
+              }}
+            />
+            {bulkFile && (
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "12px",
+                  color: "#15803D",
+                  fontWeight: 600,
+                }}
+              >
+                {bulkFile} — {bulkRows.length} rows parsed
+              </p>
+            )}
+          </div>
+
+          {/* Common Watermark + Signatures */}
+          <div
+            style={{
+              padding: "16px",
+              background: "#F8F7F4",
+              border: "1px solid var(--line)",
+              borderRadius: "10px",
+              marginBottom: "20px",
+            }}
+          >
+            <h4
+              style={{
+                color: "var(--navy)",
+                margin: "0 0 12px",
+                fontSize: "14px",
+              }}
+            >
+              Common Logo / Watermark &amp; Signatures (applies to all)
+            </h4>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={labelStyle}>Logo / Emblem (optional)</label>
+              {bulkWatermark ? (
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "16px" }}
+                >
+                  <img
+                    src={bulkWatermark}
+                    alt=""
+                    style={{
+                      height: "60px",
+                      border: "1px solid var(--line)",
+                      padding: "4px",
+                      background: "white",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setBulkWatermark("")}
+                    style={{
+                      padding: "6px 14px",
+                      background: "#FEF2F2",
+                      color: "#B91C1C",
+                      border: "1px solid #FECACA",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleBulkImageUpload(e, "watermark", 0)}
+                  style={{ fontSize: "13px" }}
+                />
+              )}
+            </div>
+
+            <div style={grid3}>
+              {bulkSignatures.map((sig, i) => {
+                const labels = ["Bottom Left", "Bottom Middle", "Bottom Right"];
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      padding: "12px",
+                      background: "white",
+                      border: "1px solid var(--line)",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: "0 0 10px",
+                        color: "var(--navy)",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        letterSpacing: "1px",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {labels[i]}
+                    </p>
+
+                    {sig.image ? (
+                      <div style={{ marginBottom: "10px" }}>
+                        <img
+                          src={sig.image}
+                          alt=""
+                          style={{
+                            height: "40px",
+                            display: "block",
+                            marginBottom: "6px",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...bulkSignatures];
+                            updated[i] = { ...updated[i], image: "" };
+                            setBulkSignatures(updated);
+                          }}
+                          style={{
+                            padding: "4px 10px",
+                            background: "#FEF2F2",
+                            color: "#B91C1C",
+                            border: "1px solid #FECACA",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "11px",
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleBulkImageUpload(e, "signature", i)
+                        }
+                        style={{
+                          fontSize: "12px",
+                          marginBottom: "10px",
+                          width: "100%",
+                        }}
+                      />
+                    )}
+
+                    <input
+                      value={sig.officerName}
+                      onChange={(e) =>
+                        handleBulkSignatureChange(
+                          i,
+                          "officerName",
+                          e.target.value,
+                        )
+                      }
+                      placeholder="Officer Name / Designation"
+                      style={{ ...inputStyle, marginBottom: "8px" }}
+                    />
+                    <input
+                      value={sig.rank}
+                      onChange={(e) =>
+                        handleBulkSignatureChange(i, "rank", e.target.value)
+                      }
+                      placeholder="Rank / Unit"
+                      style={inputStyle}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Preview Table */}
+          {bulkRows.length > 0 && (
+            <div style={{ marginBottom: "20px" }}>
+              <h4
+                style={{
+                  color: "var(--navy)",
+                  margin: "0 0 12px",
+                  fontSize: "14px",
+                }}
+              >
+                Preview ({bulkRows.length} certificates will be generated)
+              </h4>
+              <div
+                style={{
+                  maxHeight: "300px",
+                  overflowY: "auto",
+                  border: "1px solid var(--line)",
+                  borderRadius: "8px",
+                  background: "white",
+                }}
+              >
+                <table className="education-table" style={{ fontSize: "12px" }}>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Trainee</th>
+                      <th>Unit</th>
+                      <th>Course</th>
+                      <th>Grade</th>
+                      <th>Batch</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkRows.map((row, i) => (
+                      <tr key={i}>
+                        <td>{i + 1}</td>
+                        <td>{row.traineeName || "-"}</td>
+                        <td>{row.unit || "-"}</td>
+                        <td>{row.trainingCourse || "-"}</td>
+                        <td>{row.grade || "-"}</td>
+                        <td>{row.batch || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              type="button"
+              className="primary"
+              onClick={handleBulkGenerate}
+              disabled={bulkSaving || bulkRows.length === 0}
+              style={{ padding: "10px 30px" }}
+            >
+              {bulkSaving
+                ? "Generating..."
+                : `Generate ${bulkRows.length} Certificates`}
+            </button>
+            <button type="button" className="table-action" onClick={resetBulk}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== SINGLE FORM ==================== */}
       {showForm && (
         <div
           className="education-panel"
@@ -517,14 +1124,137 @@ export default function AdminTrainingCertificate() {
       {/* Table */}
       <div className="education-panel">
         <div className="panel-heading">
-          <h3>All Training Certificates ({certs.length})</h3>
+          <h3>
+            All Training Certificates ({filteredCerts.length}
+            {filteredCerts.length !== certs.length && ` of ${certs.length}`})
+          </h3>
         </div>
+
+        {/* Filters */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "12px",
+            alignItems: "end",
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--line)",
+          }}
+        >
+          <div>
+            <label style={labelStyle}>
+              Search (Trainee, ID, Unit, Course, Batch)
+            </label>
+            <input
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Type any keyword..."
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Unit</label>
+            <select
+              value={filterUnit}
+              onChange={(e) => setFilterUnit(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">All Units</option>
+              {uniqueUnits.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Course</label>
+            <select
+              value={filterCourse}
+              onChange={(e) => setFilterCourse(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">All Courses</option>
+              {uniqueCourses.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Batch</label>
+            <select
+              value={filterBatch}
+              onChange={(e) => setFilterBatch(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">All Batches</option>
+              {uniqueBatches.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Grade</label>
+            <select
+              value={filterGrade}
+              onChange={(e) => setFilterGrade(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">All Grades</option>
+              {uniqueGrades.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Issued From</label>
+            <input
+              type="date"
+              value={filterFromDate}
+              onChange={(e) => setFilterFromDate(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Issued To</label>
+            <input
+              type="date"
+              value={filterToDate}
+              onChange={(e) => setFilterToDate(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <button
+            type="button"
+            className="table-action"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            style={{
+              padding: "10px 16px",
+              cursor: hasActiveFilters ? "pointer" : "not-allowed",
+              opacity: hasActiveFilters ? 1 : 0.5,
+            }}
+          >
+            Clear Filters
+          </button>
+        </div>
+
         <div className="education-table-wrap">
           {loading ? (
             <p style={{ padding: "20px", color: "var(--gold)" }}>Loading...</p>
           ) : certs.length === 0 ? (
             <p style={{ padding: "20px", color: "var(--muted)" }}>
               No training certificates yet.
+            </p>
+          ) : filteredCerts.length === 0 ? (
+            <p style={{ padding: "20px", color: "var(--muted)" }}>
+              No certificates match your filters.
             </p>
           ) : (
             <table className="education-table">
@@ -541,7 +1271,7 @@ export default function AdminTrainingCertificate() {
                 </tr>
               </thead>
               <tbody>
-                {certs.map((c, i) => (
+                {filteredCerts.map((c, i) => (
                   <tr key={c._id}>
                     <td>{i + 1}</td>
                     <td style={{ color: "var(--navy)", fontWeight: 600 }}>
@@ -588,16 +1318,10 @@ export default function AdminTrainingCertificate() {
 
 // =========================================================
 //           TRAINING CERTIFICATE PREVIEW
-//   Colorful redesign of the original certificate:
-//   floral (phool-patti) border, top emblem + faded background
-//   watermark (uploaded image + RPSF Training Centre), round arched
-//   bold Hindi + English heading of equal length, gold CERTIFICATE,
-//   highlighted body text,
-//   Place / Date of Issue below the body, signatures at the bottom.
+//   (unchanged - your design kept as-is)
 // =========================================================
 
 function TrainingCertificatePreview({ cert, onClose }) {
-  // 01.08.2016
   const formatDate = (d) => {
     if (!d) return "";
     return new Date(d)
@@ -609,7 +1333,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
       .replace(/\//g, ".");
   };
 
-  // 20 May-2026
   const formatIssueDate = (d) => {
     if (!d) return "";
     const date = new Date(d);
@@ -618,7 +1341,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
     return `${day} ${month}-${date.getFullYear()}`;
   };
 
-  // "9th Batch" -> 9<sup>th</sup> Batch
   const renderBatch = (text) => {
     const m = String(text).match(/^(.*?)(\d+)(st|nd|rd|th)(.*)$/i);
     if (!m) return text;
@@ -686,7 +1408,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
       <div onClick={(e) => e.stopPropagation()}>
         <div className="training-cert-area">
           <div className="training-cert-inner">
-            {/* Floral (phool-patti) border */}
             <div className="tc-border tc-border-top" />
             <div className="tc-border tc-border-bottom" />
             <div className="tc-border tc-border-left" />
@@ -696,7 +1417,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
             <div className="tc-corner tc-corner-bl" />
             <div className="tc-corner tc-corner-br" />
 
-            {/* Background watermark: uploaded image + RPSF Training Centre */}
             <div className="tc-watermark">
               {cert.watermark && (
                 <img src={cert.watermark} alt="" className="tc-watermark-img" />
@@ -708,14 +1428,12 @@ function TrainingCertificatePreview({ cert, onClose }) {
             </div>
 
             <div className="tc-content">
-              {/* Emblem / logo - top center */}
               {cert.watermark && (
                 <div className="tc-logo-wrap">
                   <img src={cert.watermark} alt="" className="tc-logo" />
                 </div>
               )}
 
-              {/* Round arched heading (Hindi + English same length) + CERTIFICATE */}
               <svg
                 className="tc-heading"
                 viewBox="0 12 1000 345"
@@ -775,7 +1493,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
 
               <div className="tc-divider" />
 
-              {/* Body */}
               <p className="tc-body">
                 This is to certify that{" "}
                 <span className="tc-hl">{cert.traineeName}</span>
@@ -820,7 +1537,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
                 .
               </p>
 
-              {/* Footer: Place + Date of Issue */}
               <div className="tc-footer">
                 {cert.place && <p>Place: {cert.place}</p>}
                 {cert.dateOfIssue && (
@@ -828,7 +1544,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
                 )}
               </div>
 
-              {/* Signatures */}
               <div className="tc-signatures">
                 {(cert.signatures || []).map((sig, i) => (
                   <div key={i} className="tc-sign-slot">
@@ -865,7 +1580,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
           color: #2a3a9c;
           background: radial-gradient(circle at 50% 0%, #ffffff 0%, #fffdf7 60%, #fff6e3 100%);
         }
-        /* thin gold + navy frame inside the floral border */
         .training-cert-inner::before {
           content: "";
           position: absolute;
@@ -883,11 +1597,7 @@ function TrainingCertificatePreview({ cert, onClose }) {
           pointer-events: none;
         }
 
-        /* ---------- Floral (phool-patti) border ---------- */
-        .tc-border {
-          position: absolute;
-          background-size: auto;
-        }
+        .tc-border { position: absolute; background-size: auto; }
         .tc-border-top, .tc-border-bottom {
           left: 24px; right: 24px; height: 24px;
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='24'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/svg%3E");
@@ -914,7 +1624,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
 
         .tc-content { position: relative; z-index: 1; }
 
-        /* ---------- Background watermark (image + RPSF TRAINING CENTRE) ---------- */
         .tc-watermark {
           position: absolute;
           top: 58%;
@@ -949,7 +1658,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
           color: #c62828;
         }
 
-        /* ---------- Emblem (top) ---------- */
         .tc-logo-wrap { text-align: center; }
         .tc-logo {
           height: 100px;
@@ -958,7 +1666,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
           filter: drop-shadow(0 2px 4px rgba(31, 58, 110, 0.35));
         }
 
-        /* ---------- Round arched heading ---------- */
         .tc-heading {
           display: block;
           width: 100%;
@@ -1001,7 +1708,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
           background: linear-gradient(90deg, transparent, #1c3bbf, #8e24aa, #1c3bbf, transparent);
         }
 
-        /* ---------- Body ---------- */
         .tc-body {
           font-style: italic;
           font-size: 21px;
@@ -1014,7 +1720,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
         .tc-hl  { color: #a01535; font-weight: 700; }
         .tc-hl2 { color: #17228a; font-weight: 700; }
 
-        /* ---------- Footer (Place / Date) ---------- */
         .tc-footer {
           margin-top: 14px;
           text-align: left;
@@ -1024,7 +1729,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
         }
         .tc-footer p { margin: 2px 0; }
 
-        /* ---------- Signatures ---------- */
         .tc-signatures {
           display: flex;
           justify-content: space-between;
@@ -1059,7 +1763,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
         .tc-sign-name { color: #1c3bbf; }
         .tc-sign-rank { color: #1c3bbf; }
 
-        /* ---------- Print ---------- */
         @page { size: A4 landscape; margin: 8mm; }
         @media print {
           body * { visibility: hidden; }
