@@ -1171,7 +1171,7 @@ export async function translateText(text, target = "hi") {
   return data.translated;
 }
 
-export async function bulkCreateTrainingCertificates(certificates) {
+export async function bulkCreateTrainingCertificates(payload) {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/training-certificates/bulk`, {
     method: "POST",
@@ -1179,7 +1179,7 @@ export async function bulkCreateTrainingCertificates(certificates) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ certificates }),
+    body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Bulk create failed");
@@ -1309,5 +1309,20 @@ export async function getAdminDashboard() {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Failed to load dashboard");
+  return data;
+}
+
+export async function bulkCreateCertificates(payload) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/certificates/bulk`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Bulk create failed");
   return data;
 }

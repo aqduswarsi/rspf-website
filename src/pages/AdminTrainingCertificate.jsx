@@ -11,6 +11,7 @@ const initialForm = {
   certificateId: "",
   traineeName: "",
   unit: "",
+  mode: "",
   trainingCourse: "",
   grade: "",
   batch: "",
@@ -41,6 +42,7 @@ export default function AdminTrainingCertificate() {
   const [filterCourse, setFilterCourse] = useState("");
   const [filterBatch, setFilterBatch] = useState("");
   const [filterGrade, setFilterGrade] = useState("");
+  const [filterMode, setFilterMode] = useState("");
   const [filterFromDate, setFilterFromDate] = useState("");
   const [filterToDate, setFilterToDate] = useState("");
 
@@ -156,7 +158,6 @@ export default function AdminTrainingCertificate() {
 
   // ============ FILTERS ============
   const filteredCerts = certs.filter((c) => {
-    // Search: trainee, certId, unit, course, batch
     if (searchText.trim()) {
       const q = searchText.toLowerCase();
       const fields = [
@@ -165,6 +166,7 @@ export default function AdminTrainingCertificate() {
         c.unit,
         c.trainingCourse,
         c.batch,
+        c.mode,
       ]
         .filter(Boolean)
         .map((v) => String(v).toLowerCase());
@@ -175,8 +177,8 @@ export default function AdminTrainingCertificate() {
     if (filterCourse && (c.trainingCourse || "") !== filterCourse) return false;
     if (filterBatch && (c.batch || "") !== filterBatch) return false;
     if (filterGrade && (c.grade || "") !== filterGrade) return false;
+    if (filterMode && (c.mode || "") !== filterMode) return false;
 
-    // Date range on dateOfIssue
     const issueDate = c.dateOfIssue ? String(c.dateOfIssue).slice(0, 10) : "";
     if (filterFromDate && (!issueDate || issueDate < filterFromDate))
       return false;
@@ -197,6 +199,9 @@ export default function AdminTrainingCertificate() {
   const uniqueGrades = [
     ...new Set(certs.map((c) => c.grade).filter(Boolean)),
   ].sort();
+  const uniqueModes = [
+    ...new Set(certs.map((c) => c.mode).filter(Boolean)),
+  ].sort();
 
   const hasActiveFilters =
     searchText ||
@@ -204,6 +209,7 @@ export default function AdminTrainingCertificate() {
     filterCourse ||
     filterBatch ||
     filterGrade ||
+    filterMode ||
     filterFromDate ||
     filterToDate;
 
@@ -213,6 +219,7 @@ export default function AdminTrainingCertificate() {
     setFilterCourse("");
     setFilterBatch("");
     setFilterGrade("");
+    setFilterMode("");
     setFilterFromDate("");
     setFilterToDate("");
   };
@@ -239,7 +246,6 @@ export default function AdminTrainingCertificate() {
           return;
         }
 
-        // Map columns (case-insensitive, ignore spaces/special chars)
         const mapped = json.map((row) => {
           const get = (keys) => {
             for (const k of keys) {
@@ -253,6 +259,7 @@ export default function AdminTrainingCertificate() {
           return {
             traineeName: get(["traineename", "name"]),
             unit: get(["unit"]),
+            mode: get(["mode", "coursemode"]),
             trainingCourse: get(["trainingcourse", "course"]),
             grade: get(["grade"]),
             batch: get(["batch", "batchname"]),
@@ -319,16 +326,15 @@ export default function AdminTrainingCertificate() {
       (s) => s.image || s.officerName || s.rank,
     );
 
-    const payload = bulkRows.map((row) => ({
-      ...row,
-      watermark: bulkWatermark,
-      signatures: cleanSignatures,
-    }));
-
     try {
       setBulkSaving(true);
       setMessage("");
-      const result = await bulkCreateTrainingCertificates(payload);
+      // ✅ Send watermark + signatures ONCE at top level
+      const result = await bulkCreateTrainingCertificates({
+        certificates: bulkRows,
+        watermark: bulkWatermark,
+        signatures: cleanSignatures,
+      });
       setMessage(
         `${result.created} certificates generated successfully${
           result.failed?.length ? `, ${result.failed.length} failed` : ""
@@ -371,6 +377,7 @@ export default function AdminTrainingCertificate() {
       {
         traineeName: "CT-Jitender Singh",
         unit: "9BN/RPSF",
+        mode: "On Campus",
         trainingCourse: "CTI Course (IT & WT)",
         grade: "AX",
         batch: "9th Batch",
@@ -383,6 +390,7 @@ export default function AdminTrainingCertificate() {
       {
         traineeName: "CT-Ramesh Kumar",
         unit: "2BN/RPSF",
+        mode: "Online",
         trainingCourse: "Basic Training",
         grade: "A",
         batch: "10th Batch",
@@ -518,11 +526,22 @@ export default function AdminTrainingCertificate() {
                 fontSize: "13px",
               }}
             >
-              Excel columns required:{" "}
+              Excel columns:{" "}
               <strong>
-                traineeName, unit, trainingCourse, grade, batch, fromDate,
+                traineeName, unit, mode, trainingCourse, grade, batch, fromDate,
                 toDate, place, dateOfIssue, certificateId
               </strong>
+            </p>
+            <p
+              style={{
+                margin: "0 0 12px",
+                color: "var(--muted)",
+                fontSize: "12px",
+                fontStyle: "italic",
+              }}
+            >
+              Note: <strong>grade</strong> and <strong>mode</strong> columns are
+              optional. Leave blank if not applicable.
             </p>
             <button
               type="button"
@@ -764,6 +783,7 @@ export default function AdminTrainingCertificate() {
                       <th>#</th>
                       <th>Trainee</th>
                       <th>Unit</th>
+                      <th>Mode</th>
                       <th>Course</th>
                       <th>Grade</th>
                       <th>Batch</th>
@@ -775,6 +795,7 @@ export default function AdminTrainingCertificate() {
                         <td>{i + 1}</td>
                         <td>{row.traineeName || "-"}</td>
                         <td>{row.unit || "-"}</td>
+                        <td>{row.mode || "-"}</td>
                         <td>{row.trainingCourse || "-"}</td>
                         <td>{row.grade || "-"}</td>
                         <td>{row.batch || "-"}</td>
@@ -839,6 +860,20 @@ export default function AdminTrainingCertificate() {
                 />
               </div>
               <div>
+                <label style={labelStyle}>Mode (optional)</label>
+                <select
+                  name="mode"
+                  value={form.mode}
+                  onChange={handleChange}
+                  style={inputStyle}
+                >
+                  <option value="">-- Select Mode --</option>
+                  <option value="On Campus">On Campus</option>
+                  <option value="Online">Online</option>
+                  <option value="Hybrid">Hybrid</option>
+                </select>
+              </div>
+              <div>
                 <label style={labelStyle}>Training Course *</label>
                 <input
                   name="trainingCourse"
@@ -850,13 +885,13 @@ export default function AdminTrainingCertificate() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Grade</label>
+                <label style={labelStyle}>Grade (optional)</label>
                 <input
                   name="grade"
                   value={form.grade}
                   onChange={handleChange}
                   style={inputStyle}
-                  placeholder="AX"
+                  placeholder="AX (leave blank if not applicable)"
                 />
               </div>
               <div>
@@ -1143,7 +1178,7 @@ export default function AdminTrainingCertificate() {
         >
           <div>
             <label style={labelStyle}>
-              Search (Trainee, ID, Unit, Course, Batch)
+              Search (Trainee, ID, Unit, Course, Batch, Mode)
             </label>
             <input
               value={searchText}
@@ -1178,6 +1213,21 @@ export default function AdminTrainingCertificate() {
               {uniqueCourses.map((c) => (
                 <option key={c} value={c}>
                   {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Mode</label>
+            <select
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">All Modes</option>
+              {uniqueModes.map((m) => (
+                <option key={m} value={m}>
+                  {m}
                 </option>
               ))}
             </select>
@@ -1263,6 +1313,7 @@ export default function AdminTrainingCertificate() {
                   <th>#</th>
                   <th>Trainee</th>
                   <th>Unit</th>
+                  <th>Mode</th>
                   <th>Course</th>
                   <th>Grade</th>
                   <th>Batch</th>
@@ -1278,6 +1329,7 @@ export default function AdminTrainingCertificate() {
                       {c.traineeName}
                     </td>
                     <td>{c.unit || "-"}</td>
+                    <td>{c.mode || "-"}</td>
                     <td>{c.trainingCourse}</td>
                     <td>{c.grade || "-"}</td>
                     <td>{c.batch || "-"}</td>
@@ -1318,7 +1370,6 @@ export default function AdminTrainingCertificate() {
 
 // =========================================================
 //           TRAINING CERTIFICATE PREVIEW
-//   (unchanged - your design kept as-is)
 // =========================================================
 
 function TrainingCertificatePreview({ cert, onClose }) {
@@ -1504,6 +1555,13 @@ function TrainingCertificatePreview({ cert, onClose }) {
                 ) : null}{" "}
                 has successfully undergone the &ldquo;
                 <span className="tc-hl">{cert.trainingCourse}</span>
+                &rdquo;
+                {cert.mode ? (
+                  <>
+                    {" "}
+                    in <span className="tc-hl2">{cert.mode}</span> mode
+                  </>
+                ) : null}
                 {cert.grade ? (
                   <>
                     {" "}
@@ -1511,7 +1569,6 @@ function TrainingCertificatePreview({ cert, onClose }) {
                     <span className="tc-hl2">{cert.grade}</span>&rsquo;
                   </>
                 ) : null}
-                &rdquo;
                 {cert.batch ? (
                   <>
                     {" "}
