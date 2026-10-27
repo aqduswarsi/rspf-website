@@ -86,7 +86,7 @@ export default function SupportTickets() {
       {/* Header */}
       <div className="users-header">
         <h2>Support Ticket Report</h2>
-        <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
+        <span style={{ color: "var(--muted)", fontSize: "13px" }}>
           {tickets.length} tickets
         </span>
       </div>
@@ -124,7 +124,7 @@ export default function SupportTickets() {
             style={{
               padding: "40px",
               textAlign: "center",
-              color: "rgba(255,255,255,0.5)",
+              color: "var(--muted)",
             }}
           >
             No {status === "answered" ? "answered" : "pending"} tickets.
@@ -147,7 +147,7 @@ export default function SupportTickets() {
                   <td
                     style={{
                       textAlign: "center",
-                      color: "rgba(255,255,255,0.5)",
+                      color: "var(--muted)",
                     }}
                   >
                     {i + 1}
@@ -155,7 +155,7 @@ export default function SupportTickets() {
                   <td>
                     <div
                       style={{
-                        color: "var(--gold)",
+                        color: "var(--navy)",
                         fontWeight: 600,
                         fontSize: "13px",
                       }}
@@ -164,7 +164,7 @@ export default function SupportTickets() {
                     </div>
                     <div
                       style={{
-                        color: "rgba(255,255,255,0.4)",
+                        color: "var(--muted)",
                         fontSize: "11px",
                       }}
                     >
@@ -174,11 +174,11 @@ export default function SupportTickets() {
                   <td style={{ lineHeight: 1.7 }}>{t.question}</td>
                   <td style={{ lineHeight: 1.7 }}>
                     {t.answer ? (
-                      <span style={{ color: "#4ade80" }}>{t.answer}</span>
+                      <span style={{ color: "#15803D" }}>{t.answer}</span>
                     ) : (
                       <span
                         style={{
-                          color: "rgba(255,255,255,0.3)",
+                          color: "var(--muted)",
                           fontStyle: "italic",
                           fontSize: "12px",
                         }}
@@ -189,7 +189,7 @@ export default function SupportTickets() {
                   </td>
                   <td
                     style={{
-                      color: "rgba(255,255,255,0.6)",
+                      color: "var(--muted)",
                       whiteSpace: "nowrap",
                       fontSize: "12.5px",
                     }}
