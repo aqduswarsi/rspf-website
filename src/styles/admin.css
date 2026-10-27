@@ -633,7 +633,7 @@
 }
 
 .summary-heading span {
-  color: rgba(255,255,255,0.45);
+  color: var(--muted);
   font-size: 12px;
 }
 
