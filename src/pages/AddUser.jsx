@@ -189,8 +189,8 @@ const handleSubmit = async (e) => {
   setSubmitting(true);
   try {
     const payload = { ...form };
-    delete payload.photo; // File object हटा
-    payload.photo = form.photoPreview; // base64 save कर
+    delete payload.photo; // Remove the File object before serializing the payload.
+    payload.photo = form.photoPreview; // Store the photo preview as a base64 string.
 
     const result = await createBioData(payload);
     console.log("Saved:", result);
@@ -304,12 +304,12 @@ const handleSubmit = async (e) => {
               />
             </div>
             <div className="form-field">
-              <label>4. Name — हिंदी में</label>
+              <label>4. Name in Hindi</label>
               <input
                 name="nameHindi"
                 value={form.nameHindi}
                 onChange={handleChange}
-                placeholder="हिंदी में नाम"
+                placeholder="Enter name in Hindi"
               />
             </div>
             <div className="form-field">
@@ -322,12 +322,12 @@ const handleSubmit = async (e) => {
               />
             </div>
             <div className="form-field">
-              <label>6. Father's Name — हिंदी में</label>
+              <label>6. Father's Name in Hindi</label>
               <input
                 name="fatherNameHindi"
                 value={form.fatherNameHindi}
                 onChange={handleChange}
-                placeholder="पिता का नाम"
+                placeholder="Enter father's name in Hindi"
               />
             </div>
             <div className="form-field">
@@ -340,12 +340,12 @@ const handleSubmit = async (e) => {
               />
             </div>
             <div className="form-field">
-              <label>8. Mother's Name — हिंदी में</label>
+              <label>8. Mother's Name in Hindi</label>
               <input
                 name="motherNameHindi"
                 value={form.motherNameHindi}
                 onChange={handleChange}
-                placeholder="माता का नाम"
+                placeholder="Enter mother's name in Hindi"
               />
             </div>
           </div>

@@ -19,6 +19,8 @@ export default function ManageExam() {
     subjectId: "",
     duration: 30,
     passPercentage: 50,
+    startTime: "", // 👈 NEW
+    endTime: "", // 👈 NEW
   });
   const [courses, setCourses] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
@@ -30,8 +32,8 @@ export default function ManageExam() {
   const [message, setMessage] = useState("");
 
   // Attach Modal state
-  const [attachExam, setAttachExam] = useState(null); // exam object
-  const [attachQuestions, setAttachQuestions] = useState([]); // questions for that subject
+  const [attachExam, setAttachExam] = useState(null);
+  const [attachQuestions, setAttachQuestions] = useState([]);
   const [selectedQIds, setSelectedQIds] = useState([]);
   const [loadingAttach, setLoadingAttach] = useState(false);
   const [attachMessage, setAttachMessage] = useState("");
@@ -87,6 +89,8 @@ export default function ManageExam() {
       subjectId: "",
       duration: 30,
       passPercentage: 50,
+      startTime: "", // 👈 NEW
+      endTime: "", // 👈 NEW
     });
     setFilteredSubjects([]);
     setEditingId(null);
@@ -100,6 +104,16 @@ export default function ManageExam() {
       return;
     }
 
+    // 👇 NEW: Time validation
+    if (!form.startTime || !form.endTime) {
+      setMessage("❌ Start Time and End Time are required");
+      return;
+    }
+    if (new Date(form.startTime) >= new Date(form.endTime)) {
+      setMessage("❌ End Time must be after Start Time");
+      return;
+    }
+
     setSaving(true);
     setMessage("");
 
@@ -110,6 +124,8 @@ export default function ManageExam() {
       subjectId: form.subjectId,
       duration: Number(form.duration) || 30,
       passPercentage: Number(form.passPercentage) || 50,
+      startTime: new Date(form.startTime).toISOString(),
+      endTime: new Date(form.endTime).toISOString(),
     };
 
     try {
@@ -129,6 +145,17 @@ export default function ManageExam() {
     }
   };
 
+  // 👇 Helper: ISO date -> "datetime-local" format
+  const toLocalInput = (dateVal) => {
+    if (!dateVal) return "";
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+      d.getHours(),
+    )}:${pad(d.getMinutes())}`;
+  };
+
   const handleEdit = (exam) => {
     const cid = exam.courseId?._id || exam.courseId;
     const sid = exam.subjectId?._id || exam.subjectId;
@@ -140,6 +167,8 @@ export default function ManageExam() {
       subjectId: sid || "",
       duration: exam.duration || 30,
       passPercentage: exam.passPercentage || 50,
+      startTime: toLocalInput(exam.startTime), // 👈 NEW
+      endTime: toLocalInput(exam.endTime), // 👈 NEW
     });
     setFilteredSubjects(
       allSubjects.filter((s) => (s.courseId?._id || s.courseId) === cid),
@@ -172,16 +201,13 @@ export default function ManageExam() {
       setAttachMessage("");
       setAttachExam(exam);
 
-      // Fresh exam data lo
       const fullExam = await getAdminExamById(exam._id);
 
-      // Already attached question IDs
       const alreadyAttached = (fullExam.questionIds || []).map((q) =>
         typeof q === "string" ? q : q._id,
       );
       setSelectedQIds(alreadyAttached);
 
-      // Us exam ke subject ke questions lo
       const subjectId = fullExam.subjectId?._id || fullExam.subjectId;
       const courseId = fullExam.courseId?._id || fullExam.courseId;
 
@@ -314,6 +340,26 @@ export default function ManageExam() {
             placeholder="50"
           />
 
+          {/* 👇 NEW: Start Time */}
+          <label>Exam Start Time</label>
+          <input
+            type="datetime-local"
+            name="startTime"
+            value={form.startTime}
+            onChange={handleChange}
+            required
+          />
+
+          {/* 👇 NEW: End Time */}
+          <label>Exam End Time</label>
+          <input
+            type="datetime-local"
+            name="endTime"
+            value={form.endTime}
+            onChange={handleChange}
+            required
+          />
+
           <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
             <button type="submit" className="primary" disabled={saving}>
               {saving ? "Saving..." : editingId ? "Update Exam" : "Create Exam"}
@@ -414,7 +460,7 @@ export default function ManageExam() {
         </div>
       </div>
 
-      {/* ============ ATTACH MODAL ============ */}
+      {/* ============ ATTACH MODAL (unchanged) ============ */}
       {attachExam && (
         <div
           style={{
@@ -489,7 +535,6 @@ export default function ManageExam() {
               </button>
             </div>
 
-            {/* Subject info bar */}
             <div
               style={{
                 padding: "12px 16px",
@@ -520,7 +565,7 @@ export default function ManageExam() {
                   color: "var(--muted)",
                 }}
               >
-                ⚠️ Sirf isi subject ke questions attach ho sakte hain
+                ⚠️ Only questions from this subject can be attached.
               </p>
             </div>
 
@@ -542,8 +587,8 @@ export default function ManageExam() {
                   color: "var(--muted)",
                 }}
               >
-                Is subject me koi question nahi mila. Pehle Manage Question se
-                banao.
+                No questions are available for this subject. Add questions in
+                Manage Questions first.
               </p>
             ) : (
               <>
@@ -568,13 +613,9 @@ export default function ManageExam() {
                         gap: "12px",
                         alignItems: "flex-start",
                         padding: "12px 14px",
-                        background: checked
-                          ? "#F0F8F1"
-                          : "#FFFFFF",
+                        background: checked ? "#F0F8F1" : "#FFFFFF",
                         border: `1px solid ${
-                          checked
-                            ? "#A7DDB2"
-                            : "var(--line)"
+                          checked ? "#A7DDB2" : "var(--line)"
                         }`,
                         borderRadius: "8px",
                         marginBottom: "10px",

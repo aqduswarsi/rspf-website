@@ -363,7 +363,7 @@ export default function ManageQuestion() {
             rows="3"
             value={form.questionHindi}
             onChange={handleChange}
-            placeholder="हिंदी में प्रश्न लिखें (optional)"
+            placeholder="Enter the question in Hindi (optional)"
           />
 
           <label>Question Type</label>
@@ -487,7 +487,7 @@ export default function ManageQuestion() {
           )}
 
           {form.type === "Written" && (
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
+            <p style={{ color: "var(--muted)", fontSize: "13px" }}>
               ℹ️ Written questions will be manually reviewed by admin.
             </p>
           )}
@@ -606,7 +606,7 @@ export default function ManageQuestion() {
           {loading ? (
             <p style={{ padding: "20px", color: "var(--gold)" }}>Loading...</p>
           ) : questions.length === 0 ? (
-            <p style={{ padding: "20px", color: "rgba(255,255,255,0.5)" }}>
+            <p style={{ padding: "20px", color: "var(--muted)" }}>
               No questions found.
             </p>
           ) : (
@@ -632,7 +632,7 @@ export default function ManageQuestion() {
                       {q.questionHindi && (
                         <div
                           style={{
-                            color: "rgba(255,255,255,0.5)",
+                            color: "var(--muted)",
                             fontSize: "12px",
                             marginTop: "4px",
                           }}

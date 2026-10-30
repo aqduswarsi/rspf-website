@@ -36,6 +36,9 @@ export default function AdminTrainingCertificate() {
   const [previewCert, setPreviewCert] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
+  // 👇 Print All Mode State
+  const [printAllMode, setPrintAllMode] = useState(false);
+
   // Filters
   const [searchText, setSearchText] = useState("");
   const [filterUnit, setFilterUnit] = useState("");
@@ -224,6 +227,19 @@ export default function AdminTrainingCertificate() {
     setFilterToDate("");
   };
 
+  // 👇 PRINT ALL FUNCTION
+  const handlePrintAll = () => {
+    if (filteredCerts.length === 0) {
+      setMessage("No certificates to print");
+      return;
+    }
+    setPrintAllMode(true);
+    setTimeout(() => {
+      window.print();
+      setPrintAllMode(false);
+    }, 500);
+  };
+
   // ==================== BULK UPLOAD ====================
   const handleExcelUpload = (e) => {
     const file = e.target.files[0];
@@ -329,7 +345,6 @@ export default function AdminTrainingCertificate() {
     try {
       setBulkSaving(true);
       setMessage("");
-      // ✅ Send watermark + signatures ONCE at top level
       const result = await bulkCreateTrainingCertificates({
         certificates: bulkRows,
         watermark: bulkWatermark,
@@ -1163,6 +1178,20 @@ export default function AdminTrainingCertificate() {
             All Training Certificates ({filteredCerts.length}
             {filteredCerts.length !== certs.length && ` of ${certs.length}`})
           </h3>
+          {/* 👇 Print All Button */}
+          <button
+            type="button"
+            className="primary"
+            onClick={handlePrintAll}
+            style={{
+              padding: "8px 16px",
+              fontSize: "13px",
+              background: "var(--navy)",
+              color: "white",
+            }}
+          >
+            Print All ({filteredCerts.length})
+          </button>
         </div>
 
         {/* Filters */}
@@ -1364,6 +1393,31 @@ export default function AdminTrainingCertificate() {
           onClose={() => setPreviewCert(null)}
         />
       )}
+
+      {/* 👇 Print All Hidden Area */}
+      {printAllMode && (
+        <div
+          className="print-all-area"
+          style={{
+            display: "block",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            zIndex: 9999,
+            background: "white",
+          }}
+        >
+          {filteredCerts.map((cert) => (
+            <div
+              key={cert._id}
+              style={{ pageBreakAfter: "always", marginBottom: "20px" }}
+            >
+              <TrainingCertificatePreview cert={cert} isPrintMode={true} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -1372,7 +1426,7 @@ export default function AdminTrainingCertificate() {
 //           TRAINING CERTIFICATE PREVIEW
 // =========================================================
 
-function TrainingCertificatePreview({ cert, onClose }) {
+function TrainingCertificatePreview({ cert, onClose, isPrintMode = false }) {
   const formatDate = (d) => {
     if (!d) return "";
     return new Date(d)
@@ -1410,51 +1464,54 @@ function TrainingCertificatePreview({ cert, onClose }) {
   return (
     <div
       style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.9)",
-        zIndex: 1000,
-        overflowY: "auto",
-        padding: "40px 20px",
+        position: isPrintMode ? "relative" : "fixed",
+        inset: isPrintMode ? "auto" : 0,
+        background: isPrintMode ? "transparent" : "rgba(0,0,0,0.9)",
+        zIndex: isPrintMode ? "auto" : 1000,
+        overflowY: isPrintMode ? "visible" : "auto",
+        padding: isPrintMode ? "0" : "40px 20px",
+        pageBreakAfter: isPrintMode ? "always" : "auto",
       }}
-      onClick={onClose}
+      onClick={isPrintMode ? undefined : onClose}
     >
-      <div
-        style={{ textAlign: "center", marginBottom: "20px" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={() => window.print()}
-          style={{
-            padding: "10px 24px",
-            background: "#C2410C",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: 700,
-            marginRight: "12px",
-          }}
+      {!isPrintMode && (
+        <div
+          style={{ textAlign: "center", marginBottom: "20px" }}
+          onClick={(e) => e.stopPropagation()}
         >
-          Print / Save as PDF
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            padding: "10px 24px",
-            background: "transparent",
-            color: "white",
-            border: "1px solid white",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
-        >
-          Close
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            style={{
+              padding: "10px 24px",
+              background: "#C2410C",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 700,
+              marginRight: "12px",
+            }}
+          >
+            Print / Save as PDF
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: "10px 24px",
+              background: "transparent",
+              color: "white",
+              border: "1px solid white",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+          >
+            Close
+          </button>
+        </div>
+      )}
 
       <div onClick={(e) => e.stopPropagation()}>
         <div className="training-cert-area">
@@ -1833,6 +1890,9 @@ function TrainingCertificatePreview({ cert, onClose }) {
             zoom: 0.8;
           }
           .training-cert-area button { display: none; }
+          .print-all-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
+          .print-all-area .training-cert-area { page-break-after: always; margin-bottom: 20px; }
+          .print-all-area .training-cert-area:last-child { page-break-after: auto; }
         }
       `}</style>
     </div>

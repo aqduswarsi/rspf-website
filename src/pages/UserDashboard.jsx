@@ -283,7 +283,7 @@ export default function UserDashboard() {
                   style={{
                     padding: "20px",
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     fontSize: "13px",
                   }}
                 >
@@ -351,7 +351,7 @@ export default function UserDashboard() {
                   style={{
                     padding: "20px",
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     fontSize: "13px",
                   }}
                 >

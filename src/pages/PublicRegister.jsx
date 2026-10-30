@@ -473,12 +473,12 @@ export default function PublicRegister() {
               />
             </div>
             <div className="form-field">
-              <label>4. Name — हिंदी में</label>
+              <label>4. Name in Hindi</label>
               <input
                 name="nameHindi"
                 value={form.nameHindi}
                 onChange={handleChange}
-                placeholder="हिंदी में नाम"
+                placeholder="Enter name in Hindi"
               />
             </div>
             <div className="form-field">
@@ -491,12 +491,12 @@ export default function PublicRegister() {
               />
             </div>
             <div className="form-field">
-              <label>6. Father's Name — हिंदी में</label>
+              <label>6. Father's Name in Hindi</label>
               <input
                 name="fatherNameHindi"
                 value={form.fatherNameHindi}
                 onChange={handleChange}
-                placeholder="पिता का नाम"
+                placeholder="Enter father's name in Hindi"
               />
             </div>
             <div className="form-field">
@@ -509,12 +509,12 @@ export default function PublicRegister() {
               />
             </div>
             <div className="form-field">
-              <label>8. Mother's Name — हिंदी में</label>
+              <label>8. Mother's Name in Hindi</label>
               <input
                 name="motherNameHindi"
                 value={form.motherNameHindi}
                 onChange={handleChange}
-                placeholder="माता का नाम"
+                placeholder="Enter mother's name in Hindi"
               />
             </div>
           </div>

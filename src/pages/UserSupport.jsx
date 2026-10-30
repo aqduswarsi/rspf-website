@@ -22,22 +22,22 @@ export default function UserSupport() {
               <div
                 style={{
                   padding: "20px",
-                  background: "rgba(139,0,0,0.12)",
+                  background: "var(--card-bg)",
                   borderLeft: "3px solid var(--gold)",
                   borderRadius: "8px",
                 }}
               >
-                <h3 style={{ color: "var(--gold)", margin: "0 0 8px" }}>
+                <h3 style={{ color: "var(--navy)", margin: "0 0 8px" }}>
                   📞 Helpline
                 </h3>
                 <p
-                  style={{ color: "white", margin: "4px 0", fontSize: "16px" }}
+                  style={{ color: "var(--ink)", margin: "4px 0", fontSize: "16px" }}
                 >
                   182
                 </p>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                     margin: 0,
                     fontSize: "12px",
                   }}
@@ -49,16 +49,16 @@ export default function UserSupport() {
               <div
                 style={{
                   padding: "20px",
-                  background: "rgba(139,0,0,0.12)",
+                  background: "var(--card-bg)",
                   borderLeft: "3px solid var(--gold)",
                   borderRadius: "8px",
                 }}
               >
-                <h3 style={{ color: "var(--gold)", margin: "0 0 8px" }}>
+                <h3 style={{ color: "var(--navy)", margin: "0 0 8px" }}>
                   ✉️ Email
                 </h3>
                 <p
-                  style={{ color: "white", margin: "4px 0", fontSize: "14px" }}
+                  style={{ color: "var(--ink)", margin: "4px 0", fontSize: "14px" }}
                 >
                   rpsf.tc.gkp@gov.in
                 </p>
@@ -67,17 +67,17 @@ export default function UserSupport() {
               <div
                 style={{
                   padding: "20px",
-                  background: "rgba(139,0,0,0.12)",
+                  background: "var(--card-bg)",
                   borderLeft: "3px solid var(--gold)",
                   borderRadius: "8px",
                 }}
               >
-                <h3 style={{ color: "var(--gold)", margin: "0 0 8px" }}>
+                <h3 style={{ color: "var(--navy)", margin: "0 0 8px" }}>
                   📍 Address
                 </h3>
                 <p
                   style={{
-                    color: "rgba(255,255,255,0.8)",
+                    color: "var(--ink)",
                     margin: 0,
                     fontSize: "14px",
                     lineHeight: 1.6,

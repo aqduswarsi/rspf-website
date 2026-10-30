@@ -31,9 +31,10 @@ export default function SupportTickets() {
     }
   };
 
+  // Pre-fill the existing answer when opening the reply form.
   const handleOpenReply = (ticket) => {
     setSelectedTicket(ticket);
-    setAnswer(ticket.answer || "");
+    setAnswer(ticket.answer || ""); 
     setMessage("");
   };
 
@@ -51,6 +52,7 @@ export default function SupportTickets() {
     setSaving(true);
     setMessage("");
     try {
+      // The API also updates tickets that have already been answered.
       await replyTicket(selectedTicket._id, answer.trim());
       setMessage("✅ Reply sent successfully!");
       loadTickets();
@@ -110,23 +112,11 @@ export default function SupportTickets() {
       {/* Table */}
       <div className="table-wrap">
         {loading ? (
-          <p
-            style={{
-              padding: "40px",
-              textAlign: "center",
-              color: "var(--gold)",
-            }}
-          >
+          <p style={{ padding: "40px", textAlign: "center", color: "var(--gold)" }}>
             Loading...
           </p>
         ) : tickets.length === 0 ? (
-          <p
-            style={{
-              padding: "40px",
-              textAlign: "center",
-              color: "var(--muted)",
-            }}
-          >
+          <p style={{ padding: "40px", textAlign: "center", color: "var(--muted)" }}>
             No {status === "answered" ? "answered" : "pending"} tickets.
           </p>
         ) : (
@@ -144,30 +134,14 @@ export default function SupportTickets() {
             <tbody>
               {tickets.map((t, i) => (
                 <tr key={t._id}>
-                  <td
-                    style={{
-                      textAlign: "center",
-                      color: "var(--muted)",
-                    }}
-                  >
+                  <td style={{ textAlign: "center", color: "var(--muted)" }}>
                     {i + 1}
                   </td>
                   <td>
-                    <div
-                      style={{
-                        color: "var(--navy)",
-                        fontWeight: 600,
-                        fontSize: "13px",
-                      }}
-                    >
+                    <div style={{ color: "var(--navy)", fontWeight: 600, fontSize: "13px" }}>
                       {t.userId?.nameEnglish || "-"}
                     </div>
-                    <div
-                      style={{
-                        color: "var(--muted)",
-                        fontSize: "11px",
-                      }}
-                    >
+                    <div style={{ color: "var(--muted)", fontSize: "11px" }}>
                       {t.userId?.rollNumber || "-"}
                     </div>
                   </td>
@@ -176,44 +150,23 @@ export default function SupportTickets() {
                     {t.answer ? (
                       <span style={{ color: "#15803D" }}>{t.answer}</span>
                     ) : (
-                      <span
-                        style={{
-                          color: "var(--muted)",
-                          fontStyle: "italic",
-                          fontSize: "12px",
-                        }}
-                      >
+                      <span style={{ color: "var(--muted)", fontStyle: "italic", fontSize: "12px" }}>
                         — Not answered yet —
                       </span>
                     )}
                   </td>
-                  <td
-                    style={{
-                      color: "var(--muted)",
-                      whiteSpace: "nowrap",
-                      fontSize: "12.5px",
-                    }}
-                  >
+                  <td style={{ color: "var(--muted)", whiteSpace: "nowrap", fontSize: "12.5px" }}>
                     {formatDate(t.createdAt)}
                   </td>
                   <td>
-                    {status === "pending" ? (
-                      <button
-                        type="button"
-                        className="table-action"
-                        onClick={() => handleOpenReply(t)}
-                      >
-                        Reply
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="table-action"
-                        onClick={() => handleOpenReply(t)}
-                      >
-                        View
-                      </button>
-                    )}{" "}
+                    {/* Show "Edit Reply" for answered tickets and "Reply" otherwise. */}
+                    <button
+                      type="button"
+                      className="table-action"
+                      onClick={() => handleOpenReply(t)}
+                    >
+                      {t.status === "answered" ? "Edit Reply" : "Reply"}
+                    </button>{" "}
                     <button
                       type="button"
                       className="table-action danger"
@@ -229,7 +182,7 @@ export default function SupportTickets() {
         )}
       </div>
 
-      {/* Reply/View Modal */}
+      {/* Reply/Edit Modal */}
       {selectedTicket && (
         <div
           style={{
@@ -255,23 +208,10 @@ export default function SupportTickets() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-              }}
-            >
-              <h3
-                style={{
-                  color: "var(--gold)",
-                  margin: 0,
-                  fontFamily: "'Rajdhani', sans-serif",
-                  letterSpacing: "2px",
-                }}
-              >
-                {status === "pending" ? "Reply to Ticket" : "Ticket Details"}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              {/* Use a title that matches whether the reply is being edited or created. */}
+              <h3 style={{ color: "var(--gold)", margin: 0, fontFamily: "'Rajdhani', sans-serif", letterSpacing: "2px" }}>
+                {selectedTicket.status === "answered" ? "Edit Reply" : "Reply to Ticket"}
               </h3>
               <button
                 onClick={handleCloseModal}
@@ -291,152 +231,74 @@ export default function SupportTickets() {
             </div>
 
             {/* User info */}
-            <div
-              style={{
-                padding: "14px",
-                background: "rgba(139,0,0,0.15)",
-                border: "1px solid rgba(212,175,55,0.25)",
-                borderRadius: "10px",
-                marginBottom: "16px",
-              }}
-            >
-              <p
-                style={{
-                  margin: "0 0 4px",
-                  color: "var(--gold)",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                }}
-              >
+            <div style={{ padding: "14px", background: "rgba(139,0,0,0.15)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: "10px", marginBottom: "16px" }}>
+              <p style={{ margin: "0 0 4px", color: "var(--gold)", fontSize: "14px", fontWeight: 600 }}>
                 {selectedTicket.userId?.nameEnglish}
               </p>
-              <p
-                style={{
-                  margin: 0,
-                  color: "rgba(255,255,255,0.5)",
-                  fontSize: "12px",
-                }}
-              >
-                Roll No: {selectedTicket.userId?.rollNumber} • Mobile:{" "}
-                {selectedTicket.userId?.mobileNumber}
+              <p style={{ margin: 0, color: "rgba(255,255,255,0.5)", fontSize: "12px" }}>
+                Roll No: {selectedTicket.userId?.rollNumber} • Mobile: {selectedTicket.userId?.mobileNumber}
               </p>
             </div>
 
             {/* Question */}
-            <label
-              style={{
-                color: "var(--gold)",
-                fontSize: "12px",
-                letterSpacing: "1px",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
+            <label style={{ color: "var(--gold)", fontSize: "12px", letterSpacing: "1px", display: "block", marginBottom: "8px" }}>
               QUESTION
             </label>
-            <p
-              style={{
-                padding: "12px 14px",
-                background: "rgba(0,0,0,0.4)",
-                borderLeft: "3px solid var(--gold)",
-                borderRadius: "6px",
-                color: "rgba(255,255,255,0.85)",
-                fontSize: "14px",
-                lineHeight: 1.7,
-                marginBottom: "20px",
-              }}
-            >
+            <p style={{ padding: "12px 14px", background: "rgba(0,0,0,0.4)", borderLeft: "3px solid var(--gold)", borderRadius: "6px", color: "rgba(255,255,255,0.85)", fontSize: "14px", lineHeight: 1.7, marginBottom: "20px" }}>
               {selectedTicket.question}
             </p>
 
-            {/* Answer */}
-            <label
-              style={{
-                color: "var(--gold)",
-                fontSize: "12px",
-                letterSpacing: "1px",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
+            {/* Answer Input Field */}
+            <label style={{ color: "var(--gold)", fontSize: "12px", letterSpacing: "1px", display: "block", marginBottom: "8px" }}>
               ANSWER
             </label>
-
-            {status === "pending" ? (
-              <textarea
-                rows="4"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Type your reply here..."
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  background: "rgba(0,0,0,0.4)",
-                  border: "1px solid rgba(212,175,55,0.3)",
-                  borderRadius: "8px",
-                  color: "white",
-                  fontSize: "14px",
-                  fontFamily: "'Outfit', sans-serif",
-                  resize: "vertical",
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            ) : (
-              <p
-                style={{
-                  padding: "12px 14px",
-                  background: "rgba(74,222,128,0.08)",
-                  borderLeft: "3px solid #4ade80",
-                  borderRadius: "6px",
-                  color: "rgba(255,255,255,0.85)",
-                  fontSize: "14px",
-                  lineHeight: 1.7,
-                }}
-              >
-                {selectedTicket.answer}
-              </p>
-            )}
+            
+            {/* Keep the reply field available for both pending and answered tickets. */}
+            <textarea
+              rows="4"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Type your reply here..."
+              style={{
+                width: "100%",
+                padding: "12px",
+                background: "rgba(0,0,0,0.4)",
+                border: "1px solid rgba(212,175,55,0.3)",
+                borderRadius: "8px",
+                color: "white",
+                fontSize: "14px",
+                fontFamily: "'Outfit', sans-serif",
+                resize: "vertical",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
 
             {message && (
-              <p
-                style={{
-                  marginTop: "14px",
-                  color: message.includes("✅") ? "#4ade80" : "#ef4444",
-                  fontSize: "13px",
-                  textAlign: "center",
-                }}
-              >
+              <p style={{ marginTop: "14px", color: message.includes("✅") ? "#4ade80" : "#ef4444", fontSize: "13px", textAlign: "center" }}>
                 {message}
               </p>
             )}
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "12px",
-                marginTop: "20px",
-              }}
-            >
-              <button
-                type="button"
-                className="table-action"
-                onClick={handleCloseModal}
-              >
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "20px" }}>
+              <button type="button" className="table-action" onClick={handleCloseModal}>
                 Close
               </button>
-              {status === "pending" && (
-                <button
-                  type="button"
-                  className="primary"
-                  onClick={handleReply}
-                  disabled={saving}
-                  style={{ padding: "10px 24px" }}
-                >
-                  {saving ? "Sending..." : "Send Reply"}
-                </button>
-              )}
+              
+              {/* The button label reflects whether the reply is new or being updated. */}
+              <button
+                type="button"
+                className="primary"
+                onClick={handleReply}
+                disabled={saving}
+                style={{ padding: "10px 24px" }}
+              >
+                {saving
+                  ? "Saving..."
+                  : selectedTicket.status === "answered"
+                  ? "Update Reply"
+                  : "Send Reply"}
+              </button>
             </div>
           </div>
         </div>

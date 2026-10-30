@@ -92,7 +92,7 @@ export default function UserSupportTicket() {
             <div className="users-header">
               <h2>Support Ticket List</h2>
               <span
-                style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
+                style={{ color: "var(--muted)", fontSize: "13px" }}
               >
                 {filteredTickets.length}
                 {filteredTickets.length !== tickets.length &&
@@ -196,7 +196,7 @@ export default function UserSupportTicket() {
                   style={{
                     padding: "40px",
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                   }}
                 >
                   No support tickets yet. Submit your first question from Open
@@ -207,7 +207,7 @@ export default function UserSupportTicket() {
                   style={{
                     padding: "40px",
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--muted)",
                   }}
                 >
                   No tickets match your filters.
@@ -230,7 +230,7 @@ export default function UserSupportTicket() {
                         <td
                           style={{
                             textAlign: "center",
-                            color: "rgba(255,255,255,0.5)",
+                            color: "var(--ink)",
                           }}
                         >
                           {i + 1}
@@ -280,7 +280,7 @@ export default function UserSupportTicket() {
                         </td>
                         <td
                           style={{
-                            color: "rgba(255,255,255,0.6)",
+                            color: "var(--ink)",
                             whiteSpace: "nowrap",
                             fontSize: "12.5px",
                           }}
@@ -405,11 +405,12 @@ export default function UserSupportTicket() {
                   <p
                     style={{
                       padding: "12px 14px",
-                      background: "rgba(74,222,128,0.08)",
+                      background: "#14532d",
                       borderLeft: "3px solid #4ade80",
                       borderRadius: "6px",
-                      color: "rgba(255,255,255,0.9)",
+                      color: "#ffffff",
                       fontSize: "14px",
+                      fontWeight: 500,
                       lineHeight: 1.7,
                     }}
                   >
@@ -419,15 +420,16 @@ export default function UserSupportTicket() {
                   <p
                     style={{
                       padding: "12px 14px",
-                      background: "rgba(245,158,11,0.08)",
-                      borderLeft: "3px solid #f59e0b",
+                      background: "#92400e",
+                      borderLeft: "3px solid #fbbf24",
                       borderRadius: "6px",
-                      color: "rgba(255,255,255,0.7)",
-                      fontSize: "13px",
-                      fontStyle: "italic",
+                      color: "#ffffff",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      lineHeight: 1.7,
                     }}
                   >
-                    Admin ne abhi reply nahi kiya. Please wait.
+                    No reply yet. Please wait.
                   </p>
                 )}
 

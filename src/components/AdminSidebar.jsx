@@ -74,6 +74,16 @@ export default function AdminSidebar({ isOpen, onClose }) {
             </NavLink>
 
             <NavLink
+              to="/admin/guest-lectures"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `admin-nav-item ${isActive ? "active" : ""}`
+              }
+            >
+              Guest Lecture
+            </NavLink>
+            
+            <NavLink
               to="/admin/certificates"
               onClick={onClose}
               className={({ isActive }) =>

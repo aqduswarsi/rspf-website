@@ -1291,17 +1291,6 @@ export async function updateMyFeedback(id, data) {
   return result;
 }
 
-export async function deleteMyFeedback(id) {
-  const token = localStorage.getItem("rpsf_user_token");
-  const res = await fetch(`${API_BASE_URL}/api/user/feedback/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "Failed to delete feedback");
-  return data;
-}
-
 export async function getAdminDashboard() {
   const token = localStorage.getItem("rpsf_login_token");
   const res = await fetch(`${API_BASE_URL}/api/admin/dashboard`, {
@@ -1324,5 +1313,58 @@ export async function bulkCreateCertificates(payload) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Bulk create failed");
+  return data;
+}
+
+// ==================== GUEST LECTURES ====================
+
+export async function createGuestLecture(data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/guest-lectures`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to create lecture");
+  return result;
+}
+
+export async function getAllGuestLectures() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/guest-lectures`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load lectures");
+  return data;
+}
+
+export async function updateGuestLecture(id, data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/guest-lectures/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to update lecture");
+  return result;
+}
+
+export async function deleteGuestLecture(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/guest-lectures/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to delete lecture");
   return data;
 }

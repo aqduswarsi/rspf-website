@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   createUserFeedback,
   deleteFeedback,
-  deleteMyFeedback,
   getAllFeedback,
   getMyFeedback,
   updateFeedbackAdmin,
@@ -231,7 +230,7 @@ const BARRACK = [
     "Beds, mattresses and essential facilities",
   ],
   ["B03", "बैरक की सफाई एवं रख-रखाव", "Barrack cleanliness and maintenance"],
-  ["B04", "बाधकम एवं शौचालयों की स्थिति", "Condition of bathrooms and toilets"],
+  ["B04", "बाथरूम एवं शौचालयों की स्थिति", "Condition of bathrooms and toilets"],
   ["B05", "पानी की पर्याप्त उपलब्धता", "Availability of water"],
   [
     "B06",
@@ -662,6 +661,31 @@ const FEEDBACK_RATING_SECTIONS = [
   { title: "Part 13 — Learning Outcomes", field: "learning", questions: LEARNING },
 ];
 
+const FEEDBACK_FILTER_FIELDS = [
+  ["courseName", "Course"],
+  ["batch", "Batch / Course ID"],
+  ["courseMode", "Course Mode"],
+  ["courseCategory", "Course Category"],
+  ["feedbackStage", "Feedback Stage"],
+  ["courseStatus", "Course Status"],
+  ["language", "Language"],
+  ["instructor", "Instructor"],
+  ["traineeName", "Trainee Name"],
+  ["traineeId", "Trainee ID"],
+  ["railwayZone", "Zone / Unit"],
+  ["overallCourseRating", "Overall Rating"],
+  ["wouldRecommend", "Would Recommend"],
+  ["reportIssue", "Issue / Complaint"],
+  ["priority", "Priority"],
+  ["adminCategory", "Admin Category"],
+  ["adminPriority", "Admin Priority"],
+  ["assignedTo", "Assigned To"],
+  ["adminStatus", "Admin Status"],
+  ["verifiedBy", "Verified By"],
+  ["reopened", "Reopened"],
+  ["adminReviewed", "Review Status"],
+];
+
 function formFromFeedback(feedback) {
   const form = Object.fromEntries(
     Object.keys(initialForm).map((key) => [
@@ -776,6 +800,7 @@ function RatingSection({ title, hindi, english, questions, values, onChange }) {
         <h3
           style={{
             margin: 0,
+            color: "#FFFFFF",
             fontSize: "15px",
             fontFamily: "'Rajdhani', sans-serif",
             letterSpacing: "1px",
@@ -784,7 +809,14 @@ function RatingSection({ title, hindi, english, questions, values, onChange }) {
         >
           {title}
         </h3>
-        <p style={{ margin: "2px 0 0", fontSize: "11px", opacity: 0.85 }}>
+        <p
+          style={{
+            margin: "2px 0 0",
+            color: "#FFFFFF",
+            fontSize: "11px",
+            opacity: 0.85,
+          }}
+        >
           {hindi} / {english}
         </p>
       </div>
@@ -815,6 +847,11 @@ export default function AdminFeedback({ userMode = false }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [feedbackFilters, setFeedbackFilters] = useState({});
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [previewData, setPreviewData] = useState(null);
@@ -905,11 +942,7 @@ export default function AdminFeedback({ userMode = false }) {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this feedback submission?")) return;
     try {
-      if (userMode) {
-        await deleteMyFeedback(id);
-      } else {
-        await deleteFeedback(id);
-      }
+      await deleteFeedback(id);
       await load();
     } catch (err) {
       alert(err.message);
@@ -933,6 +966,79 @@ export default function AdminFeedback({ userMode = false }) {
       year: "numeric",
     });
   };
+
+  const filteredFeedbacks = feedbacks.filter((feedback) => {
+    const query = searchText.trim().toLowerCase();
+    if (
+      query &&
+      ![
+        feedback.courseName,
+        feedback.batch,
+        feedback.courseMode,
+        feedback.courseCategory,
+        feedback.instructor,
+        feedback.traineeName,
+        feedback.traineeId,
+        feedback.railwayZone,
+        feedback.feedbackStage,
+        feedback.courseStatus,
+        feedback.language,
+        feedback.mostUsefulAspect,
+        feedback.areasRequiringImprovement,
+        feedback.otherSuggestions,
+        feedback.issueDetails,
+        feedback.assignedTo,
+        feedback.actionTaken,
+        feedback.resolutionRemarks,
+        feedback.verifiedBy,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    ) {
+      return false;
+    }
+
+    if (
+      FEEDBACK_FILTER_FIELDS.some(
+        ([field]) =>
+          feedbackFilters[field] &&
+          String(feedback[field] ?? "") !== feedbackFilters[field],
+      )
+    ) {
+      return false;
+    }
+
+    const submittedDate = feedback.createdAt
+      ? String(feedback.createdAt).slice(0, 10)
+      : "";
+    if (filterFromDate && (!submittedDate || submittedDate < filterFromDate))
+      return false;
+    if (filterToDate && (!submittedDate || submittedDate > filterToDate))
+      return false;
+
+    return true;
+  });
+  const hasActiveFeedbackFilters =
+    searchText ||
+    filterFromDate ||
+    filterToDate ||
+    Object.values(feedbackFilters).some(Boolean);
+  const feedbackFilterOptions = Object.fromEntries(
+    FEEDBACK_FILTER_FIELDS.map(([field]) => [
+      field,
+      field === "adminReviewed"
+        ? ["true", "false"]
+        : [
+            ...new Set(
+              feedbacks
+                .map((feedback) => feedback[field])
+                .filter((value) => value !== null && value !== undefined && value !== ""),
+            ),
+          ]
+            .map(String)
+            .sort((a, b) => a.localeCompare(b)),
+    ]),
+  );
 
   const inputStyle = {
     width: "100%",
@@ -1017,7 +1123,18 @@ export default function AdminFeedback({ userMode = false }) {
           className="education-panel"
           style={{ padding: "20px", marginBottom: "24px" }}
         >
-          <h3 style={{ margin: "0 0 16px", color: "var(--navy)" }}>
+          <h3
+            style={{
+              margin: "0 0 16px",
+              color: "#FFFFFF",
+              background: "linear-gradient(90deg, #0f2350 0%, #1e3a8a 100%)",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              fontFamily: "'Rajdhani', sans-serif",
+              letterSpacing: "1px",
+              textTransform: "uppercase",
+            }}
+          >
             {editingId ? "Edit Feedback" : "Submit Training Feedback"}
           </h3>
           {/* Rating Scale Reference */}
@@ -1031,7 +1148,7 @@ export default function AdminFeedback({ userMode = false }) {
               fontSize: "12px",
             }}
           >
-            <strong style={{ color: "var(--navy)" }}>Rating Scale:</strong>{" "}
+            <strong style={{ color: "#0f2350" }}>Rating Scale:</strong>{" "}
             1=Poor, 2=Needs Improvement, 3=Satisfactory, 4=Good, 5=Excellent,
             N/A=Not Applicable. (N/A excluded from average)
           </div>
@@ -1056,6 +1173,7 @@ export default function AdminFeedback({ userMode = false }) {
               <h3
                 style={{
                   margin: 0,
+                  color: "#FFFFFF",
                   fontSize: "15px",
                   fontFamily: "'Rajdhani', sans-serif",
                   letterSpacing: "1px",
@@ -1064,7 +1182,14 @@ export default function AdminFeedback({ userMode = false }) {
               >
                 Part 1 — Training &amp; Trainee Details
               </h3>
-              <p style={{ margin: "2px 0 0", fontSize: "11px", opacity: 0.85 }}>
+              <p
+                style={{
+                  margin: "2px 0 0",
+                  color: "#FFFFFF",
+                  fontSize: "11px",
+                  opacity: 0.85,
+                }}
+              >
                 प्रशिक्षण एवं प्रशिक्षु की जानकारी
               </p>
             </div>
@@ -1277,6 +1402,7 @@ export default function AdminFeedback({ userMode = false }) {
               <h3
                 style={{
                   margin: 0,
+                  color: "#FFFFFF",
                   fontSize: "15px",
                   fontFamily: "'Rajdhani', sans-serif",
                   letterSpacing: "1px",
@@ -1285,7 +1411,14 @@ export default function AdminFeedback({ userMode = false }) {
               >
                 Part 4 — Training Methodology
               </h3>
-              <p style={{ margin: "2px 0 0", fontSize: "11px", opacity: 0.85 }}>
+              <p
+                style={{
+                  margin: "2px 0 0",
+                  color: "#FFFFFF",
+                  fontSize: "11px",
+                  opacity: 0.85,
+                }}
+              >
                 प्रशिक्षण पद्धति
               </p>
             </div>
@@ -1437,12 +1570,15 @@ export default function AdminFeedback({ userMode = false }) {
           >
             <h4
               style={{
-                color: "var(--navy)",
+                color: "#FFFFFF",
                 margin: "0 0 14px",
                 fontSize: "14px",
                 fontFamily: "'Rajdhani', sans-serif",
                 letterSpacing: "1px",
                 textTransform: "uppercase",
+                background: "linear-gradient(90deg, #0f2350 0%, #1e3a8a 100%)",
+                padding: "12px 14px",
+                borderRadius: "8px",
               }}
             >
               Trainee Self-Assessment
@@ -1523,6 +1659,7 @@ export default function AdminFeedback({ userMode = false }) {
               <h3
                 style={{
                   margin: 0,
+                  color: "#FFFFFF",
                   fontSize: "15px",
                   fontFamily: "'Rajdhani', sans-serif",
                   letterSpacing: "1px",
@@ -1531,7 +1668,14 @@ export default function AdminFeedback({ userMode = false }) {
               >
                 Part 14 — Overall Feedback &amp; Suggestions
               </h3>
-              <p style={{ margin: "2px 0 0", fontSize: "11px", opacity: 0.85 }}>
+              <p
+                style={{
+                  margin: "2px 0 0",
+                  color: "#FFFFFF",
+                  fontSize: "11px",
+                  opacity: 0.85,
+                }}
+              >
                 समग्र फीडबैक एवं सुझाव
               </p>
             </div>
@@ -1829,15 +1973,172 @@ export default function AdminFeedback({ userMode = false }) {
         <div className="panel-heading">
           <h3>
             {isAdmin ? "All Feedback Submissions" : "My Feedback Submissions"} (
-            {feedbacks.length})
+            {isAdmin
+              ? `${filteredFeedbacks.length}${filteredFeedbacks.length !== feedbacks.length ? ` of ${feedbacks.length}` : ""}`
+              : feedbacks.length}
+            )
           </h3>
         </div>
+        {isAdmin && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(220px, 1fr) auto",
+              gap: "12px",
+              alignItems: "end",
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--line)",
+            }}
+          >
+            <div>
+              <label style={labelStyle}>
+                Search (Course, Batch, Trainee, Instructor)
+              </label>
+              <input
+                type="search"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Type any keyword..."
+                style={inputStyle}
+              />
+            </div>
+            <button
+              type="button"
+              className="table-action"
+              onClick={() => {
+                setSearchText("");
+                setFeedbackFilters({});
+                setFilterFromDate("");
+                setFilterToDate("");
+              }}
+              disabled={!hasActiveFeedbackFilters}
+              style={{
+                padding: "10px 16px",
+                cursor: hasActiveFeedbackFilters ? "pointer" : "not-allowed",
+                opacity: hasActiveFeedbackFilters ? 1 : 0.5,
+              }}
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+        {isAdmin && (
+          <>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                gap: "12px",
+                alignItems: "end",
+                padding: "16px 20px",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              {FEEDBACK_FILTER_FIELDS.slice(0, 4).map(([field, label]) => (
+                <div key={field}>
+                  <label style={labelStyle}>{label}</label>
+                  <select
+                    value={feedbackFilters[field] || ""}
+                    onChange={(e) =>
+                      setFeedbackFilters((current) => ({
+                        ...current,
+                        [field]: e.target.value,
+                      }))
+                    }
+                    style={inputStyle}
+                  >
+                    <option value="">All {label}</option>
+                    {feedbackFilterOptions[field].map((value) => (
+                      <option key={value} value={value}>
+                        {field === "adminReviewed"
+                          ? value === "true"
+                            ? "Reviewed"
+                            : "Pending review"
+                          : value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="table-action"
+                onClick={() => setShowAdvancedFilters((current) => !current)}
+                style={{ padding: "10px 16px" }}
+              >
+                {showAdvancedFilters ? "Hide Advanced Filters" : "More Filters"}
+              </button>
+            </div>
+            {showAdvancedFilters && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                  gap: "12px",
+                  alignItems: "end",
+                  padding: "16px 20px",
+                  borderBottom: "1px solid var(--line)",
+                  background: "#FAFAF8",
+                }}
+              >
+                {FEEDBACK_FILTER_FIELDS.slice(4).map(([field, label]) => (
+                  <div key={field}>
+                    <label style={labelStyle}>{label}</label>
+                    <select
+                      value={feedbackFilters[field] || ""}
+                      onChange={(e) =>
+                        setFeedbackFilters((current) => ({
+                          ...current,
+                          [field]: e.target.value,
+                        }))
+                      }
+                      style={inputStyle}
+                    >
+                      <option value="">All {label}</option>
+                      {feedbackFilterOptions[field].map((value) => (
+                        <option key={value} value={value}>
+                          {field === "adminReviewed"
+                            ? value === "true"
+                              ? "Reviewed"
+                              : "Pending review"
+                            : value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+                <div>
+                  <label style={labelStyle}>Submitted From</label>
+                  <input
+                    type="date"
+                    value={filterFromDate}
+                    onChange={(e) => setFilterFromDate(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Submitted To</label>
+                  <input
+                    type="date"
+                    value={filterToDate}
+                    onChange={(e) => setFilterToDate(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
         <div className="education-table-wrap">
           {loading ? (
             <p style={{ padding: "20px", color: "var(--gold)" }}>Loading...</p>
           ) : feedbacks.length === 0 ? (
             <p style={{ padding: "20px", color: "var(--muted)" }}>
               No feedback yet.
+            </p>
+          ) : isAdmin && filteredFeedbacks.length === 0 ? (
+            <p style={{ padding: "20px", color: "var(--muted)" }}>
+              No feedback submissions match your filters.
             </p>
           ) : (
             <table className="education-table">
@@ -1855,7 +2156,7 @@ export default function AdminFeedback({ userMode = false }) {
                 </tr>
               </thead>
               <tbody>
-                {feedbacks.map((f, i) => (
+                {(isAdmin ? filteredFeedbacks : feedbacks).map((f, i) => (
                   <tr key={f._id}>
                     <td>{i + 1}</td>
                     <td style={{ color: "var(--navy)", fontWeight: 600 }}>
@@ -1898,13 +2199,15 @@ export default function AdminFeedback({ userMode = false }) {
                       >
                         Edit
                       </button>{" "}
-                      <button
-                        type="button"
-                        className="table-action danger"
-                        onClick={() => handleDelete(f._id)}
-                      >
-                        Delete
-                      </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          className="table-action danger"
+                          onClick={() => handleDelete(f._id)}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1945,7 +2248,20 @@ export default function AdminFeedback({ userMode = false }) {
               <strong>{previewData.averageRating || 0} / 5</strong>
             </p>
 
-            <h3 style={{ color: "var(--navy)", marginTop: "24px" }}>
+            <h3
+              style={{
+                marginTop: "24px",
+                marginBottom: "10px",
+                padding: "12px 14px",
+                borderRadius: "8px",
+                background: "linear-gradient(90deg, #0f2350 0%, #1e3a8a 100%)",
+                color: "white",
+                fontSize: "15px",
+                fontFamily: "'Rajdhani', sans-serif",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+              }}
+            >
               Part 1 — Training &amp; Trainee Details
             </h3>
             <div style={{ display: "grid", gap: "10px", fontSize: "13px" }}>
@@ -1978,10 +2294,16 @@ export default function AdminFeedback({ userMode = false }) {
               <section key={field}>
                 <h3
                   style={{
-                    color: "var(--navy)",
+                    color: "white",
                     marginTop: "24px",
                     marginBottom: "10px",
                     fontSize: "15px",
+                    padding: "12px 14px",
+                    borderRadius: "8px",
+                    background: "linear-gradient(90deg, #0f2350 0%, #1e3a8a 100%)",
+                    fontFamily: "'Rajdhani', sans-serif",
+                    letterSpacing: "1px",
+                    textTransform: "uppercase",
                   }}
                 >
                   {title}
@@ -2019,10 +2341,16 @@ export default function AdminFeedback({ userMode = false }) {
 
             <h3
               style={{
-                color: "var(--navy)",
+                color: "white",
                 marginTop: "24px",
                 marginBottom: "10px",
                 fontSize: "15px",
+                padding: "12px 14px",
+                borderRadius: "8px",
+                background: "linear-gradient(90deg, #0f2350 0%, #1e3a8a 100%)",
+                fontFamily: "'Rajdhani', sans-serif",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
               }}
             >
               Part 13 — Trainee Self-Assessment
@@ -2042,10 +2370,16 @@ export default function AdminFeedback({ userMode = false }) {
 
             <h3
               style={{
-                color: "var(--navy)",
+                color: "white",
                 marginTop: "24px",
                 marginBottom: "10px",
                 fontSize: "15px",
+                padding: "12px 14px",
+                borderRadius: "8px",
+                background: "linear-gradient(90deg, #0f2350 0%, #1e3a8a 100%)",
+                fontFamily: "'Rajdhani', sans-serif",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
               }}
             >
               Part 14 — Overall Feedback &amp; Suggestions
@@ -2087,10 +2421,16 @@ export default function AdminFeedback({ userMode = false }) {
               <>
                 <h3
                   style={{
-                    color: "var(--navy)",
+                    color: "white",
                     marginTop: "24px",
                     marginBottom: "10px",
                     fontSize: "15px",
+                    padding: "12px 14px",
+                    borderRadius: "8px",
+                    background: "linear-gradient(90deg, #0f2350 0%, #1e3a8a 100%)",
+                    fontFamily: "'Rajdhani', sans-serif",
+                    letterSpacing: "1px",
+                    textTransform: "uppercase",
                   }}
                 >
                   Part 15 — Administrative Action

@@ -15,6 +15,34 @@ const questionTypes = [
   { type: "Written", color: "#7e22ce" },
 ];
 
+// 👇 NEW: Countdown component
+function Countdown({ targetDate, onEnd }) {
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const tick = () => {
+      const diff = new Date(targetDate) - new Date();
+      if (diff <= 0) {
+        setText("Starting...");
+        if (onEnd) onEnd();
+        return;
+      }
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / (1000 * 60)) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      setText(
+        `${d > 0 ? d + "d " : ""}${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`,
+      );
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+
+  return <span>{text}</span>;
+}
+
 export default function UserExam() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [exams, setExams] = useState([]);
@@ -212,33 +240,29 @@ export default function UserExam() {
     }
   };
 
-    const handleSubmit = async () => {
-      const exam = selectedExamRef.current;
-      const currentAnswers = answersRef.current;
-      if (!exam) return;
+  const handleSubmit = async () => {
+    const exam = selectedExamRef.current;
+    const currentAnswers = answersRef.current;
+    if (!exam) return;
 
-      const unanswered = exam.questions.filter(
-        (q) =>
-          !currentAnswers[q._id] || !currentAnswers[q._id].toString().trim(),
-      );
+    const unanswered = exam.questions.filter(
+      (q) => !currentAnswers[q._id] || !currentAnswers[q._id].toString().trim(),
+    );
 
-      if (unanswered.length > 0) {
-        if (
-          !window.confirm(
-            `${unanswered.length} questions unanswered. Submit anyway?`,
-          )
+    if (unanswered.length > 0) {
+      if (
+        !window.confirm(
+          `${unanswered.length} questions unanswered. Submit anyway?`,
         )
-          return;
-      } else {
-        if (
-          !window.confirm("Submit exam? You cannot change answers after this.")
-        )
-          return;
-      }
+      )
+        return;
+    } else {
+      if (!window.confirm("Submit exam? You cannot change answers after this."))
+        return;
+    }
 
-      await submitAnswers(false);
-    };
-
+    await submitAnswers(false);
+  };
 
   const handleBackToExams = () => {
     clearInterval(timerRef.current);
@@ -303,7 +327,24 @@ export default function UserExam() {
     }
   };
 
+  // 👇 UPDATED: getExamBadge with time status
   const getExamBadge = (exam) => {
+    if (exam.statusMessage === "not_started") {
+      return {
+        text: "Upcoming",
+        bg: "#eff6ff",
+        color: "#1d4ed8",
+        border: "#bfdbfe",
+      };
+    }
+    if (exam.statusMessage === "ended") {
+      return {
+        text: "Ended",
+        bg: "#fef2f2",
+        color: "#b91c1c",
+        border: "#fecaca",
+      };
+    }
     if (exam.requestStatus === "pending") {
       return {
         text: "Reattempt Pending",
@@ -346,10 +387,7 @@ export default function UserExam() {
     ) {
       return false;
     }
-    if (
-      filterAvailability &&
-      getExamBadge(exam).text !== filterAvailability
-    ) {
+    if (filterAvailability && getExamBadge(exam).text !== filterAvailability) {
       return false;
     }
     return true;
@@ -410,7 +448,8 @@ export default function UserExam() {
                 <h2>Available Exams</h2>
                 <span style={{ color: "var(--muted)", fontSize: "13px" }}>
                   {filteredExams.length}
-                  {filteredExams.length !== exams.length && ` of ${exams.length}`}{" "}
+                  {filteredExams.length !== exams.length &&
+                    ` of ${exams.length}`}{" "}
                   exam{filteredExams.length !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -432,8 +471,7 @@ export default function UserExam() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(200px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                     gap: "12px",
                     marginBottom: "18px",
                   }}
@@ -525,40 +563,87 @@ export default function UserExam() {
                           <span>{exam.passPercentage}% Pass</span>
                         </div>
 
-                        {exam.canAttempt ? (
-                          <button
-                            className="exam-start-btn"
-                            onClick={() => startExam(exam._id)}
-                          >
-                            Start Exam
-                          </button>
-                        ) : exam.requestStatus === "pending" ? (
+                        {/* 👇 NEW: Upcoming exam — countdown + disabled button */}
+                        {exam.statusMessage === "not_started" && (
+                          <>
+                            <div
+                              style={{
+                                padding: "8px 12px",
+                                background: "#eff6ff",
+                                border: "1px solid #bfdbfe",
+                                borderRadius: "8px",
+                                marginBottom: "10px",
+                                textAlign: "center",
+                                fontSize: "12px",
+                                color: "#1d4ed8",
+                                fontFamily: "monospace",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Starts in:{" "}
+                              <Countdown
+                                targetDate={exam.startTime}
+                                onEnd={loadExams}
+                              />
+                            </div>
+                            <button
+                              className="exam-start-btn"
+                              disabled
+                              style={{ cursor: "not-allowed" }}
+                            >
+                              Not Started Yet
+                            </button>
+                          </>
+                        )}
+
+                        {/* 👇 NEW: Ended exam */}
+                        {exam.statusMessage === "ended" && (
                           <button
                             className="exam-start-btn"
                             disabled
                             style={{ cursor: "not-allowed" }}
                           >
-                            Request Pending
-                          </button>
-                        ) : exam.requestStatus === "approved" ? (
-                          <button
-                            className="exam-start-btn"
-                            onClick={() => startExam(exam._id)}
-                          >
-                            Start Reattempt
-                          </button>
-                        ) : (
-                          <button
-                            className="exam-start-btn"
-                            onClick={() => openReattemptModal(exam)}
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #78350f, #b45309)",
-                            }}
-                          >
-                            Request Reattempt
+                            Exam Ended
                           </button>
                         )}
+
+                        {/* 👇 Existing button logic (available / attempted / reattempt) */}
+                        {exam.statusMessage !== "not_started" &&
+                          exam.statusMessage !== "ended" &&
+                          (exam.canAttempt ? (
+                            <button
+                              className="exam-start-btn"
+                              onClick={() => startExam(exam._id)}
+                            >
+                              Start Exam
+                            </button>
+                          ) : exam.requestStatus === "pending" ? (
+                            <button
+                              className="exam-start-btn"
+                              disabled
+                              style={{ cursor: "not-allowed" }}
+                            >
+                              Request Pending
+                            </button>
+                          ) : exam.requestStatus === "approved" ? (
+                            <button
+                              className="exam-start-btn"
+                              onClick={() => startExam(exam._id)}
+                            >
+                              Start Reattempt
+                            </button>
+                          ) : (
+                            <button
+                              className="exam-start-btn"
+                              onClick={() => openReattemptModal(exam)}
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #78350f, #b45309)",
+                              }}
+                            >
+                              Request Reattempt
+                            </button>
+                          ))}
                       </div>
                     );
                   })}
@@ -724,10 +809,10 @@ export default function UserExam() {
                   <p
                     style={{
                       padding: "12px 24px",
-                      background: "rgba(245,158,11,0.1)",
-                      border: "1px solid rgba(245,158,11,0.4)",
+                      background: "#FCEDE5",
+                      border: "1px solid rgba(232,89,12,0.25)",
                       borderRadius: "8px",
-                      color: "#f59e0b",
+                      color: "var(--navy)",
                       fontSize: "13px",
                       display: "inline-block",
                       margin: "0 0 16px",
@@ -737,10 +822,15 @@ export default function UserExam() {
                   </p>
                   <div>
                     <button
-                      className="btn-copy"
+                      className="user-primary-btn"
                       onClick={handleSubmit}
                       disabled={submitting}
-                      style={{ padding: "14px 40px", fontSize: "15px" }}
+                      style={{
+                        padding: "14px 40px",
+                        fontSize: "15px",
+                        opacity: submitting ? 0.65 : 1,
+                        cursor: submitting ? "not-allowed" : "pointer",
+                      }}
                     >
                       {submitting ? "Submitting..." : "Submit Exam"}
                     </button>
@@ -754,15 +844,21 @@ export default function UserExam() {
                 style={{
                   textAlign: "center",
                   padding: "80px 20px",
-                  background:
-                    "linear-gradient(135deg, rgba(139,0,0,0.15), rgba(212,175,55,0.05))",
-                  border: "1px solid rgba(212,175,55,0.3)",
+                  background: "#FFFFFF",
+                  border: "1px solid var(--line)",
                   borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(11,37,69,0.04)",
                   maxWidth: "600px",
                   margin: "40px auto",
                 }}
               >
-                <div style={{ fontSize: "72px", marginBottom: "16px" }}>
+                <div
+                  style={{
+                    color: "var(--signal)",
+                    fontSize: "72px",
+                    marginBottom: "16px",
+                  }}
+                >
                   &#10003;
                 </div>
                 <h2
@@ -797,7 +893,7 @@ export default function UserExam() {
                 </p>
 
                 <button
-                  className="btn-copy"
+                  className="user-primary-btn"
                   onClick={handleBackToExams}
                   style={{ padding: "14px 40px", fontSize: "15px" }}
                 >

@@ -239,12 +239,12 @@ export default function UserProfileUpdate() {
                     />
                   </div>
                   <div className="form-field">
-                    <label>Name (हिंदी)</label>
+                    <label>Name in Hindi</label>
                     <input
                       name="nameHindi"
                       value={form.nameHindi}
                       onChange={handleChange}
-                      placeholder="हिंदी में नाम"
+                      placeholder="Enter name in Hindi"
                     />
                   </div>
                   <div className="form-field">
@@ -257,12 +257,12 @@ export default function UserProfileUpdate() {
                     />
                   </div>
                   <div className="form-field">
-                    <label>Father's Name (हिंदी)</label>
+                    <label>Father's Name in Hindi</label>
                     <input
                       name="fatherNameHindi"
                       value={form.fatherNameHindi}
                       onChange={handleChange}
-                      placeholder="पिता का नाम"
+                      placeholder="Enter father's name in Hindi"
                     />
                   </div>
                   <div className="form-field">
@@ -275,12 +275,12 @@ export default function UserProfileUpdate() {
                     />
                   </div>
                   <div className="form-field">
-                    <label>Mother's Name (हिंदी)</label>
+                    <label>Mother's Name in Hindi</label>
                     <input
                       name="motherNameHindi"
                       value={form.motherNameHindi}
                       onChange={handleChange}
-                      placeholder="माता का नाम"
+                      placeholder="Enter mother's name in Hindi"
                     />
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export default function UserProfileUpdate() {
                   <div className="form-field">
                     <label>
                       Mobile Number{" "}
-                      <small style={{ color: "rgba(255,255,255,0.4)" }}>
+                      <small style={{ color: "var(--muted)" }}>
                         (cannot be changed)
                       </small>
                     </label>
@@ -301,7 +301,11 @@ export default function UserProfileUpdate() {
                       name="mobileNumber"
                       value={form.mobileNumber}
                       readOnly
-                      style={{ opacity: 0.6, cursor: "not-allowed" }}
+                      style={{
+                        background: "var(--paper)",
+                        color: "var(--muted)",
+                        cursor: "not-allowed",
+                      }}
                     />
                     <div className="whatsapp-radio">
                       <span>WhatsApp:</span>

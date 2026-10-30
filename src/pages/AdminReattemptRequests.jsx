@@ -379,7 +379,7 @@ export default function AdminReattemptRequests() {
                     </td>
                     <td
                       style={{
-                        color: "rgba(255,255,255,0.6)",
+                        color: "#000000",
                         whiteSpace: "nowrap",
                         fontSize: "12.5px",
                       }}

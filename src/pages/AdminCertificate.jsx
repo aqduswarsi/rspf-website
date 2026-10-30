@@ -13,6 +13,7 @@ const initialForm = {
   quizName: "",
   courseName: "",
   score: "",
+  grade: "",
   completedOn: new Date().toISOString().split("T")[0],
   place: "RPSF/TC/GKP",
   dateOfIssue: new Date().toISOString().split("T")[0],
@@ -57,6 +58,7 @@ export default function AdminCertificate() {
   const [message, setMessage] = useState("");
   const [previewCert, setPreviewCert] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [printAllMode, setPrintAllMode] = useState(false);
 
   // Bulk
   const [showBulk, setShowBulk] = useState(false);
@@ -133,17 +135,19 @@ export default function AdminCertificate() {
     if (
       !form.name ||
       !form.certificateId ||
-      !form.quizName ||
       !form.courseName ||
-      !form.score
+      !form.completedOn
     ) {
-      setMessage("Name, Certificate ID, Quiz, Course and Score are required");
+      setMessage("Name, Certificate ID, Course and Completed On are required");
       return;
     }
     try {
       setSaving(true);
       setMessage("");
-      await createCertificate({ ...form, score: Number(form.score) });
+      await createCertificate({
+        ...form,
+        score: form.score ? Number(form.score) : 0,
+      });
       setMessage("Certificate created successfully");
       setForm(initialForm);
       load();
@@ -213,6 +217,19 @@ export default function AdminCertificate() {
     setFilterToDate("");
   };
 
+  // ============ PRINT ALL ============
+  const handlePrintAll = () => {
+    if (filteredCerts.length === 0) {
+      setMessage("No certificates to print");
+      return;
+    }
+    setPrintAllMode(true);
+    setTimeout(() => {
+      window.print();
+      setPrintAllMode(false);
+    }, 500);
+  };
+
   // ==================== BULK UPLOAD ====================
   const handleExcelUpload = (e) => {
     const file = e.target.files[0];
@@ -251,6 +268,7 @@ export default function AdminCertificate() {
             quizName: get(["quizname", "quiz", "quiztitle"]),
             courseName: get(["coursename", "course", "coursetitle"]),
             score: get(["score", "marks", "percentage"]),
+            grade: get(["grade", "gradepoint"]),
             completedOn: formatExcelDate(
               row[
                 normalizedHeaders.completedon ||
@@ -320,7 +338,6 @@ export default function AdminCertificate() {
     const cleanSignatures = bulkSignatures.filter(
       (s) => s.image || s.officerName || s.rank,
     );
-
     const validRows = [];
     const failedRows = [];
 
@@ -329,8 +346,6 @@ export default function AdminCertificate() {
       const missingFields = [
         ["name", row.name],
         ["certificateId", row.certificateId],
-        ["quizName", row.quizName],
-        ["courseName", row.courseName],
         ["completedOn", row.completedOn],
       ]
         .filter(([, value]) => !value)
@@ -343,7 +358,7 @@ export default function AdminCertificate() {
         });
         continue;
       }
-      if (!Number.isFinite(score) || score < 0 || score > 100) {
+      if (row.score && (!Number.isFinite(score) || score < 0 || score > 100)) {
         failedRows.push({ ...row, _error: "Score must be between 0 and 100" });
         continue;
       }
@@ -364,7 +379,8 @@ export default function AdminCertificate() {
           certificateId: r.certificateId,
           quizName: r.quizName,
           courseName: r.courseName,
-          score: Number(r.score),
+          score: Number(r.score) || 0,
+          grade: r.grade || "",
           completedOn: r.completedOn,
           place: r.place,
           dateOfIssue: r.dateOfIssue,
@@ -419,19 +435,10 @@ export default function AdminCertificate() {
         quizName: "Pre Assessment Quiz",
         courseName: "For testing purpose",
         score: 80,
+        grade: "A",
         completedOn: "2026-05-20",
         place: "RPSF/TC/GKP",
         dateOfIssue: "2026-05-20",
-      },
-      {
-        name: "Ramesh Kumar",
-        certificateId: "504NPS04487",
-        quizName: "Final Assessment Quiz",
-        courseName: "Railway Protection Force",
-        score: 92,
-        completedOn: "2026-05-21",
-        place: "RPSF/TC/GKP",
-        dateOfIssue: "2026-05-21",
       },
     ];
     const worksheet = XLSX.utils.json_to_sheet(sample);
@@ -544,8 +551,8 @@ export default function AdminCertificate() {
             <p style={{ margin: "0 0 12px", fontSize: "13px" }}>
               Excel columns:{" "}
               <strong>
-                name, certificateId, quizName, courseName, score, completedOn,
-                place, dateOfIssue
+                name, certificateId, quizName, courseName, score, grade,
+                completedOn, place, dateOfIssue
               </strong>
             </p>
             <button
@@ -583,7 +590,7 @@ export default function AdminCertificate() {
             )}
           </div>
 
-          {/* Watermark + Signatures (common for all) */}
+          {/* Watermark + Signatures */}
           <div
             style={{
               padding: "16px",
@@ -602,7 +609,6 @@ export default function AdminCertificate() {
             >
               Common Logo / Watermark &amp; Signatures (applies to all)
             </h4>
-
             <div style={{ marginBottom: "16px" }}>
               <label style={labelStyle}>Logo / Emblem (optional)</label>
               {bulkWatermark ? (
@@ -671,7 +677,6 @@ export default function AdminCertificate() {
                     >
                       Signature {labels[i]}
                     </p>
-
                     {sig.image ? (
                       <div style={{ marginBottom: "10px" }}>
                         <img
@@ -717,7 +722,6 @@ export default function AdminCertificate() {
                         }}
                       />
                     )}
-
                     <input
                       value={sig.officerName}
                       onChange={(e) =>
@@ -760,6 +764,7 @@ export default function AdminCertificate() {
                       <th>Quiz Name</th>
                       <th>Course</th>
                       <th>Score</th>
+                      <th>Grade</th>
                       <th>Completed On</th>
                       {bulkRows.some((row) => row._error) && <th>Error</th>}
                     </tr>
@@ -773,6 +778,7 @@ export default function AdminCertificate() {
                         <td>{row.quizName || "-"}</td>
                         <td>{row.courseName || "-"}</td>
                         <td>{row.score || "-"}</td>
+                        <td>{row.grade || "-"}</td>
                         <td>{row.completedOn || "-"}</td>
                         {bulkRows.some((item) => item._error) && (
                           <td>{row._error || "-"}</td>
@@ -841,29 +847,27 @@ export default function AdminCertificate() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Quiz Name *</label>
+                <label style={labelStyle}>Quiz Name</label>
                 <input
                   name="quizName"
                   value={form.quizName}
                   onChange={handleChange}
                   style={inputStyle}
                   placeholder="Pre Assessment Quiz"
-                  required
                 />
               </div>
               <div>
-                <label style={labelStyle}>Course Name *</label>
+                <label style={labelStyle}>Course Name</label>
                 <input
                   name="courseName"
                   value={form.courseName}
                   onChange={handleChange}
                   style={inputStyle}
                   placeholder="For testing purpose"
-                  required
                 />
               </div>
               <div>
-                <label style={labelStyle}>Score (%) *</label>
+                <label style={labelStyle}>Score (%)</label>
                 <input
                   type="number"
                   name="score"
@@ -873,7 +877,16 @@ export default function AdminCertificate() {
                   placeholder="80"
                   min="0"
                   max="100"
-                  required
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Grade</label>
+                <input
+                  name="grade"
+                  value={form.grade}
+                  onChange={handleChange}
+                  style={inputStyle}
+                  placeholder="A+, A, B, etc."
                 />
               </div>
               <div>
@@ -1012,7 +1025,6 @@ export default function AdminCertificate() {
                       >
                         Signature {labels[i]}
                       </p>
-
                       {sig.image ? (
                         <div style={{ marginBottom: "10px" }}>
                           <img
@@ -1054,7 +1066,6 @@ export default function AdminCertificate() {
                           }}
                         />
                       )}
-
                       <input
                         value={sig.officerName}
                         onChange={(e) =>
@@ -1102,6 +1113,19 @@ export default function AdminCertificate() {
             All Certificates ({filteredCerts.length}
             {filteredCerts.length !== certs.length && ` of ${certs.length}`})
           </h3>
+          <button
+            type="button"
+            className="primary"
+            onClick={handlePrintAll}
+            style={{
+              padding: "8px 16px",
+              fontSize: "13px",
+              background: "var(--navy)",
+              color: "white",
+            }}
+          >
+            Print All ({filteredCerts.length})
+          </button>
         </div>
         <div
           style={{
@@ -1207,6 +1231,7 @@ export default function AdminCertificate() {
                   <th>Quiz Name</th>
                   <th>Course</th>
                   <th>Score</th>
+                  <th>Grade</th>
                   <th>Completed On</th>
                   <th>Action</th>
                 </tr>
@@ -1220,6 +1245,7 @@ export default function AdminCertificate() {
                     <td>{c.quizName}</td>
                     <td>{c.courseName}</td>
                     <td>{c.score}%</td>
+                    <td>{c.grade || "-"}</td>
                     <td>{formatDate(c.completedOn)}</td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       <button
@@ -1251,15 +1277,40 @@ export default function AdminCertificate() {
           onClose={() => setPreviewCert(null)}
         />
       )}
+
+      {/* 👇 Print All Hidden Area */}
+      {printAllMode && (
+        <div
+          className="print-all-area"
+          style={{
+            display: "block",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            zIndex: 9999,
+            background: "white",
+          }}
+        >
+          {filteredCerts.map((cert) => (
+            <div
+              key={cert._id}
+              style={{ pageBreakAfter: "always", marginBottom: "20px" }}
+            >
+              <CertificatePreview cert={cert} isPrintMode={true} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
 
 // =========================================================
-//              CERTIFICATE PREVIEW COMPONENT (2 signatures)
+//              CERTIFICATE PREVIEW COMPONENT
 // =========================================================
 
-function CertificatePreview({ cert, onClose }) {
+function CertificatePreview({ cert, onClose, isPrintMode = false }) {
   const formatIssueDate = (d) => {
     if (!d) return "";
     const date = new Date(d);
@@ -1280,51 +1331,54 @@ function CertificatePreview({ cert, onClose }) {
   return (
     <div
       style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.9)",
-        zIndex: 1000,
-        overflowY: "auto",
-        padding: "40px 20px",
+        position: isPrintMode ? "relative" : "fixed",
+        inset: isPrintMode ? "auto" : 0,
+        background: isPrintMode ? "transparent" : "rgba(0,0,0,0.9)",
+        zIndex: isPrintMode ? "auto" : 1000,
+        overflowY: isPrintMode ? "visible" : "auto",
+        padding: isPrintMode ? "0" : "40px 20px",
+        pageBreakAfter: isPrintMode ? "always" : "auto",
       }}
-      onClick={onClose}
+      onClick={isPrintMode ? undefined : onClose}
     >
-      <div
-        style={{ textAlign: "center", marginBottom: "20px" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={() => window.print()}
-          style={{
-            padding: "10px 24px",
-            background: "#C2410C",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: 700,
-            marginRight: "12px",
-          }}
+      {!isPrintMode && (
+        <div
+          style={{ textAlign: "center", marginBottom: "20px" }}
+          onClick={(e) => e.stopPropagation()}
         >
-          Print / Save as PDF
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            padding: "10px 24px",
-            background: "transparent",
-            color: "white",
-            border: "1px solid white",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
-        >
-          Close
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            style={{
+              padding: "10px 24px",
+              background: "#C2410C",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 700,
+              marginRight: "12px",
+            }}
+          >
+            Print / Save as PDF
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: "10px 24px",
+              background: "transparent",
+              color: "white",
+              border: "1px solid white",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+          >
+            Close
+          </button>
+        </div>
+      )}
 
       <div onClick={(e) => e.stopPropagation()}>
         <div className="training-cert-area">
@@ -1376,7 +1430,6 @@ function CertificatePreview({ cert, onClose }) {
                     <stop offset="100%" stopColor="#5e1030" />
                   </linearGradient>
                 </defs>
-
                 <text className="tc-arc-hi">
                   <textPath
                     href="#ccArcHindi"
@@ -1388,7 +1441,6 @@ function CertificatePreview({ cert, onClose }) {
                     गोरखपुर
                   </textPath>
                 </text>
-
                 <text className="tc-arc-en">
                   <textPath
                     href="#ccArcEnglish"
@@ -1400,7 +1452,6 @@ function CertificatePreview({ cert, onClose }) {
                     Camp, Gorakhpur
                   </textPath>
                 </text>
-
                 <text
                   x="500"
                   y="275"
@@ -1424,9 +1475,22 @@ function CertificatePreview({ cert, onClose }) {
                 ) : null}{" "}
                 has successfully completed the{" "}
                 <span className="tc-hl">{cert.quizName}</span> in{" "}
-                <span className="tc-hl2">{cert.courseName}</span> and passed the
-                assessment with a score of{" "}
-                <span className="tc-hl2">{cert.score}%</span>.
+                <span className="tc-hl2">{cert.courseName}</span>
+                {cert.score ? (
+                  <>
+                    {" "}
+                    and passed the assessment with a score of{" "}
+                    <span className="tc-hl2">{cert.score}%</span>
+                  </>
+                ) : null}
+                {cert.grade ? (
+                  <>
+                    {" "}
+                    and achieved Grade{" "}
+                    <span className="tc-hl2">{cert.grade}</span>
+                  </>
+                ) : null}
+                .
               </p>
 
               <div className="tc-footer">
@@ -1477,221 +1541,57 @@ function CertificatePreview({ cert, onClose }) {
         </div>
       </div>
 
+      {/* 👇 CSS for Print */}
       <style>{`
-        .training-cert-area {
-          background: white;
-          max-width: 1000px;
-          margin: 0 auto;
-          padding: 0;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .training-cert-inner {
-          position: relative;
-          min-height: 700px;
-          padding: 50px 66px 38px;
-          box-sizing: border-box;
-          font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
-          color: #2a3a9c;
-          background: radial-gradient(circle at 50% 0%, #ffffff 0%, #fffdf7 60%, #fff6e3 100%);
-        }
-        .training-cert-inner::before {
-          content: "";
-          position: absolute;
-          inset: 30px;
-          border: 2px solid #c62828;
-          border-radius: 6px;
-          pointer-events: none;
-        }
-        .training-cert-inner::after {
-          content: "";
-          position: absolute;
-          inset: 36px;
-          border: 1px solid #f4b400;
-          border-radius: 4px;
-          pointer-events: none;
-        }
-
+        .training-cert-area { background: white; max-width: 1000px; margin: 0 auto; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .training-cert-inner { position: relative; min-height: 700px; padding: 50px 66px 38px; box-sizing: border-box; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif; color: #2a3a9c; background: radial-gradient(circle at 50% 0%, #ffffff 0%, #fffdf7 60%, #fff6e3 100%); }
+        .training-cert-inner::before { content: ""; position: absolute; inset: 30px; border: 2px solid #c62828; border-radius: 6px; pointer-events: none; }
+        .training-cert-inner::after { content: ""; position: absolute; inset: 36px; border: 1px solid #f4b400; border-radius: 4px; pointer-events: none; }
         .tc-border { position: absolute; background-size: auto; }
-        .tc-border-top, .tc-border-bottom {
-          left: 24px; right: 24px; height: 24px;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='24'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/svg%3E");
-          background-repeat: space no-repeat;
-        }
+        .tc-border-top, .tc-border-bottom { left: 24px; right: 24px; height: 24px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='24'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/svg%3E"); background-repeat: space no-repeat; }
         .tc-border-top { top: 0; }
         .tc-border-bottom { bottom: 0; transform: scaleY(-1); }
-        .tc-border-left, .tc-border-right {
-          top: 24px; bottom: 24px; width: 24px;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='36'%3E%3Cg transform='translate(24 0) rotate(90)'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/g%3E%3C/svg%3E");
-          background-repeat: no-repeat space;
-        }
+        .tc-border-left, .tc-border-right { top: 24px; bottom: 24px; width: 24px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='36'%3E%3Cg transform='translate(24 0) rotate(90)'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/g%3E%3C/svg%3E"); background-repeat: no-repeat space; }
         .tc-border-left { left: 0; }
         .tc-border-right { right: 0; transform: scaleX(-1); }
-        .tc-corner {
-          position: absolute;
-          width: 24px; height: 24px;
-          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='18.20' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='18.20' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='5.80' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='5.80' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12' cy='12' r='4.2' fill='%23c62828'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='%23ffd54f'/%3E%3C/svg%3E") center / 24px 24px no-repeat;
-        }
+        .tc-corner { position: absolute; width: 24px; height: 24px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='18.20' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='18.20' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='5.80' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='5.80' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12' cy='12' r='4.2' fill='%23c62828'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='%23ffd54f'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }
         .tc-corner-tl { top: 0; left: 0; }
         .tc-corner-tr { top: 0; right: 0; }
         .tc-corner-bl { bottom: 0; left: 0; }
         .tc-corner-br { bottom: 0; right: 0; }
-
         .tc-content { position: relative; z-index: 1; }
-
-        .tc-watermark {
-          position: absolute;
-          top: 58%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          opacity: 0.12;
-          z-index: 0;
-          pointer-events: none;
-          text-align: center;
-        }
-        .tc-watermark-img {
-          width: 300px;
-          height: 300px;
-          object-fit: contain;
-          margin-bottom: 6px;
-        }
-        .tc-watermark-text {
-          font-family: 'Arial Black', Impact, Arial, sans-serif;
-          font-weight: 900;
-          font-size: 64px;
-          letter-spacing: 8px;
-          line-height: 1;
-          color: #1c3bbf;
-        }
-        .tc-watermark-sub {
-          font-size: 34px;
-          letter-spacing: 6px;
-          margin-top: 6px;
-          color: #c62828;
-        }
-
+        .tc-watermark { position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; opacity: 0.12; z-index: 0; pointer-events: none; text-align: center; }
+        .tc-watermark-img { width: 300px; height: 300px; object-fit: contain; margin-bottom: 6px; }
+        .tc-watermark-text { font-family: 'Arial Black', Impact, Arial, sans-serif; font-weight: 900; font-size: 64px; letter-spacing: 8px; line-height: 1; color: #1c3bbf; }
+        .tc-watermark-sub { font-size: 34px; letter-spacing: 6px; margin-top: 6px; color: #c62828; }
         .tc-logo-wrap { text-align: center; }
-        .tc-logo {
-          height: 100px;
-          max-width: 200px;
-          object-fit: contain;
-          filter: drop-shadow(0 2px 4px rgba(31, 58, 110, 0.35));
-        }
-
-        .tc-heading {
-          display: block;
-          width: 100%;
-          height: auto;
-          margin: 2px 0 0;
-          overflow: visible;
-        }
-        .tc-arc-hi {
-          font-family: 'Noto Sans Devanagari', 'Mangal', 'Nirmala UI', 'Kohinoor Devanagari', sans-serif;
-          font-size: 53px;
-          font-weight: 800;
-          fill: #1c3bbf;
-          stroke: #1c3bbf;
-          stroke-width: 0.9px;
-        }
-        .tc-arc-en {
-          font-family: Arial, Helvetica, sans-serif;
-          font-size: 27px;
-          font-weight: 900;
-          fill: #8e24aa;
-          stroke: #8e24aa;
-          stroke-width: 0.6px;
-        }
-        .tc-main-title {
-          font-family: 'Arial Black', Impact, 'Helvetica Neue', Arial, sans-serif;
-          font-size: 68px;
-          font-weight: 900;
-          letter-spacing: 2px;
-          fill: url(#ccTitle);
-          stroke: #3d0a1f;
-          stroke-width: 1.4px;
-          paint-order: stroke fill;
-          filter: drop-shadow(3px 3px 0 #5b5bd6);
-        }
-        .tc-divider {
-          width: 60%;
-          height: 3px;
-          margin: 8px auto 0;
-          border-radius: 3px;
-          background: linear-gradient(90deg, transparent, #1c3bbf, #8e24aa, #1c3bbf, transparent);
-        }
-
-        .tc-body {
-          font-style: italic;
-          font-size: 21px;
-          line-height: 1.9;
-          text-align: justify;
-          color: #2a3a9c;
-          margin: 20px 0 0;
-        }
+        .tc-logo { height: 100px; max-width: 200px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(31, 58, 110, 0.35)); }
+        .tc-heading { display: block; width: 100%; height: auto; margin: 2px 0 0; overflow: visible; }
+        .tc-arc-hi { font-family: 'Noto Sans Devanagari', 'Mangal', 'Nirmala UI', 'Kohinoor Devanagari', sans-serif; font-size: 53px; font-weight: 800; fill: #1c3bbf; stroke: #1c3bbf; stroke-width: 0.9px; }
+        .tc-arc-en { font-family: Arial, Helvetica, sans-serif; font-size: 27px; font-weight: 900; fill: #8e24aa; stroke: #8e24aa; stroke-width: 0.6px; }
+        .tc-main-title { font-family: 'Arial Black', Impact, 'Helvetica Neue', Arial, sans-serif; font-size: 68px; font-weight: 900; letter-spacing: 2px; fill: url(#ccTitle); stroke: #3d0a1f; stroke-width: 1.4px; paint-order: stroke fill; filter: drop-shadow(3px 3px 0 #5b5bd6); }
+        .tc-divider { width: 60%; height: 3px; margin: 8px auto 0; border-radius: 3px; background: linear-gradient(90deg, transparent, #1c3bbf, #8e24aa, #1c3bbf, transparent); }
+        .tc-body { font-style: italic; font-size: 21px; line-height: 1.9; text-align: justify; color: #2a3a9c; margin: 20px 0 0; }
         .tc-body sup { font-size: 0.6em; line-height: 0; }
         .tc-hl  { color: #a01535; font-weight: 700; }
         .tc-hl2 { color: #17228a; font-weight: 700; }
-
-        .tc-footer {
-          margin-top: 14px;
-          text-align: left;
-          font-style: italic;
-          font-size: 17px;
-          color: #2a3a9c;
-        }
+        .tc-footer { margin-top: 14px; text-align: left; font-style: italic; font-size: 17px; color: #2a3a9c; }
         .tc-footer p { margin: 2px 0; }
-
-        .tc-signatures {
-          display: flex;
-          justify-content: space-around;
-          align-items: flex-end;
-          gap: 60px;
-          margin-top: 34px;
-        }
-        .tc-sign-slot {
-          flex: 1;
-          max-width: 300px;
-          min-height: 90px;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          align-items: center;
-          text-align: center;
-        }
-        .tc-sign-img {
-          height: 62px;
-          max-width: 100%;
-          object-fit: contain;
-          margin-bottom: 2px;
-        }
-        .tc-sign-name,
-        .tc-sign-rank {
-          margin: 0;
-          font-family: 'Times New Roman', Georgia, serif;
-          font-size: 17px;
-          font-weight: 700;
-          line-height: 1.3;
-          transform: scaleX(0.92);
-        }
+        .tc-signatures { display: flex; justify-content: space-around; align-items: flex-end; gap: 60px; margin-top: 34px; }
+        .tc-sign-slot { flex: 1; max-width: 300px; min-height: 90px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; text-align: center; }
+        .tc-sign-img { height: 62px; max-width: 100%; object-fit: contain; margin-bottom: 2px; }
+        .tc-sign-name, .tc-sign-rank { margin: 0; font-family: 'Times New Roman', Georgia, serif; font-size: 17px; font-weight: 700; line-height: 1.3; transform: scaleX(0.92); }
         .tc-sign-name { color: #1c3bbf; }
         .tc-sign-rank { color: #1c3bbf; }
-
         @page { size: A4 landscape; margin: 8mm; }
         @media print {
           body * { visibility: hidden; }
           .training-cert-area, .training-cert-area * { visibility: visible; }
-          .training-cert-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            max-width: none;
-            zoom: 0.8;
-          }
+          .training-cert-area { position: absolute; top: 0; left: 0; width: 100%; max-width: none; zoom: 0.8; }
           .training-cert-area button { display: none; }
+          .print-all-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
+          .print-all-area .training-cert-area { page-break-after: always; margin-bottom: 20px; }
+          .print-all-area .training-cert-area:last-child { page-break-after: auto; }
         }
       `}</style>
     </div>

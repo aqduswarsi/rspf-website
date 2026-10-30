@@ -297,7 +297,7 @@ export default function UserExamResult() {
                       color: "var(--muted)",
                     }}
                   >
-                    No results yet. Exam submit karo pehle.
+                    No results yet. Submit the exam first.
                   </p>
                 ) : filteredResults.length === 0 ? (
                   <p

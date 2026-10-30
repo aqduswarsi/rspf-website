@@ -41,6 +41,7 @@ import AdminCertificate from "./pages/AdminCertificate";
 import AdminTrainingCertificate from "./pages/AdminTrainingCertificate";
 import AdminFeedback from "./pages/AdminFeedback";
 import UserFeedback from "./pages/UserFeedback";
+import ManageGuestLectures from "./pages/ManageGuestLectures"; 
 
 function PublicLayout({ children }) {
   return (
@@ -87,6 +88,10 @@ export default function App() {
         {/* ============ ADMIN ============ */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route
+            path="/admin/guest-lectures"
+            element={<ManageGuestLectures />}
+          />
 
           {/* Users Management */}
           <Route path="users/unverified" element={<UsersUnverified />} />
@@ -132,7 +137,7 @@ export default function App() {
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="contact-details" element={<AddContactDetails />} />
 
-          {/* Catch-all — jo bhi route miss ho */}
+          {/* Catch-all for unmatched routes. */}
           <Route path="*" element={<AdminDashboard />} />
         </Route>
 
