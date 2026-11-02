@@ -1383,10 +1383,12 @@ function CertificatePreview({ cert, onClose, isPrintMode = false }) {
       <div onClick={(e) => e.stopPropagation()}>
         <div className="training-cert-area">
           <div className="training-cert-inner">
-            <div className="tc-border tc-border-top" />
-            <div className="tc-border tc-border-bottom" />
-            <div className="tc-border tc-border-left" />
-            <div className="tc-border tc-border-right" />
+            {/* Border frame + ornaments */}
+            <div className="tc-frame" />
+            <div className="tc-diamond tc-diamond-top" />
+            <div className="tc-diamond tc-diamond-bottom" />
+            <div className="tc-diamond tc-diamond-left" />
+            <div className="tc-diamond tc-diamond-right" />
             <div className="tc-corner tc-corner-tl" />
             <div className="tc-corner tc-corner-tr" />
             <div className="tc-corner tc-corner-bl" />
@@ -1403,49 +1405,71 @@ function CertificatePreview({ cert, onClose, isPrintMode = false }) {
             </div>
 
             <div className="tc-content">
-              {cert.watermark && (
-                <div className="tc-logo-wrap">
-                  <img src={cert.watermark} alt="" className="tc-logo" />
-                </div>
-              )}
-
               <svg
                 className="tc-heading"
-                viewBox="0 12 1000 345"
+                viewBox="72 36 856 326"
                 preserveAspectRatio="xMidYMid meet"
                 role="img"
               >
                 <defs>
                   <path
                     id="ccArcHindi"
-                    d="M 7.2 296.6 A 653 653 0 0 1 992.8 296.6"
+                    d="M 64 311 L 134 238 C 194 187 330 156 500 156 C 670 156 806 187 866 238 L 936 311"
                   />
                   <path
                     id="ccArcEnglish"
-                    d="M 51 334.6 A 595 595 0 0 1 949 334.6"
+                    d="M 121 316 L 176 264 C 230 232 330 196 500 196 C 670 196 770 232 824 264 L 879 316"
                   />
                   <linearGradient id="ccTitle" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#b8325f" />
-                    <stop offset="50%" stopColor="#8b1d45" />
-                    <stop offset="100%" stopColor="#5e1030" />
+                    <stop offset="0%" stopColor="#e8283c" />
+                    <stop offset="50%" stopColor="#c8102e" />
+                    <stop offset="100%" stopColor="#9e0b22" />
+                  </linearGradient>
+                  <linearGradient
+                    id="ccEn"
+                    gradientUnits="userSpaceOnUse"
+                    x1="121"
+                    y1="0"
+                    x2="879"
+                    y2="0"
+                  >
+                    <stop offset="0%" stopColor="#a02fc0" />
+                    <stop offset="40%" stopColor="#5b3bd6" />
+                    <stop offset="75%" stopColor="#3a32b8" />
+                    <stop offset="100%" stopColor="#2c2a8f" />
                   </linearGradient>
                 </defs>
+
+                {cert.watermark && (
+                  <image
+                    href={cert.watermark}
+                    x="468"
+                    y="46"
+                    width="64"
+                    height="64"
+                    preserveAspectRatio="xMidYMid meet"
+                    style={{
+                      filter: "drop-shadow(0 2px 4px rgba(31, 58, 110, 0.35))",
+                    }}
+                  />
+                )}
+
                 <text className="tc-arc-hi">
                   <textPath
                     href="#ccArcHindi"
-                    startOffset="22.5"
-                    textLength="1072"
+                    startOffset="5"
+                    textLength="950"
                     lengthAdjust="spacingAndGlyphs"
                   >
-                    रेलवे सुरक्षा विशेष बल, प्रशिक्षण केन्द्र, राजही कैम्प,
+                    रेलवे सुरक्षा विशेष बल, प्रशिक्षण केन्द्र, रजही कैम्प,
                     गोरखपुर
                   </textPath>
                 </text>
                 <text className="tc-arc-en">
                   <textPath
                     href="#ccArcEnglish"
-                    startOffset="20.8"
-                    textLength="976"
+                    startOffset="7"
+                    textLength="805"
                     lengthAdjust="spacingAndGlyphs"
                   >
                     Railway Protection Special Force, Training Centre, Rajahi
@@ -1454,7 +1478,7 @@ function CertificatePreview({ cert, onClose, isPrintMode = false }) {
                 </text>
                 <text
                   x="500"
-                  y="275"
+                  y="340"
                   textAnchor="middle"
                   className="tc-main-title"
                 >
@@ -1544,45 +1568,54 @@ function CertificatePreview({ cert, onClose, isPrintMode = false }) {
       {/* 👇 CSS for Print */}
       <style>{`
         .training-cert-area { background: white; max-width: 1000px; margin: 0 auto; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .training-cert-inner { position: relative; min-height: 700px; padding: 50px 66px 38px; box-sizing: border-box; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif; color: #2a3a9c; background: radial-gradient(circle at 50% 0%, #ffffff 0%, #fffdf7 60%, #fff6e3 100%); }
-        .training-cert-inner::before { content: ""; position: absolute; inset: 30px; border: 2px solid #c62828; border-radius: 6px; pointer-events: none; }
-        .training-cert-inner::after { content: ""; position: absolute; inset: 36px; border: 1px solid #f4b400; border-radius: 4px; pointer-events: none; }
-        .tc-border { position: absolute; background-size: auto; }
-        .tc-border-top, .tc-border-bottom { left: 24px; right: 24px; height: 24px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='24'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/svg%3E"); background-repeat: space no-repeat; }
-        .tc-border-top { top: 0; }
-        .tc-border-bottom { bottom: 0; transform: scaleY(-1); }
-        .tc-border-left, .tc-border-right { top: 24px; bottom: 24px; width: 24px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='36'%3E%3Cg transform='translate(24 0) rotate(90)'%3E%3Cellipse cx='7' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(-22 7 12)'/%3E%3Cellipse cx='29' cy='12' rx='6.5' ry='2.7' fill='%23c62828' stroke='%238e0000' stroke-width='0.5' transform='rotate(22 29 12)'/%3E%3Ccircle cx='18.00' cy='7.00' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='22.76' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='20.94' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='15.06' cy='16.05' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='13.24' cy='10.45' r='3.6' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='18' cy='12' r='2.7' fill='%238e0000'/%3E%3Ccircle cx='18' cy='12' r='1' fill='%23ffd54f'/%3E%3C/g%3E%3C/svg%3E"); background-repeat: no-repeat space; }
-        .tc-border-left { left: 0; }
-        .tc-border-right { right: 0; transform: scaleX(-1); }
-        .tc-corner { position: absolute; width: 24px; height: 24px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='18.20' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='18.20' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='16.38' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='5.80' cy='12.00' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='7.62' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12.00' cy='5.80' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='16.38' cy='7.62' r='3.4' fill='%23f4b400' stroke='%23b45f00' stroke-width='0.6'/%3E%3Ccircle cx='12' cy='12' r='4.2' fill='%23c62828'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='%23ffd54f'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }
-        .tc-corner-tl { top: 0; left: 0; }
-        .tc-corner-tr { top: 0; right: 0; }
-        .tc-corner-bl { bottom: 0; left: 0; }
-        .tc-corner-br { bottom: 0; right: 0; }
+        .training-cert-inner { position: relative; min-height: 700px; padding: 46px 72px 44px; box-sizing: border-box; font-family: 'Arial Narrow', 'Liberation Sans Narrow', Arial, Helvetica, sans-serif; color: #1a1a1a; background: radial-gradient(circle at 50% 0%, #ffffff 0%, #fffdf7 60%, #fff8ea 100%); }
+
+        /* outer thin gold line */
+        .training-cert-inner::before { content: ""; position: absolute; inset: 12px; border: 2px solid #e6b422; pointer-events: none; }
+        /* inner thin gold line */
+        .training-cert-inner::after { content: ""; position: absolute; inset: 42px; border: 1.5px solid #e6b422; pointer-events: none; }
+
+        /* thick blue shimmer border */
+        .tc-frame { position: absolute; inset: 24px; border: 11px solid; border-image: linear-gradient(135deg, #0b2a8a 0%, #3b6fe0 20%, #0b2a8a 40%, #2a58c8 60%, #0b2a8a 80%, #3b6fe0 100%) 1; pointer-events: none; }
+
+        /* gold diamonds at the middle of each side */
+        .tc-diamond { position: absolute; width: 14px; height: 14px; background: #f4b400; border: 2px solid #1a3fa8; box-sizing: border-box; }
+        .tc-diamond-top { top: 20px; left: 50%; transform: translateX(-50%) rotate(45deg); }
+        .tc-diamond-bottom { bottom: 20px; left: 50%; transform: translateX(-50%) rotate(45deg); }
+        .tc-diamond-left { left: 20px; top: 50%; transform: translateY(-50%) rotate(45deg); }
+        .tc-diamond-right { right: 20px; top: 50%; transform: translateY(-50%) rotate(45deg); }
+
+        /* corner ornaments */
+        .tc-corner { position: absolute; width: 100px; height: 100px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M10 10 C12 36 30 52 54 54 C52 30 36 12 10 10 Z' fill='%231a3fa8' stroke='%23e6b422' stroke-width='1.6'/%3E%3Cpath d='M16 16 C20 32 30 42 44 46' fill='none' stroke='%236f95ee' stroke-width='1.2'/%3E%3Cpath d='M36 10 C58 4 84 8 92 26 C86 34 70 32 70 22' fill='none' stroke='%23e6b422' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M10 36 C4 58 8 84 26 92 C34 86 32 70 22 70' fill='none' stroke='%23e6b422' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='20' r='4.5' fill='%23e6b422'/%3E%3Ccircle cx='70' cy='22' r='3' fill='%231a3fa8'/%3E%3Ccircle cx='22' cy='70' r='3' fill='%231a3fa8'/%3E%3C/svg%3E") center / contain no-repeat; pointer-events: none; }
+        .tc-corner-tl { top: 16px; left: 16px; }
+        .tc-corner-tr { top: 16px; right: 16px; transform: scaleX(-1); }
+        .tc-corner-bl { bottom: 16px; left: 16px; transform: scaleY(-1); }
+        .tc-corner-br { bottom: 16px; right: 16px; transform: scale(-1, -1); }
+
         .tc-content { position: relative; z-index: 1; }
         .tc-watermark { position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; opacity: 0.12; z-index: 0; pointer-events: none; text-align: center; }
         .tc-watermark-img { width: 300px; height: 300px; object-fit: contain; margin-bottom: 6px; }
         .tc-watermark-text { font-family: 'Arial Black', Impact, Arial, sans-serif; font-weight: 900; font-size: 64px; letter-spacing: 8px; line-height: 1; color: #1c3bbf; }
         .tc-watermark-sub { font-size: 34px; letter-spacing: 6px; margin-top: 6px; color: #c62828; }
-        .tc-logo-wrap { text-align: center; }
-        .tc-logo { height: 100px; max-width: 200px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(31, 58, 110, 0.35)); }
-        .tc-heading { display: block; width: 100%; height: auto; margin: 2px 0 0; overflow: visible; }
-        .tc-arc-hi { font-family: 'Noto Sans Devanagari', 'Mangal', 'Nirmala UI', 'Kohinoor Devanagari', sans-serif; font-size: 53px; font-weight: 800; fill: #1c3bbf; stroke: #1c3bbf; stroke-width: 0.9px; }
-        .tc-arc-en { font-family: Arial, Helvetica, sans-serif; font-size: 27px; font-weight: 900; fill: #8e24aa; stroke: #8e24aa; stroke-width: 0.6px; }
-        .tc-main-title { font-family: 'Arial Black', Impact, 'Helvetica Neue', Arial, sans-serif; font-size: 68px; font-weight: 900; letter-spacing: 2px; fill: url(#ccTitle); stroke: #3d0a1f; stroke-width: 1.4px; paint-order: stroke fill; filter: drop-shadow(3px 3px 0 #5b5bd6); }
-        .tc-divider { width: 60%; height: 3px; margin: 8px auto 0; border-radius: 3px; background: linear-gradient(90deg, transparent, #1c3bbf, #8e24aa, #1c3bbf, transparent); }
-        .tc-body { font-style: italic; font-size: 21px; line-height: 1.9; text-align: justify; color: #2a3a9c; margin: 20px 0 0; }
+
+        .tc-heading { display: block; width: 100%; height: auto; margin: 0; overflow: visible; }
+        .tc-arc-hi { font-family: 'Noto Sans Devanagari', 'Mangal', 'Nirmala UI', 'Kohinoor Devanagari', sans-serif; font-size: 36px; font-weight: 500; fill: #1c3bbf; stroke: #1c3bbf; stroke-width: 0.4px; }
+        .tc-arc-en { font-family: Arial, Helvetica, sans-serif; font-size: 36px; font-weight: 600; fill: url(#ccEn); stroke: url(#ccEn); stroke-width: 0.4px; }
+        .tc-main-title { font-family: 'Arial Black', Impact, 'Helvetica Neue', Arial, sans-serif; font-size: 57px; font-weight: 900; letter-spacing: 2px; fill: url(#ccTitle); stroke: #1c3bbf; stroke-width: 1.2px; paint-order: stroke fill; filter: drop-shadow(2px 2px 0 rgba(28, 59, 191, 0.45)); }
+        .tc-divider { width: 60%; height: 2px; margin: 56px auto 0; border-radius: 3px; background: linear-gradient(90deg, transparent, #1c3bbf, #1c3bbf, transparent); }
+
+        .tc-body { font-style: italic; font-size: 21px; line-height: 1.9; text-align: justify; color: #1a1a1a; margin: 20px 0 0; }
         .tc-body sup { font-size: 0.6em; line-height: 0; }
-        .tc-hl  { color: #a01535; font-weight: 700; }
-        .tc-hl2 { color: #17228a; font-weight: 700; }
-        .tc-footer { margin-top: 14px; text-align: left; font-style: italic; font-size: 17px; color: #2a3a9c; }
+        .tc-hl  { color: #d11a2a; font-weight: 700; }
+        .tc-hl2 { color: #1c3bbf; font-weight: 700; }
+        .tc-footer { margin-top: 14px; text-align: left; font-style: italic; font-size: 17px; color: #1a1a1a; }
         .tc-footer p { margin: 2px 0; }
+
         .tc-signatures { display: flex; justify-content: space-around; align-items: flex-end; gap: 60px; margin-top: 34px; }
         .tc-sign-slot { flex: 1; max-width: 300px; min-height: 90px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; text-align: center; }
         .tc-sign-img { height: 62px; max-width: 100%; object-fit: contain; margin-bottom: 2px; }
-        .tc-sign-name, .tc-sign-rank { margin: 0; font-family: 'Times New Roman', Georgia, serif; font-size: 17px; font-weight: 700; line-height: 1.3; transform: scaleX(0.92); }
-        .tc-sign-name { color: #1c3bbf; }
-        .tc-sign-rank { color: #1c3bbf; }
+        .tc-sign-name, .tc-sign-rank { margin: 0; font-family: 'Arial Narrow', 'Liberation Sans Narrow', Arial, sans-serif; font-size: 17px; font-weight: 700; line-height: 1.3; color: #111; }
+
         @page { size: A4 landscape; margin: 8mm; }
         @media print {
           body * { visibility: hidden; }
