@@ -1,21 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   createGuestLecture,
   getAllGuestLectures,
   updateGuestLecture,
   deleteGuestLecture,
-  getAllCourses, // 👈 1. Courses fetch karne ke liye import kiya
+  getAllCourses,
+  getAllSubjects, // 👈 1. Subjects fetch karne ke liye import kiya
 } from "../utils/api";
 
 export default function ManageGuestLectures() {
   const [lectures, setLectures] = useState([]);
-  const [courses, setCourses] = useState([]); // 👈 2. Courses state banayi
+  const [courses, setCourses] = useState([]);
+  const [subjects, setSubjects] = useState([]); // 👈 2. Subjects state banayi
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState(null);
 
-  // Print State
+  // 🔍 Search & Filter States
+  const [searchText, setSearchText] = useState("");
+  const [filterCourse, setFilterCourse] = useState("");
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
+
   const [printAllMode, setPrintAllMode] = useState(false);
   const [printSingleData, setPrintSingleData] = useState(null);
 
@@ -25,20 +32,22 @@ export default function ManageGuestLectures() {
     guestName: "",
     designation: "",
     placeOfPosting: "",
-    course: "", // Ab ye dropdown se select hoga
+    course: "",
     status: "In Service",
     employeeType: "Railway Emp",
-    subject: "",
+    subject: "", // Ab ye dropdown se select hoga
     startTime: "",
     endTime: "",
     signOfLecturer: "",
     signOfPTC: "",
     remark: "Paid",
+    guestHonorarium: "",
   });
 
   useEffect(() => {
     loadData();
-    loadCourses(); // 👈 3. Page load hote hi courses fetch karo
+    loadCourses();
+    loadSubjects(); // 👈 3. Page load hote hi subjects fetch karo
   }, []);
 
   const loadData = async () => {
@@ -52,13 +61,22 @@ export default function ManageGuestLectures() {
     }
   };
 
-  // 👈 4. Courses fetch karne ka function
   const loadCourses = async () => {
     try {
       const data = await getAllCourses();
       setCourses(data);
     } catch (err) {
       console.error("Failed to load courses", err);
+    }
+  };
+
+  // 👈 4. Subjects fetch karne ka function
+  const loadSubjects = async () => {
+    try {
+      const data = await getAllSubjects();
+      setSubjects(data);
+    } catch (err) {
+      console.error("Failed to load subjects", err);
     }
   };
 
@@ -81,6 +99,7 @@ export default function ManageGuestLectures() {
       signOfLecturer: "",
       signOfPTC: "",
       remark: "Paid",
+      guestHonorarium: "",
     });
     setEditingId(null);
   };
@@ -126,6 +145,7 @@ export default function ManageGuestLectures() {
       signOfLecturer: item.signOfLecturer || "",
       signOfPTC: item.signOfPTC || "",
       remark: item.remark || "Paid",
+      guestHonorarium: item.guestHonorarium || "",
     });
     setEditingId(item._id);
     setMessage("");
@@ -142,9 +162,49 @@ export default function ManageGuestLectures() {
     }
   };
 
+  // ============ FILTER LOGIC ============
+  const filteredLectures = useMemo(() => {
+    return lectures.filter((item) => {
+      if (searchText.trim()) {
+        const q = searchText.toLowerCase();
+        const fields = [
+          item.guestName,
+          item.subject,
+          item.designation,
+          item.placeOfPosting,
+        ]
+          .filter(Boolean)
+          .map((v) => String(v).toLowerCase());
+        if (!fields.some((f) => f.includes(q))) return false;
+      }
+
+      if (filterCourse && item.course !== filterCourse) return false;
+
+      const itemDate = item.date ? String(item.date).slice(0, 10) : "";
+      if (filterFromDate && (!itemDate || itemDate < filterFromDate))
+        return false;
+      if (filterToDate && (!itemDate || itemDate > filterToDate)) return false;
+
+      return true;
+    });
+  }, [lectures, searchText, filterCourse, filterFromDate, filterToDate]);
+
+  const hasActiveFilters =
+    searchText || filterCourse || filterFromDate || filterToDate;
+
+  const clearFilters = () => {
+    setSearchText("");
+    setFilterCourse("");
+    setFilterFromDate("");
+    setFilterToDate("");
+  };
+
   // ============ PRINT HANDLERS ============
   const handlePrintAll = () => {
-    if (lectures.length === 0) return;
+    if (filteredLectures.length === 0) {
+      setMessage("No records to print");
+      return;
+    }
     setPrintAllMode(true);
     setTimeout(() => {
       window.print();
@@ -159,6 +219,18 @@ export default function ManageGuestLectures() {
       setPrintSingleData(null);
     }, 500);
   };
+
+  // 👈 5. Filtered Subjects (Agar Course select hai to uske subjects dikhao)
+  const filteredSubjects = useMemo(() => {
+    if (!form.course) return subjects; // Agar course nahi chuna, to sab dikhao
+    const selectedCourse = courses.find((c) => c.name === form.course);
+    if (!selectedCourse) return subjects;
+
+    return subjects.filter((s) => {
+      const sCourseId = s.courseId?._id || s.courseId;
+      return sCourseId === selectedCourse._id;
+    });
+  }, [subjects, courses, form.course]);
 
   return (
     <section className="education-page">
@@ -178,7 +250,7 @@ export default function ManageGuestLectures() {
             color: "white",
           }}
         >
-          Print All ({lectures.length})
+          Print ({filteredLectures.length})
         </button>
       </div>
 
@@ -233,10 +305,16 @@ export default function ManageGuestLectures() {
               />
             </div>
 
-            {/* 👈 5. Course Dropdown yahan add kiya gaya hai */}
             <div>
               <label>Course</label>
-              <select name="course" value={form.course} onChange={handleChange}>
+              <select
+                name="course"
+                value={form.course}
+                onChange={(e) => {
+                  // Course change hone par subject reset kar do
+                  setForm({ ...form, course: e.target.value, subject: "" });
+                }}
+              >
                 <option value="">-- Select Course --</option>
                 {courses.map((c) => (
                   <option key={c._id} value={c.name}>
@@ -245,7 +323,6 @@ export default function ManageGuestLectures() {
                 ))}
               </select>
             </div>
-
             <div>
               <label>Status</label>
               <select name="status" value={form.status} onChange={handleChange}>
@@ -265,15 +342,23 @@ export default function ManageGuestLectures() {
                 <option value="Non-Railway Emp">Non-Railway Emp</option>
               </select>
             </div>
+
+            {/* 👈 6. Subject Dropdown me badla */}
             <div>
               <label>Subject / Topic</label>
-              <input
+              <select
                 name="subject"
                 value={form.subject}
                 onChange={handleChange}
-                placeholder="e.g., First Aid"
                 required
-              />
+              >
+                <option value="">-- Select Subject --</option>
+                {filteredSubjects.map((s) => (
+                  <option key={s._id} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div style={{ display: "flex", gap: "10px", gridColumn: "span 2" }}>
@@ -325,6 +410,16 @@ export default function ManageGuestLectures() {
                 <option value="Non-Paid">Non-Paid</option>
               </select>
             </div>
+
+            <div>
+              <label>Guest Honorarium</label>
+              <input
+                name="guestHonorarium"
+                value={form.guestHonorarium}
+                onChange={handleChange}
+                placeholder="e.g., ₹1000"
+              />
+            </div>
           </div>
 
           <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
@@ -349,11 +444,113 @@ export default function ManageGuestLectures() {
         {message && <p className="form-message">{message}</p>}
       </div>
 
-      {/* TABLE */}
+      {/* TABLE & FILTERS */}
       <div className="education-panel" style={{ marginTop: "20px" }}>
         <div className="panel-heading">
-          <h3>All Guest Lectures ({lectures.length})</h3>
+          <h3>
+            All Guest Lectures ({filteredLectures.length}
+            {filteredLectures.length !== lectures.length &&
+              ` of ${lectures.length}`}
+            )
+          </h3>
         </div>
+
+        {/* 🔍 FILTERS */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "12px",
+            alignItems: "end",
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--line)",
+          }}
+        >
+          <div>
+            <label>Search (Name, Subject, Place)</label>
+            <input
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Type to search..."
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid var(--line)",
+                borderRadius: "4px",
+                fontSize: "13px",
+              }}
+            />
+          </div>
+          <div>
+            <label>Course</label>
+            <select
+              value={filterCourse}
+              onChange={(e) => setFilterCourse(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid var(--line)",
+                borderRadius: "4px",
+                fontSize: "13px",
+              }}
+            >
+              <option value="">All Courses</option>
+              {courses.map((c) => (
+                <option key={c._id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>From Date</label>
+            <input
+              type="date"
+              value={filterFromDate}
+              onChange={(e) => setFilterFromDate(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid var(--line)",
+                borderRadius: "4px",
+                fontSize: "13px",
+              }}
+            />
+          </div>
+          <div>
+            <label>To Date</label>
+            <input
+              type="date"
+              value={filterToDate}
+              onChange={(e) => setFilterToDate(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid var(--line)",
+                borderRadius: "4px",
+                fontSize: "13px",
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            style={{
+              padding: "8px 16px",
+              background: hasActiveFilters ? "#FEF2F2" : "#f3f4f6",
+              color: hasActiveFilters ? "#B91C1C" : "#9ca3af",
+              border: "1px solid var(--line)",
+              borderRadius: "4px",
+              cursor: hasActiveFilters ? "pointer" : "not-allowed",
+              fontSize: "13px",
+              fontWeight: 600,
+            }}
+          >
+            Clear Filters
+          </button>
+        </div>
+
         <div className="education-table-wrap">
           {loading ? (
             <p style={{ padding: "20px", color: "var(--gold)" }}>Loading...</p>
@@ -361,22 +558,25 @@ export default function ManageGuestLectures() {
             <p style={{ padding: "20px", color: "rgba(255,255,255,0.5)" }}>
               No records found.
             </p>
+          ) : filteredLectures.length === 0 ? (
+            <p style={{ padding: "20px", color: "rgba(255,255,255,0.5)" }}>
+              No records match your filters.
+            </p>
           ) : (
             <table className="education-table" style={{ fontSize: "13px" }}>
               <thead>
                 <tr>
                   <th>Date</th>
                   <th>Guest Name</th>
-                  <th>Designation</th>
                   <th>Course</th>
                   <th>Subject</th>
-                  <th>Time</th>
+                  <th>Honorarium</th>
                   <th>Remark</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {lectures.map((item) => (
+                {filteredLectures.map((item) => (
                   <tr key={item._id}>
                     <td>
                       {item.date
@@ -384,12 +584,9 @@ export default function ManageGuestLectures() {
                         : "-"}
                     </td>
                     <td style={{ color: "var(--gold)" }}>{item.guestName}</td>
-                    <td>{item.designation}</td>
                     <td>{item.course || "-"}</td>
                     <td>{item.subject}</td>
-                    <td>
-                      {item.startTime} - {item.endTime}
-                    </td>
+                    <td>{item.guestHonorarium || "-"}</td>
                     <td>
                       <span
                         style={{
@@ -454,7 +651,7 @@ export default function ManageGuestLectures() {
           }}
         >
           {printAllMode ? (
-            lectures.map((item) => (
+            filteredLectures.map((item) => (
               <div
                 key={item._id}
                 style={{ pageBreakAfter: "always", marginBottom: "20px" }}
@@ -668,6 +865,20 @@ function GuestLecturePrintView({ data }) {
             </td>
             <td style={{ padding: "8px", border: "1px solid #ccc" }}>
               {data.remark}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Guest Honorarium
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.guestHonorarium || "-"}
             </td>
           </tr>
         </tbody>
