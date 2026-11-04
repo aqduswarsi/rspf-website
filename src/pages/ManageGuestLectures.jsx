@@ -4,14 +4,20 @@ import {
   getAllGuestLectures,
   updateGuestLecture,
   deleteGuestLecture,
+  getAllCourses, // 👈 1. Courses fetch karne ke liye import kiya
 } from "../utils/api";
 
 export default function ManageGuestLectures() {
   const [lectures, setLectures] = useState([]);
+  const [courses, setCourses] = useState([]); // 👈 2. Courses state banayi
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState(null);
+
+  // Print State
+  const [printAllMode, setPrintAllMode] = useState(false);
+  const [printSingleData, setPrintSingleData] = useState(null);
 
   // Form State
   const [form, setForm] = useState({
@@ -19,6 +25,7 @@ export default function ManageGuestLectures() {
     guestName: "",
     designation: "",
     placeOfPosting: "",
+    course: "", // Ab ye dropdown se select hoga
     status: "In Service",
     employeeType: "Railway Emp",
     subject: "",
@@ -31,6 +38,7 @@ export default function ManageGuestLectures() {
 
   useEffect(() => {
     loadData();
+    loadCourses(); // 👈 3. Page load hote hi courses fetch karo
   }, []);
 
   const loadData = async () => {
@@ -44,6 +52,16 @@ export default function ManageGuestLectures() {
     }
   };
 
+  // 👈 4. Courses fetch karne ka function
+  const loadCourses = async () => {
+    try {
+      const data = await getAllCourses();
+      setCourses(data);
+    } catch (err) {
+      console.error("Failed to load courses", err);
+    }
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -54,6 +72,7 @@ export default function ManageGuestLectures() {
       guestName: "",
       designation: "",
       placeOfPosting: "",
+      course: "",
       status: "In Service",
       employeeType: "Railway Emp",
       subject: "",
@@ -98,6 +117,7 @@ export default function ManageGuestLectures() {
       guestName: item.guestName || "",
       designation: item.designation || "",
       placeOfPosting: item.placeOfPosting || "",
+      course: item.course || "",
       status: item.status || "In Service",
       employeeType: item.employeeType || "Railway Emp",
       subject: item.subject || "",
@@ -122,6 +142,24 @@ export default function ManageGuestLectures() {
     }
   };
 
+  // ============ PRINT HANDLERS ============
+  const handlePrintAll = () => {
+    if (lectures.length === 0) return;
+    setPrintAllMode(true);
+    setTimeout(() => {
+      window.print();
+      setPrintAllMode(false);
+    }, 500);
+  };
+
+  const handlePrintSingle = (item) => {
+    setPrintSingleData(item);
+    setTimeout(() => {
+      window.print();
+      setPrintSingleData(null);
+    }, 500);
+  };
+
   return (
     <section className="education-page">
       <div className="page-heading">
@@ -130,6 +168,18 @@ export default function ManageGuestLectures() {
           <h2>{editingId ? "Edit Guest Lecture" : "Add Guest Lecture"}</h2>
           <p>Manage daily guest lectures and signatures.</p>
         </div>
+        <button
+          type="button"
+          className="primary"
+          onClick={handlePrintAll}
+          style={{
+            padding: "10px 20px",
+            background: "var(--navy)",
+            color: "white",
+          }}
+        >
+          Print All ({lectures.length})
+        </button>
       </div>
 
       {/* FORM */}
@@ -183,6 +233,19 @@ export default function ManageGuestLectures() {
               />
             </div>
 
+            {/* 👈 5. Course Dropdown yahan add kiya gaya hai */}
+            <div>
+              <label>Course</label>
+              <select name="course" value={form.course} onChange={handleChange}>
+                <option value="">-- Select Course --</option>
+                {courses.map((c) => (
+                  <option key={c._id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label>Status</label>
               <select name="status" value={form.status} onChange={handleChange}>
@@ -190,6 +253,7 @@ export default function ManageGuestLectures() {
                 <option value="Retired">Retired</option>
               </select>
             </div>
+
             <div>
               <label>Employee Type</label>
               <select
@@ -201,7 +265,6 @@ export default function ManageGuestLectures() {
                 <option value="Non-Railway Emp">Non-Railway Emp</option>
               </select>
             </div>
-
             <div>
               <label>Subject / Topic</label>
               <input
@@ -212,7 +275,8 @@ export default function ManageGuestLectures() {
                 required
               />
             </div>
-            <div style={{ display: "flex", gap: "10px" }}>
+
+            <div style={{ display: "flex", gap: "10px", gridColumn: "span 2" }}>
               <div style={{ flex: 1 }}>
                 <label>Start Time</label>
                 <input
@@ -245,7 +309,7 @@ export default function ManageGuestLectures() {
               />
             </div>
             <div>
-              <label>Sign of PTC / UPTC</label>
+              <label>Sign of PTC / VPTC</label>
               <input
                 name="signOfPTC"
                 value={form.signOfPTC}
@@ -304,9 +368,7 @@ export default function ManageGuestLectures() {
                   <th>Date</th>
                   <th>Guest Name</th>
                   <th>Designation</th>
-                  <th>Place</th>
-                  <th>Status</th>
-                  <th>Type</th>
+                  <th>Course</th>
                   <th>Subject</th>
                   <th>Time</th>
                   <th>Remark</th>
@@ -323,9 +385,7 @@ export default function ManageGuestLectures() {
                     </td>
                     <td style={{ color: "var(--gold)" }}>{item.guestName}</td>
                     <td>{item.designation}</td>
-                    <td>{item.placeOfPosting}</td>
-                    <td>{item.status}</td>
-                    <td>{item.employeeType}</td>
+                    <td>{item.course || "-"}</td>
                     <td>{item.subject}</td>
                     <td>
                       {item.startTime} - {item.endTime}
@@ -344,6 +404,18 @@ export default function ManageGuestLectures() {
                       </span>
                     </td>
                     <td style={{ whiteSpace: "nowrap" }}>
+                      <button
+                        type="button"
+                        className="table-action"
+                        onClick={() => handlePrintSingle(item)}
+                        style={{
+                          background: "#f0f8f1",
+                          color: "#15803D",
+                          border: "1px solid #a7ddb2",
+                        }}
+                      >
+                        Print
+                      </button>{" "}
                       <button
                         type="button"
                         className="table-action"
@@ -366,7 +438,278 @@ export default function ManageGuestLectures() {
           )}
         </div>
       </div>
+
+      {/* ==================== PRINT AREA ==================== */}
+      {(printAllMode || printSingleData) && (
+        <div
+          className="print-all-area"
+          style={{
+            display: "block",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            zIndex: 9999,
+            background: "white",
+          }}
+        >
+          {printAllMode ? (
+            lectures.map((item) => (
+              <div
+                key={item._id}
+                style={{ pageBreakAfter: "always", marginBottom: "20px" }}
+              >
+                <GuestLecturePrintView data={item} />
+              </div>
+            ))
+          ) : (
+            <GuestLecturePrintView data={printSingleData} />
+          )}
+        </div>
+      )}
+
+      <style>{`
+        @page { size: A4 portrait; margin: 15mm; }
+        @media print {
+          body * { visibility: hidden; }
+          .print-all-area, .print-all-area * { visibility: visible; }
+          .print-all-area { position: absolute; top: 0; left: 0; width: 100%; }
+          .print-all-area > div { page-break-after: always; }
+          .print-all-area > div:last-child { page-break-after: auto; }
+        }
+      `}</style>
     </section>
   );
 }
-    
+
+// =========================================================
+//           GUEST LECTURE PRINT PREVIEW COMPONENT
+// =========================================================
+function GuestLecturePrintView({ data }) {
+  const formatDate = (d) => {
+    if (!d) return "";
+    return new Date(d).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <div
+      style={{
+        fontFamily: "Arial, sans-serif",
+        color: "#000",
+        padding: "20px",
+      }}
+    >
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: "20px",
+          borderBottom: "2px solid #000",
+          paddingBottom: "10px",
+        }}
+      >
+        <h2
+          style={{
+            margin: "0 0 5px",
+            fontSize: "24px",
+            textTransform: "uppercase",
+          }}
+        >
+          RPSF Training Centre
+        </h2>
+        <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "normal" }}>
+          Rajahi Camp, Gorakhpur
+        </h3>
+        <h4
+          style={{
+            margin: "10px 0 0",
+            fontSize: "16px",
+            textDecoration: "underline",
+          }}
+        >
+          Guest Lecture Record
+        </h4>
+      </div>
+
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          fontSize: "14px",
+          marginBottom: "20px",
+        }}
+      >
+        <tbody>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+                width: "30%",
+              }}
+            >
+              Date
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {formatDate(data.date)}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Name of Guest
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.guestName}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Designation
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.designation}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Place of Posting
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.placeOfPosting}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Course
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.course || "-"}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Subject / Topic
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.subject}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Time
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.startTime} to {data.endTime}
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Status
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.status} ({data.employeeType})
+            </td>
+          </tr>
+          <tr>
+            <td
+              style={{
+                padding: "8px",
+                border: "1px solid #ccc",
+                fontWeight: "bold",
+              }}
+            >
+              Remark
+            </td>
+            <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+              {data.remark}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: "60px",
+          padding: "0 20px",
+        }}
+      >
+        <div style={{ textAlign: "center", width: "200px" }}>
+          <div
+            style={{
+              borderTop: "1px solid #000",
+              paddingTop: "5px",
+              marginTop: "40px",
+            }}
+          >
+            <strong>Sign of Lecturer</strong>
+            <br />
+            <span style={{ fontSize: "12px" }}>
+              {data.signOfLecturer || data.guestName}
+            </span>
+          </div>
+        </div>
+        <div style={{ textAlign: "center", width: "200px" }}>
+          <div
+            style={{
+              borderTop: "1px solid #000",
+              paddingTop: "5px",
+              marginTop: "40px",
+            }}
+          >
+            <strong>Sign of PTC / VPTC</strong>
+            <br />
+            <span style={{ fontSize: "12px" }}>{data.signOfPTC}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
