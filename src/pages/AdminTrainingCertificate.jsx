@@ -35,6 +35,7 @@ export default function AdminTrainingCertificate() {
   const [message, setMessage] = useState("");
   const [previewCert, setPreviewCert] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // 👇 Print All Mode State
   const [printAllMode, setPrintAllMode] = useState(false);
@@ -141,6 +142,7 @@ export default function AdminTrainingCertificate() {
   };
 
   const handleDelete = async (id) => {
+    if (deleting) return;
     if (!window.confirm("Delete this certificate?")) return;
     try {
       await deleteTrainingCertificate(id);
@@ -148,6 +150,40 @@ export default function AdminTrainingCertificate() {
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const handleBulkDelete = async (records, scope) => {
+    if (deleting || records.length === 0) return;
+
+    const message =
+      scope === "all"
+        ? `Permanently delete all ${records.length} training certificates, including any hidden by the current filters? This cannot be undone.`
+        : `Permanently delete the ${records.length} training certificates currently matching your filters? This cannot be undone.`;
+    if (!window.confirm(message)) return;
+
+    setDeleting(true);
+    setMessage("");
+    const deletedIds = new Set();
+    const failures = [];
+
+    for (const cert of records) {
+      try {
+        await deleteTrainingCertificate(cert._id);
+        deletedIds.add(cert._id);
+      } catch (err) {
+        failures.push(err.message || "Unknown error");
+      }
+    }
+
+    if (deletedIds.size > 0) {
+      setCerts((current) => current.filter((cert) => !deletedIds.has(cert._id)));
+    }
+    setMessage(
+      failures.length
+        ? `Deleted ${deletedIds.size} training certificates. Failed to delete ${failures.length}: ${failures[0]}`
+        : `Deleted ${deletedIds.size} training certificates successfully.`,
+    );
+    setDeleting(false);
   };
 
   const formatDate = (d) => {
@@ -1178,20 +1214,39 @@ export default function AdminTrainingCertificate() {
             All Training Certificates ({filteredCerts.length}
             {filteredCerts.length !== certs.length && ` of ${certs.length}`})
           </h3>
-          {/* 👇 Print All Button */}
-          <button
-            type="button"
-            className="primary"
-            onClick={handlePrintAll}
-            style={{
-              padding: "8px 16px",
-              fontSize: "13px",
-              background: "var(--navy)",
-              color: "white",
-            }}
-          >
-            Print All ({filteredCerts.length})
-          </button>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="primary"
+              onClick={handlePrintAll}
+              style={{
+                padding: "8px 16px",
+                fontSize: "13px",
+                background: "var(--navy)",
+                color: "white",
+              }}
+            >
+              Print All ({filteredCerts.length})
+            </button>
+            <button
+              type="button"
+              className="table-action danger"
+              onClick={() => handleBulkDelete(filteredCerts, "filtered")}
+              disabled={deleting || loading || !hasActiveFilters || filteredCerts.length === 0}
+              style={{ padding: "8px 16px" }}
+            >
+              {deleting ? "Deleting..." : `Delete Filtered (${filteredCerts.length})`}
+            </button>
+            <button
+              type="button"
+              className="table-action danger"
+              onClick={() => handleBulkDelete(certs, "all")}
+              disabled={deleting || loading || certs.length === 0}
+              style={{ padding: "8px 16px" }}
+            >
+              {deleting ? "Deleting..." : `Delete All (${certs.length})`}
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -1375,6 +1430,7 @@ export default function AdminTrainingCertificate() {
                         type="button"
                         className="table-action danger"
                         onClick={() => handleDelete(c._id)}
+                        disabled={deleting}
                       >
                         Delete
                       </button>

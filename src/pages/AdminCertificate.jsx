@@ -59,6 +59,7 @@ export default function AdminCertificate() {
   const [previewCert, setPreviewCert] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [printAllMode, setPrintAllMode] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Bulk
   const [showBulk, setShowBulk] = useState(false);
@@ -159,6 +160,7 @@ export default function AdminCertificate() {
   };
 
   const handleDelete = async (id) => {
+    if (deleting) return;
     if (!window.confirm("Delete this certificate?")) return;
     try {
       await deleteCertificate(id);
@@ -166,6 +168,40 @@ export default function AdminCertificate() {
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const handleBulkDelete = async (records, scope) => {
+    if (deleting || records.length === 0) return;
+
+    const message =
+      scope === "all"
+        ? `Permanently delete all ${records.length} certificates, including any hidden by the current filters? This cannot be undone.`
+        : `Permanently delete the ${records.length} certificates currently matching your filters? This cannot be undone.`;
+    if (!window.confirm(message)) return;
+
+    setDeleting(true);
+    setMessage("");
+    const deletedIds = new Set();
+    const failures = [];
+
+    for (const cert of records) {
+      try {
+        await deleteCertificate(cert._id);
+        deletedIds.add(cert._id);
+      } catch (err) {
+        failures.push(err.message || "Unknown error");
+      }
+    }
+
+    if (deletedIds.size > 0) {
+      setCerts((current) => current.filter((cert) => !deletedIds.has(cert._id)));
+    }
+    setMessage(
+      failures.length
+        ? `Deleted ${deletedIds.size} certificates. Failed to delete ${failures.length}: ${failures[0]}`
+        : `Deleted ${deletedIds.size} certificates successfully.`,
+    );
+    setDeleting(false);
   };
 
   const formatDate = (d) => {
@@ -1113,19 +1149,39 @@ export default function AdminCertificate() {
             All Certificates ({filteredCerts.length}
             {filteredCerts.length !== certs.length && ` of ${certs.length}`})
           </h3>
-          <button
-            type="button"
-            className="primary"
-            onClick={handlePrintAll}
-            style={{
-              padding: "8px 16px",
-              fontSize: "13px",
-              background: "var(--navy)",
-              color: "white",
-            }}
-          >
-            Print All ({filteredCerts.length})
-          </button>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="primary"
+              onClick={handlePrintAll}
+              style={{
+                padding: "8px 16px",
+                fontSize: "13px",
+                background: "var(--navy)",
+                color: "white",
+              }}
+            >
+              Print All ({filteredCerts.length})
+            </button>
+            <button
+              type="button"
+              className="table-action danger"
+              onClick={() => handleBulkDelete(filteredCerts, "filtered")}
+              disabled={deleting || loading || !hasActiveFilters || filteredCerts.length === 0}
+              style={{ padding: "8px 16px" }}
+            >
+              {deleting ? "Deleting..." : `Delete Filtered (${filteredCerts.length})`}
+            </button>
+            <button
+              type="button"
+              className="table-action danger"
+              onClick={() => handleBulkDelete(certs, "all")}
+              disabled={deleting || loading || certs.length === 0}
+              style={{ padding: "8px 16px" }}
+            >
+              {deleting ? "Deleting..." : `Delete All (${certs.length})`}
+            </button>
+          </div>
         </div>
         <div
           style={{
@@ -1259,6 +1315,7 @@ export default function AdminCertificate() {
                         type="button"
                         className="table-action danger"
                         onClick={() => handleDelete(c._id)}
+                        disabled={deleting}
                       >
                         Delete
                       </button>
