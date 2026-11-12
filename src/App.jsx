@@ -42,6 +42,7 @@ import AdminTrainingCertificate from "./pages/AdminTrainingCertificate";
 import AdminFeedback from "./pages/AdminFeedback";
 import UserFeedback from "./pages/UserFeedback";
 import ManageGuestLectures from "./pages/ManageGuestLectures"; 
+import AdminFacultyMembers from "./pages/AdminFacultyMembers";
 
 function PublicLayout({ children }) {
   return (
@@ -91,6 +92,10 @@ export default function App() {
           <Route
             path="/admin/guest-lectures"
             element={<ManageGuestLectures />}
+          />
+          <Route
+            path="faculty-members"
+            element={<AdminFacultyMembers />}
           />
 
           {/* Users Management */}

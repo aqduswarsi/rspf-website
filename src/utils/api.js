@@ -1368,3 +1368,56 @@ export async function deleteGuestLecture(id) {
   if (!res.ok) throw new Error(data.message || "Failed to delete lecture");
   return data;
 }
+
+// ==================== FACULTY MEMBERS ====================
+
+export async function createFacultyMember(data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/faculty-members`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to add faculty member");
+  return result;
+}
+
+export async function getAllFacultyMembers() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/faculty-members`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load faculty members");
+  return data;
+}
+
+export async function updateFacultyMember(id, data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/faculty-members/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to update faculty member");
+  return result;
+}
+
+export async function deleteFacultyMember(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/faculty-members/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to delete faculty member");
+  return data;
+}
