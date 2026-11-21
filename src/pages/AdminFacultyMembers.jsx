@@ -7,15 +7,15 @@ import {
 } from "../utils/api"; // 👈 अपनी api.js का सही path डालें
 
 const initialForm = {
-  name: "",
-  facultyType: "",
-  designation: "",
-  instructorType: "",
   rank: "",
-  subject: "",
-  placeOfPosting: "",
-  education: "",
   uinNumber: "",
+  name: "",
+  designation: "",
+  facultyType: "",
+  placeOfPosting: "",
+  totOtherCourse: "",
+  education: "",
+  subject: "",
 };
 
 const designations = [
@@ -69,9 +69,6 @@ export default function AdminFacultyMembers() {
     setForm((currentForm) => ({
       ...currentForm,
       [name]: value,
-      ...(name === "designation" && value !== "Instructor"
-        ? { instructorType: "" }
-        : {}),
     }));
     setMessage("");
   };
@@ -85,6 +82,16 @@ export default function AdminFacultyMembers() {
 
     if (normalized.uimNumber && !normalized.uinNumber) {
       normalized.uinNumber = normalized.uimNumber;
+    }
+
+    if (normalized.totOtherCourse) {
+      normalized.instructorType = normalized.totOtherCourse;
+    }
+    if (normalized.education) {
+      normalized.subjectSpecialization = normalized.education;
+    }
+    if (normalized.subject) {
+      normalized.allottedSubject = normalized.subject;
     }
 
     return normalized;
@@ -119,15 +126,24 @@ export default function AdminFacultyMembers() {
 
   const handleEdit = (member) => {
     setForm({
-      name: member.name || "",
-      facultyType: member.facultyType || "",
-      designation: member.designation || "",
-      instructorType: member.instructorType || "",
       rank: member.rank || "",
-      subject: member.subject || "",
-      placeOfPosting: member.placeOfPosting || "",
-      education: member.education || "",
       uinNumber: member.uinNumber || member.uimNumber || "",
+      name: member.name || "",
+      designation: member.designation || "",
+      facultyType: member.facultyType || "",
+      placeOfPosting: member.placeOfPosting || "",
+      totOtherCourse:
+        member.totOtherCourse ||
+        member.instructorType ||
+        "",
+      education:
+        member.education ||
+        member.subjectSpecialization ||
+        "",
+      subject:
+        member.subject ||
+        member.allottedSubject ||
+        "",
     });
     setEditingId(member._id); // 👈 MongoDB की _id
     setMessage("");
@@ -157,16 +173,19 @@ export default function AdminFacultyMembers() {
       if (
         query &&
         ![
+          member.rank,
+          member.uinNumber,
+          member.uimNumber,
           member.name,
           member.facultyType,
           member.designation,
+          member.totOtherCourse,
           member.instructorType,
-          member.rank,
+          member.subjectSpecialization,
+          member.allottedSubject,
           member.subject,
           member.placeOfPosting,
           member.education,
-          member.uinNumber,
-          member.uimNumber,
         ]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(query))
@@ -178,7 +197,10 @@ export default function AdminFacultyMembers() {
         return false;
       if (filterDesignation && member.designation !== filterDesignation)
         return false;
-      if (filterInstructorType && member.instructorType !== filterInstructorType)
+      if (
+        filterInstructorType &&
+        (member.totOtherCourse || member.instructorType) !== filterInstructorType
+      )
         return false;
 
       return true;
@@ -200,7 +222,9 @@ export default function AdminFacultyMembers() {
   const facultyInstructorTypes = [
     ...new Set([
       ...instructorTypes,
-      ...members.map((member) => member.instructorType).filter(Boolean),
+      ...members
+        .map((member) => member.totOtherCourse || member.instructorType)
+        .filter(Boolean),
     ]),
   ].sort();
   const hasActiveFilters = Boolean(
@@ -255,6 +279,25 @@ export default function AdminFacultyMembers() {
             }}
           >
             <div>
+              <label htmlFor="faculty-rank">Rank</label>
+              <input
+                id="faculty-rank"
+                name="rank"
+                value={form.rank}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="faculty-uin-number">UIN Number</label>
+              <input
+                id="faculty-uin-number"
+                name="uinNumber"
+                value={form.uinNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div>
               <label htmlFor="faculty-name">Name</label>
               <input
                 id="faculty-name"
@@ -263,20 +306,6 @@ export default function AdminFacultyMembers() {
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div>
-              <label htmlFor="faculty-type">Faculty Type</label>
-              <select
-                id="faculty-type"
-                name="facultyType"
-                value={form.facultyType}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Select Type --</option>
-                <option value="Indoor">Indoor</option>
-                <option value="Outdoor">Outdoor</option>
-              </select>
             </div>
             <div>
               <label htmlFor="faculty-designation">Designation</label>
@@ -295,42 +324,19 @@ export default function AdminFacultyMembers() {
                 ))}
               </select>
             </div>
-            {form.designation === "Instructor" && (
-              <div>
-                <label htmlFor="faculty-instructor-type">Instructor Type</label>
-                <select
-                  id="faculty-instructor-type"
-                  name="instructorType"
-                  value={form.instructorType}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">-- Select Instructor Type --</option>
-                  {instructorTypes.map((instructorType) => (
-                    <option key={instructorType} value={instructorType}>
-                      {instructorType}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
             <div>
-              <label htmlFor="faculty-rank">Rank</label>
-              <input
-                id="faculty-rank"
-                name="rank"
-                value={form.rank}
+              <label htmlFor="faculty-type">Faculty Type</label>
+              <select
+                id="faculty-type"
+                name="facultyType"
+                value={form.facultyType}
                 onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="faculty-subject">Subject</label>
-              <input
-                id="faculty-subject"
-                name="subject"
-                value={form.subject}
-                onChange={handleChange}
-              />
+                required
+              >
+                <option value="">-- Select Type --</option>
+                <option value="Indoor">Indoor</option>
+                <option value="Outdoor">Outdoor</option>
+              </select>
             </div>
             <div>
               <label htmlFor="faculty-posting">Place of Posting</label>
@@ -342,7 +348,17 @@ export default function AdminFacultyMembers() {
               />
             </div>
             <div>
-              <label htmlFor="faculty-education">Education</label>
+              <label htmlFor="faculty-tot-course">ToT / Other Course Qualified</label>
+              <input
+                id="faculty-tot-course"
+                name="totOtherCourse"
+                value={form.totOtherCourse}
+                onChange={handleChange}
+                placeholder="If any"
+              />
+            </div>
+            <div>
+              <label htmlFor="faculty-education">Subject Specialization / Qualification</label>
               <input
                 id="faculty-education"
                 name="education"
@@ -351,13 +367,12 @@ export default function AdminFacultyMembers() {
               />
             </div>
             <div>
-              <label htmlFor="faculty-uin-number">UIN Number</label>
+              <label htmlFor="faculty-subject">Alloted Subject</label>
               <input
-                id="faculty-uin-number"
-                name="uinNumber"
-                value={form.uinNumber}
+                id="faculty-subject"
+                name="subject"
+                value={form.subject}
                 onChange={handleChange}
-                required
               />
             </div>
           </div>
@@ -403,7 +418,7 @@ export default function AdminFacultyMembers() {
         >
           <div>
             <label htmlFor="faculty-search" style={filterLabelStyle}>
-              Search (Name, UIN, Subject, Posting)
+              Search (Name, Rank, UIN, Subject, Posting)
             </label>
             <input
               id="faculty-search"
@@ -452,7 +467,7 @@ export default function AdminFacultyMembers() {
           </div>
           <div>
             <label htmlFor="faculty-instructor-type-filter" style={filterLabelStyle}>
-              Instructor Type
+              ToT / Other Course
             </label>
             <select
               id="faculty-instructor-type-filter"
@@ -460,7 +475,7 @@ export default function AdminFacultyMembers() {
               onChange={(e) => setFilterInstructorType(e.target.value)}
               style={filterInputStyle}
             >
-              <option value="">All Instructor Types</option>
+              <option value="">All Courses</option>
               {facultyInstructorTypes.map((instructorType) => (
                 <option key={instructorType} value={instructorType}>
                   {instructorType}
@@ -489,14 +504,15 @@ export default function AdminFacultyMembers() {
             <table className="education-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Designation</th>
                   <th>Rank</th>
-                  <th>Subject</th>
-                  <th>Place of Posting</th>
-                  <th>Education</th>
                   <th>UIN Number</th>
+                  <th>Name</th>
+                  <th>Designation</th>
+                  <th>Faculty Type</th>
+                  <th>Place of Posting</th>
+                  <th>ToT / Other Course Qualified</th>
+                  <th>Subject Specialization / Qualification</th>
+                  <th>Alloted Subject</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -505,18 +521,27 @@ export default function AdminFacultyMembers() {
                   <tr key={member._id}>
                     {" "}
                     {/* 👈 _id का इस्तेमाल करें */}
-                    <td>{member.name}</td>
-                    <td>{member.facultyType}</td>
-                    <td>
-                      {member.designation === "Instructor"
-                        ? `${member.designation} - ${member.instructorType}`
-                        : member.designation}
-                    </td>
                     <td>{member.rank || "—"}</td>
-                    <td>{member.subject || "—"}</td>
-                    <td>{member.placeOfPosting || "—"}</td>
-                    <td>{member.education || "—"}</td>
                     <td>{member.uinNumber ?? member.uimNumber ?? "—"}</td>
+                    <td>{member.name}</td>
+                    <td>{member.designation || "—"}</td>
+                    <td>{member.facultyType || "—"}</td>
+                    <td>{member.placeOfPosting || "—"}</td>
+                    <td>
+                      {member.totOtherCourse ||
+                        member.instructorType ||
+                        "—"}
+                    </td>
+                    <td>
+                      {member.education ||
+                        member.subjectSpecialization ||
+                        "—"}
+                    </td>
+                    <td>
+                      {member.subject ||
+                        member.allottedSubject ||
+                        "—"}
+                    </td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       <button
                         type="button"
