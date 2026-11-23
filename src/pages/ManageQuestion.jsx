@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 import {
   createQuestion,
   getAllQuestions,
@@ -32,6 +33,10 @@ export default function ManageQuestion() {
   const [message, setMessage] = useState("");
   const [translating, setTranslating] = useState(false);
   const [translatingOptions, setTranslatingOptions] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [bulkRows, setBulkRows] = useState([]);
+  const [bulkFileName, setBulkFileName] = useState("");
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   // Filters
   const [filterCourseId, setFilterCourseId] = useState("");
@@ -276,6 +281,196 @@ export default function ManageQuestion() {
     );
   };
 
+  const handleQuestionExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setBulkFileName(file.name);
+    setBulkRows([]);
+    setMessage("");
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const workbook = XLSX.read(event.target.result, { type: "binary" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        if (!data.length) {
+          setMessage("Excel file is empty");
+          return;
+        }
+
+        const rows = data.map((row, index) => {
+          const headers = Object.keys(row).reduce((result, key) => {
+            result[key.toLowerCase().replace(/[^a-z0-9]/g, "")] = key;
+            return result;
+          }, {});
+          const get = (...names) => {
+            const key = names
+              .map((name) =>
+                headers[
+                  name.toLowerCase().replace(/[^a-z0-9]/g, "")
+                ],
+              )
+              .find(Boolean);
+            return key ? String(row[key] ?? "").trim() : "";
+          };
+
+          const courseValue = get("course", "coursename", "courseid");
+          const subjectValue = get("subject", "subjectname", "subjectid");
+          const course = courses.find(
+            (item) =>
+              item._id === courseValue ||
+              item.name?.toLowerCase() === courseValue.toLowerCase(),
+          );
+          const subject = subjects.find(
+            (item) =>
+              item._id === subjectValue ||
+              item.name?.toLowerCase() === subjectValue.toLowerCase(),
+          );
+
+          const typeValue = get("type", "questiontype");
+          let type = "MCQ";
+          if (/true|false/i.test(typeValue)) type = "True / False";
+          else if (/fill/i.test(typeValue)) type = "Fill in the Blank";
+          else if (/written/i.test(typeValue)) type = "Written";
+
+          const options = [
+            get("optiona", "option1", "a"),
+            get("optionb", "option2", "b"),
+            get("optionc", "option3", "c"),
+            get("optiond", "option4", "d"),
+          ].filter(Boolean);
+          const optionsHindi = [
+            get("optionahindi", "optionhindia"),
+            get("optionbhindi", "optionhindib"),
+            get("optionchindi", "optionhindic"),
+            get("optiondhindi", "optionhindid"),
+          ];
+
+          let correctAnswer = get("correctanswer", "answer");
+          if (type === "True / False") {
+            correctAnswer = /^t|true/i.test(correctAnswer) ? "True" : "False";
+          } else if (type === "MCQ") {
+            const letterMatch = correctAnswer.match(/^[abcd]$/i);
+            if (letterMatch) {
+              correctAnswer = letterMatch[0].toUpperCase();
+            } else {
+              const optionIndex = options.findIndex(
+                (option) =>
+                  option.toLowerCase() === correctAnswer.toLowerCase(),
+              );
+              correctAnswer =
+                optionIndex >= 0
+                  ? String.fromCharCode(65 + optionIndex)
+                  : "";
+            }
+          }
+
+          const errors = [];
+          if (!get("question", "questionenglish")) errors.push("Question required");
+          if (!course) errors.push("Course not found");
+          if (!subject) errors.push("Subject not found");
+          if (type === "MCQ" && options.length < 2) errors.push("At least 2 options required");
+          if (type === "MCQ" && !correctAnswer) errors.push("Valid correct answer required");
+          if (type === "Fill in the Blank" && !correctAnswer) errors.push("Correct answer required");
+
+          return {
+            _rowNumber: index + 2,
+            question: get("question", "questionenglish"),
+            questionHindi: get("questionhindi"),
+            type,
+            options,
+            optionsHindi: optionsHindi.length ? optionsHindi : ["", "", "", ""],
+            correctAnswer,
+            courseId: course?._id || "",
+            subjectId: subject?._id || "",
+            courseName: course?.name || courseValue,
+            subjectName: subject?.name || subjectValue,
+            _error: errors.join(", "),
+          };
+        });
+
+        setBulkRows(rows);
+        setMessage(`${rows.length} question rows detected. Verify and import.`);
+      } catch (err) {
+        setMessage(`Failed to read Excel: ${err.message}`);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const downloadQuestionTemplate = () => {
+    const sample = [
+      {
+        Course: courses[0]?.name || "Course Name",
+        Subject: subjects[0]?.name || "Subject Name",
+        Question: "What is the full form of RPSF?",
+        QuestionHindi: "RPSF का पूर्ण रूप क्या है?",
+        Type: "MCQ",
+        OptionA: "Railway Protection Special Force",
+        OptionB: "Rapid Police Security Force",
+        OptionC: "Reserve Police Special Force",
+        OptionD: "Regional Protection Security Force",
+        CorrectAnswer: "A",
+        OptionAHindi: "",
+        OptionBHindi: "",
+        OptionCHindi: "",
+        OptionDHindi: "",
+      },
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(sample);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Questions");
+    XLSX.writeFile(workbook, "questions-import-template.xlsx");
+  };
+
+  const handleBulkQuestionImport = async () => {
+    const validRows = bulkRows.filter((row) => !row._error);
+    if (!validRows.length) {
+      setMessage("No valid questions to import");
+      return;
+    }
+
+    setBulkSaving(true);
+    setMessage("");
+    let successCount = 0;
+    const failed = [];
+
+    for (const row of validRows) {
+      try {
+        await createQuestion({
+          question: row.question,
+          questionHindi: row.questionHindi,
+          type: row.type,
+          options: row.type === "MCQ" ? row.options : [],
+          optionsHindi:
+            row.type === "MCQ"
+              ? row.optionsHindi.slice(0, row.options.length)
+              : [],
+          correctAnswer:
+            row.type === "Written" ? "" : row.correctAnswer,
+          courseId: row.courseId,
+          subjectId: row.subjectId,
+        });
+        successCount += 1;
+      } catch (err) {
+        failed.push(`Row ${row._rowNumber}: ${err.message}`);
+      }
+    }
+
+    setBulkSaving(false);
+    setBulkRows([]);
+    setBulkFileName("");
+    setShowBulkUpload(false);
+    loadQuestions();
+    setMessage(
+      failed.length
+        ? `✅ ${successCount} imported, ❌ ${failed.length} failed.`
+        : `✅ ${successCount} questions imported successfully.`,
+    );
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
     return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -293,7 +488,99 @@ export default function ManageQuestion() {
           <h2>{editingId ? "Edit Question" : "Add Question"}</h2>
           <p>Create exam questions for courses and subjects.</p>
         </div>
+        <button
+          type="button"
+          className="table-action"
+          onClick={() => setShowBulkUpload((current) => !current)}
+        >
+          {showBulkUpload ? "Close Excel Upload" : "Upload Excel Questions"}
+        </button>
       </div>
+
+      {showBulkUpload && (
+        <div className="education-panel" style={{ marginBottom: "20px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "12px",
+              alignItems: "center",
+              flexWrap: "wrap",
+              marginBottom: "16px",
+            }}
+          >
+            <h3 style={{ margin: 0 }}>Bulk Upload Questions</h3>
+            <button
+              type="button"
+              className="table-action"
+              onClick={downloadQuestionTemplate}
+            >
+              Download Excel Template
+            </button>
+          </div>
+          <input
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleQuestionExcelUpload}
+            style={{
+              width: "100%",
+              padding: "10px",
+              border: "1px solid var(--line)",
+              borderRadius: "8px",
+              marginBottom: "12px",
+            }}
+          />
+          {bulkFileName && (
+            <p style={{ fontSize: "13px", fontWeight: 700 }}>
+              {bulkFileName} — {bulkRows.length} rows detected
+            </p>
+          )}
+          {bulkRows.length > 0 && (
+            <>
+              <div className="education-table-wrap" style={{ marginBottom: "12px" }}>
+                <table className="education-table">
+                  <thead>
+                    <tr>
+                      <th>Excel Row</th>
+                      <th>Course</th>
+                      <th>Subject</th>
+                      <th>Question</th>
+                      <th>Type</th>
+                      <th>Correct Answer</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkRows.map((row) => (
+                      <tr key={row._rowNumber}>
+                        <td>{row._rowNumber}</td>
+                        <td>{row.courseName || "-"}</td>
+                        <td>{row.subjectName || "-"}</td>
+                        <td>{row.question || "-"}</td>
+                        <td>{row.type}</td>
+                        <td>{row.correctAnswer || "-"}</td>
+                        <td style={{ color: row._error ? "#b91c1c" : "#15803d" }}>
+                          {row._error || "Ready"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                type="button"
+                className="primary"
+                disabled={bulkSaving}
+                onClick={handleBulkQuestionImport}
+              >
+                {bulkSaving
+                  ? "Importing..."
+                  : `Import ${bulkRows.filter((row) => !row._error).length} Valid Questions`}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Form */}
       <div className="education-panel education-form-panel">

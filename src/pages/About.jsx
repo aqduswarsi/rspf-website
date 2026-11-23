@@ -1,25 +1,31 @@
 const timeline = [
   {
     year: "1957",
-    event: "Watch & Ward force established under Indian Railways.",
+    event: 
+      "Watch & Ward force established under Indian Railways.",
   },
   {
     year: "1985",
-    event: "Renamed to Railway Protection Force (RPF) under RPF Act 1957.",
+    event:  
+      "Renamed to Railway Protection Force (RPF) under RPF Act 1957.",
   },
   {
     year: "2003",
-    event: "Granted armed force status under Indian Railways Act.",
+    event: 
+      "Granted armed force status under Indian Railways Act.",
   },
   {
     year: "2018",
     event:
       "RPSF (RPSF TRAINING CENTER RAJAHI CAMP GORAKHPUR) expanded operations.",
   },
-  { year: "2022", event: "Operation NANHE FARISHTE rescues 80,000+ children." },
+  { year: "2022", 
+    event: 
+      "Operation NANHE FARISHTE rescues 80,000+ children." },
   {
     year: "2024",
-    event: "RPSF modernised with cyber cells, FRS and geo-fencing technology.",
+    event:  
+      "RPSF modernised with cyber cells, FRS and geo-fencing technology.",
   },
 ];
 

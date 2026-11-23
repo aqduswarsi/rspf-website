@@ -212,7 +212,7 @@ const handleSubmit = async (e) => {
     <div className="form-page bio-form-page">
       <div className="bio-form-header">
         <h2>BIO - DATA</h2>
-        <p>RPSF / TC / GKP — Recruitment 2026</p>
+        <p>RPSF / TC / GKP</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bio-form">

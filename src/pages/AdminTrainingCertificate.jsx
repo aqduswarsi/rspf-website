@@ -1734,7 +1734,7 @@ function TrainingCertificatePreview({ cert, onClose, isPrintMode = false }) {
                 )}
               </div>
 
-              <div className="tc-signatures">
+              <div className="tc-signatures tc-signatures-training">
                 {(cert.signatures || []).slice(0, 3).map((sig, i) => (
                   <div key={i} className="tc-sign-slot">
                     {sig.image && (
@@ -1749,13 +1749,7 @@ function TrainingCertificatePreview({ cert, onClose, isPrintMode = false }) {
               </div>
 
               {cert.certificateId && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "40px",
-                    right: "60px",
-                  }}
-                >
+                <div className="tc-qr tc-qr-training">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(cert.certificateId)}`}
                     alt="QR"
@@ -1816,9 +1810,13 @@ function TrainingCertificatePreview({ cert, onClose, isPrintMode = false }) {
         .tc-footer p { margin: 2px 0; }
 
         .tc-signatures { display: flex; justify-content: space-around; align-items: flex-end; gap: 60px; margin-top: 34px; }
+        .tc-signatures-training { padding-right: 120px; box-sizing: border-box; }
         .tc-sign-slot { flex: 1; max-width: 300px; min-height: 90px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; text-align: center; }
         .tc-sign-img { height: 62px; max-width: 100%; object-fit: contain; margin-bottom: 2px; }
         .tc-sign-name, .tc-sign-rank { margin: 0; font-family: 'Arial Narrow', 'Liberation Sans Narrow', Arial, sans-serif; font-size: 17px; font-weight: 700; line-height: 1.3; color: #111; }
+        .tc-qr { position: absolute; z-index: 2; }
+        .tc-qr-training { bottom: 40px; right: 60px; width: 70px; height: 70px; background: white; padding: 4px; box-sizing: border-box; }
+        .tc-qr img { display: block; width: 100%; height: 100%; }
 
         @page { size: A4 landscape; margin: 8mm; }
         @media print {
