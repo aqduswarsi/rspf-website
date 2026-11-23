@@ -351,10 +351,89 @@ export async function createGalleryImage(data) {
 }
 
 export async function getAllGalleryImages() {
-  const res = await fetch(`${API_BASE_URL}/api/gallery`);
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/gallery`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const data = await res.json().catch(() => []);
   if (!res.ok) throw new Error(data.message || "Failed to load gallery");
   return data;
+}
+
+export async function getGalleryFolders() {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/gallery/folders`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (res.status === 404) {
+    throw new Error(
+      "Gallery folder API is not available on the configured backend. Deploy the latest backend changes.",
+    );
+  }
+  if (!res.ok) throw new Error(data.message || "Failed to load gallery folders");
+  return data;
+}
+
+export async function createGalleryFolder(data) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/gallery/folders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (res.status === 404) {
+    throw new Error(
+      "Gallery folder API is not available on the configured backend. Deploy the latest backend changes.",
+    );
+  }
+  if (!res.ok) throw new Error(result.message || "Failed to create folder");
+  return result;
+}
+
+export async function updateGalleryFolder(id, updates) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/gallery/folders/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to update folder");
+  return result;
+}
+
+export async function deleteGalleryFolder(id) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/gallery/folders/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to delete folder");
+  return result;
+}
+
+export async function updateGalleryImage(id, updates) {
+  const token = localStorage.getItem("rpsf_login_token");
+  const res = await fetch(`${API_BASE_URL}/api/gallery/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(result.message || "Failed to update image");
+  return result;
 }
 
 export async function deleteGalleryImage(id) {
@@ -365,6 +444,16 @@ export async function deleteGalleryImage(id) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Failed to delete");
+  return data;
+}
+
+export async function getPublishedGalleryImages() {
+  const token = localStorage.getItem("rpsf_user_token");
+  const res = await fetch(`${API_BASE_URL}/api/user/gallery`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => []);
+  if (!res.ok) throw new Error(data.message || "Failed to load published gallery");
   return data;
 }
 

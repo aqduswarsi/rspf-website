@@ -54,6 +54,14 @@ export default function UserSidebar({ isOpen, onClose }) {
         >
           Training Feedback
         </NavLink>
+        <NavLink
+          to="/user/gallery"
+          className={({ isActive }) =>
+            `admin-nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          Gallery
+        </NavLink>
 
         {/* ============ MY ACCOUNT ============ */}
         <button

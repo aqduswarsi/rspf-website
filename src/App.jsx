@@ -41,6 +41,7 @@ import AdminCertificate from "./pages/AdminCertificate";
 import AdminTrainingCertificate from "./pages/AdminTrainingCertificate";
 import AdminFeedback from "./pages/AdminFeedback";
 import UserFeedback from "./pages/UserFeedback";
+import UserGallery from "./pages/UserGallery";
 import ManageGuestLectures from "./pages/ManageGuestLectures"; 
 import AdminFacultyMembers from "./pages/AdminFacultyMembers";
 
@@ -149,6 +150,7 @@ export default function App() {
         {/* ============ USER ============ */}
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/feedback" element={<UserFeedback />} />
+        <Route path="/user/gallery" element={<UserGallery />} />
         <Route path="/user/account/profile" element={<UserProfileUpdate />} />
         <Route path="/user/account/id-card" element={<UserIdCard />} />
         <Route path="/user/change-password" element={<UserChangePassword />} />

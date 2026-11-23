@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import {
   createGalleryImage,
   getAllGalleryImages,
+  getGalleryFolders,
+  createGalleryFolder,
+  updateGalleryFolder,
+  deleteGalleryFolder,
+  updateGalleryImage,
   deleteGalleryImage,
 } from "../utils/api";
 
@@ -13,31 +18,31 @@ export default function Gallery() {
     category: "General",
   });
   const [images, setImages] = useState([]);
+  const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState("All");
-  const [customFolders, setCustomFolders] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("rpsf_gallery_folders") || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadImages();
   }, []);
 
-  const loadImages = async () => {
+  async function loadImages() {
     try {
-      const data = await getAllGalleryImages();
-      setImages(data);
+      const [imageData, folderData] = await Promise.all([
+        getAllGalleryImages(),
+        getGalleryFolders(),
+      ]);
+      setImages(imageData);
+      setFolders(folderData);
+      setError("");
     } catch (err) {
-      console.error(err);
+      setError(err.message || "Failed to load gallery");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
@@ -94,7 +99,7 @@ export default function Gallery() {
       });
       // reset file input
       document.getElementById("gallery-file-input").value = "";
-      loadImages();
+      await loadImages();
     } catch (err) {
       alert("❌ " + err.message);
     } finally {
@@ -106,38 +111,111 @@ export default function Gallery() {
     if (!window.confirm("Delete this image?")) return;
     try {
       await deleteGalleryImage(id);
-      loadImages();
+      await loadImages();
     } catch (err) {
       alert("❌ " + err.message);
     }
   };
 
-  const handleCreateFolder = () => {
+  const handleCreateFolder = async () => {
     const name = window.prompt("Folder name");
     if (!name) return;
     const folderName = name.trim();
     if (!folderName) return;
-    if (folders.some((folder) => folder.toLowerCase() === folderName.toLowerCase())) {
-      alert("This folder already exists.");
-      return;
+    const description = window.prompt("Folder description (optional)") || "";
+    try {
+      const { data } = await createGalleryFolder({
+        name: folderName,
+        description,
+      });
+      await loadImages();
+      setForm((current) => ({ ...current, category: data.name }));
+      setSelectedFolder(data._id);
+    } catch (err) {
+      alert(`❌ ${err.message}`);
     }
-    const updated = [...customFolders, folderName];
-    setCustomFolders(updated);
-    localStorage.setItem("rpsf_gallery_folders", JSON.stringify(updated));
-    setForm((current) => ({ ...current, category: folderName }));
   };
 
-  const folders = [
-    ...new Set([
-      "General",
-      ...customFolders,
-      ...images.map((img) => img.category).filter(Boolean),
-    ]),
-  ];
-  const visibleImages =
-    selectedFolder === "All"
-      ? images
-      : images.filter((img) => (img.category || "General") === selectedFolder);
+  const handleRenameFolder = async (folder) => {
+    const name = window.prompt("Folder name", folder.name);
+    if (name === null) return;
+    const updatedName = name.trim();
+    if (!updatedName) {
+      alert("Folder name cannot be empty.");
+      return;
+    }
+    const description =
+      window.prompt("Folder description", folder.description || "") ??
+      folder.description;
+    try {
+      await updateGalleryFolder(folder._id, {
+        name: updatedName,
+        description,
+      });
+      await loadImages();
+      setForm((current) =>
+        current.category === folder.name
+          ? { ...current, category: updatedName }
+          : current,
+      );
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
+  };
+
+  const handleDeleteFolder = async (folder) => {
+    const count = images.filter((image) => image.category === folder.name).length;
+    if (
+      !window.confirm(
+        `Delete "${folder.name}" and all ${count} image(s) inside it? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await deleteGalleryFolder(folder._id);
+      setSelectedFolder("All");
+      setForm((current) =>
+        current.category === folder.name
+          ? { ...current, category: "General" }
+          : current,
+      );
+      await loadImages();
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
+  };
+
+  const handleToggleFolderPublish = async (folder) => {
+    try {
+      await updateGalleryFolder(folder._id, {
+        isPublished: !folder.isPublished,
+      });
+      await loadImages();
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
+  };
+
+  const handleToggleImagePublish = async (image) => {
+    try {
+      const result = await updateGalleryImage(image._id, {
+        isPublished: !image.isPublished,
+      });
+      setImages((current) =>
+        current.map((item) =>
+          item._id === image._id ? result.data : item,
+        ),
+      );
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
+  };
+
+  const activeFolder = folders.find((folder) => folder._id === selectedFolder);
+  const visibleImages = activeFolder
+    ? images.filter((image) => image.category === activeFolder.name)
+    : images;
 
   return (
     <div className="form-page bio-form-page">
@@ -174,8 +252,8 @@ export default function Gallery() {
                   }}
                 >
                   {folders.map((folder) => (
-                    <option key={folder} value={folder}>
-                      {folder}
+                    <option key={folder._id} value={folder.name}>
+                      {folder.name}
                     </option>
                   ))}
                 </select>
@@ -314,70 +392,103 @@ export default function Gallery() {
       {/* ============ All Images ============ */}
       <div className="users-page" style={{ marginTop: "30px" }}>
         <div className="users-header">
-          <h2>All Images ({visibleImages.length})</h2>
-          <select
-            value={selectedFolder}
-            onChange={(e) => setSelectedFolder(e.target.value)}
-            className="filter-select"
-            aria-label="Filter gallery folder"
-          >
-            <option value="All">All Folders</option>
-            {folders.map((folder) => (
-              <option key={folder} value={folder}>
-                {folder}
-              </option>
-            ))}
-          </select>
+          <h2>
+            {activeFolder
+              ? `${activeFolder.name} (${visibleImages.length})`
+              : `Gallery Folders (${folders.length})`}
+          </h2>
+          {activeFolder && (
+            <button
+              type="button"
+              className="table-action"
+              onClick={() => setSelectedFolder("All")}
+            >
+              ← All Folders
+            </button>
+          )}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            marginBottom: "16px",
-          }}
-        >
-          {folders.map((folder) => {
-            const count = images.filter(
-              (img) => (img.category || "General") === folder,
-            ).length;
-            return (
-              <button
-                type="button"
-                key={folder}
-                onClick={() => setSelectedFolder(folder)}
-                style={{
-                  minWidth: "130px",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
-                  border:
-                    selectedFolder === folder
-                      ? "2px solid #d4af37"
-                      : "1px solid rgba(212,175,55,0.25)",
-                  background:
-                    selectedFolder === folder
-                      ? "rgba(212,175,55,0.12)"
-                      : "var(--card-bg)",
-                  color: "var(--ink)",
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
-              >
-                <strong>📁 {folder}</strong>
-                <div style={{ fontSize: "12px", marginTop: "4px" }}>
-                  {count} {count === 1 ? "image" : "images"}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {loading ? (
+        {error ? (
+          <p style={{ color: "#b91c1c", padding: "16px" }}>{error}</p>
+        ) : loading ? (
           <p style={{ textAlign: "center", color: "var(--gold)" }}>
             Loading...
           </p>
-        ) : visibleImages.length === 0 ? (
+        ) : !activeFolder && folders.length > 0 ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            {folders.map((folder) => {
+              const count = images.filter(
+                (image) => image.category === folder.name,
+              ).length;
+              return (
+                <article
+                  key={folder._id}
+                  style={{
+                    padding: "18px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(212,175,55,0.35)",
+                    background: "var(--card-bg)",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFolder(folder._id)}
+                    style={{
+                      width: "100%",
+                      padding: 0,
+                      border: 0,
+                      background: "transparent",
+                      color: "var(--ink)",
+                      textAlign: "left",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <strong style={{ fontSize: "18px" }}>📁 {folder.name}</strong>
+                    <div style={{ marginTop: "8px", fontSize: "13px", color: "var(--muted)" }}>
+                      {folder.description || "No description"}
+                    </div>
+                    <div style={{ marginTop: "8px", fontSize: "12px" }}>
+                      {count} {count === 1 ? "image" : "images"} ·{" "}
+                      {folder.isPublished ? "Published" : "Not published"}
+                    </div>
+                  </button>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      marginTop: "14px",
+                    }}
+                  >
+                    <button type="button" className="table-action" onClick={() => handleRenameFolder(folder)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="table-action"
+                      onClick={() => handleToggleFolderPublish(folder)}
+                    >
+                      {folder.isPublished ? "Unpublish Folder" : "Publish Folder"}
+                    </button>
+                    <button
+                      type="button"
+                      className="table-action danger"
+                      onClick={() => handleDeleteFolder(folder)}
+                    >
+                      Delete Folder
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : !activeFolder || visibleImages.length === 0 ? (
           <p
             style={{
               textAlign: "center",
@@ -386,9 +497,9 @@ export default function Gallery() {
               fontStyle: "italic",
             }}
           >
-            {selectedFolder === "All"
-              ? "No images yet. Upload your first image above."
-              : `No images in the "${selectedFolder}" folder.`}
+            {activeFolder
+              ? `No images in the "${activeFolder.name}" folder.`
+              : "No gallery folders yet. Create a folder above."}
           </p>
         ) : (
           <div
@@ -459,6 +570,32 @@ export default function Gallery() {
                       {img.description}
                     </p>
                   )}
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+                    {!activeFolder?.isPublished && (
+                      <button
+                        type="button"
+                        className="table-action"
+                        onClick={() => handleToggleImagePublish(img)}
+                      >
+                        {img.isPublished ? "Unpublish Photo" : "Publish Photo"}
+                      </button>
+                    )}
+                    <span
+                      style={{
+                        alignSelf: "center",
+                        fontSize: "12px",
+                        color: img.isPublished || activeFolder?.isPublished
+                          ? "#15803d"
+                          : "var(--muted)",
+                      }}
+                    >
+                      {activeFolder?.isPublished
+                        ? "Visible via published folder"
+                        : img.isPublished
+                          ? "Visible to users"
+                        : "Admin only"}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => handleDelete(img._id)}
