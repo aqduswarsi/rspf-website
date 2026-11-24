@@ -131,6 +131,24 @@ const RANKS = [
 ];
 
 const num = (v) => Number(v) || 0;
+const textValue = (v) =>
+  String(v ?? "")
+    .trim()
+    .toLowerCase();
+const dateValue = (v) => {
+  if (!v) return "";
+  const value = String(v).trim();
+  const isoDate = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDate) return isoDate[1];
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return [
+    parsed.getFullYear(),
+    String(parsed.getMonth() + 1).padStart(2, "0"),
+    String(parsed.getDate()).padStart(2, "0"),
+  ].join("-");
+};
 
 export default function AdminDataEntry() {
   const [form, setForm] = useState(initialForm);
@@ -247,7 +265,10 @@ export default function AdminDataEntry() {
 
   const formatDate = (d) => {
     if (!d) return "-";
-    return new Date(d).toLocaleDateString("en-IN", {
+    const normalized = dateValue(d);
+    if (!normalized) return "-";
+    const [year, month, day] = normalized.split("-").map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -258,7 +279,7 @@ export default function AdminDataEntry() {
   const filteredRecords = records.filter((r) => {
     // Text search across ALL text fields
     if (searchText.trim()) {
-      const q = searchText.toLowerCase();
+      const q = textValue(searchText);
       const textFields = [
         r.reference,
         r.courseName,
@@ -267,17 +288,18 @@ export default function AdminDataEntry() {
         r.remarks,
       ]
         .filter(Boolean)
-        .map((v) => String(v).toLowerCase());
+        .map(textValue);
       const matched = textFields.some((t) => t.includes(q));
       if (!matched) return false;
     }
 
     // Batch
-    if (filterBatch && (r.batchName || "") !== filterBatch) return false;
+    if (filterBatch && textValue(r.batchName) !== textValue(filterBatch)) return false;
 
     // Year
     if (filterYear) {
-      const y = r.fromDate ? new Date(r.fromDate).getFullYear().toString() : "";
+      const fromDate = dateValue(r.fromDate);
+      const y = fromDate ? fromDate.slice(0, 4) : "";
       if (y !== filterYear) return false;
     }
 
@@ -292,14 +314,12 @@ export default function AdminDataEntry() {
 
     // Date range
     if (filterFromDate) {
-      const fdate = r.fromDate ? new Date(r.fromDate) : null;
-      const filterDate = new Date(filterFromDate);
-      if (!fdate || fdate < filterDate) return false;
+      const fdate = dateValue(r.fromDate);
+      if (!fdate || fdate < filterFromDate) return false;
     }
     if (filterToDate) {
-      const tdate = r.toDate ? new Date(r.toDate) : null;
-      const filterDate = new Date(filterToDate);
-      if (!tdate || tdate > filterDate) return false;
+      const tdate = dateValue(r.toDate);
+      if (!tdate || tdate > filterToDate) return false;
     }
 
     // "Has Data" filter
@@ -327,7 +347,7 @@ export default function AdminDataEntry() {
           if (num(r.female) <= 0) return false;
           break;
         case "remarks":
-          if (!r.remarks || !r.remarks.trim()) return false;
+          if (!textValue(r.remarks)) return false;
           break;
         default:
           break;
@@ -338,16 +358,16 @@ export default function AdminDataEntry() {
   });
 
   const uniqueBatches = [
-    ...new Set(records.map((r) => r.batchName).filter(Boolean)),
+    ...new Set(
+      records
+        .map((r) => String(r.batchName ?? "").trim())
+        .filter(Boolean),
+    ),
   ].sort();
 
   const uniqueYears = [
     ...new Set(
-      records
-        .map((r) =>
-          r.fromDate ? new Date(r.fromDate).getFullYear().toString() : "",
-        )
-        .filter(Boolean),
+      records.map((r) => dateValue(r.fromDate).slice(0, 4)).filter(Boolean),
     ),
   ].sort((a, b) => b - a);
 
@@ -373,6 +393,285 @@ export default function AdminDataEntry() {
     filterHasData ||
     filterFromDate ||
     filterToDate;
+
+  const escapeHtml = (value) =>
+    String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  const handlePrintSummary = () => {
+    if (filteredRecords.length === 0) {
+      alert("No records available to print.");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=1100,height=800");
+    if (!printWindow) {
+      alert("Please allow pop-ups to print the course summary.");
+      return;
+    }
+
+    const selectedZone =
+      ZONES.find(([key]) => key === filterZone)?.[1] || "";
+    const selectedBattalion =
+      BATTALIONS.find(([key]) => key === filterBattalion)?.[1] || "";
+    const selectedRank =
+      RANKS.find(([key]) => key === filterRank)?.[1] || "";
+    const activeFilters = [
+      searchText.trim() ? `Search: ${searchText.trim()}` : "",
+      filterBatch ? `Batch: ${filterBatch}` : "",
+      filterYear ? `Year: ${filterYear}` : "",
+      selectedZone ? `Zone: ${selectedZone}` : "",
+      selectedBattalion ? `Battalion: ${selectedBattalion}` : "",
+      selectedRank ? `Rank: ${selectedRank}` : "",
+      filterHasData ? `Has data: ${filterHasData}` : "",
+      filterFromDate ? `From date: ${formatDate(filterFromDate)}` : "",
+      filterToDate ? `To date: ${formatDate(filterToDate)}` : "",
+    ].filter(Boolean);
+    const selectedColumnCount =
+      (selectedZone ? 1 : 0) +
+      (selectedBattalion ? 1 : 0) +
+      (selectedRank ? 1 : 0);
+
+    const battalionBreakdown = BATTALIONS.map(([key, label]) => ({
+      label,
+      arrivals: filteredRecords.reduce((sum, r) => sum + num(r[key]), 0),
+    })).filter((item) => item.arrivals > 0);
+
+    const totals = filteredRecords.reduce(
+      (sum, r) => ({
+        trainingDays: sum.trainingDays + num(r.trainingDays),
+        strength: sum.strength + num(r.totalStrength),
+        selectedZone: sum.selectedZone + num(filterZone ? r[filterZone] : 0),
+        selectedBattalion:
+          sum.selectedBattalion +
+          num(filterBattalion ? r[filterBattalion] : 0),
+        selectedRank: sum.selectedRank + num(filterRank ? r[filterRank] : 0),
+        rpf: sum.rpf + (num(r.totalFromRPF) || ZONES.reduce((n, [key]) => n + num(r[key]), 0)),
+        rpsf:
+          sum.rpsf +
+          (num(r.totalFromRPSF) || BATTALIONS.reduce((n, [key]) => n + num(r[key]), 0)),
+        shortfall:
+          sum.shortfall +
+          (num(r.grandTotalShortfall) ||
+            num(r.shortfallRPF) + num(r.shortfallRPSF)),
+        excess:
+          sum.excess +
+          (num(r.grandTotalExcess) || num(r.excessRPF) + num(r.excessRPSF)),
+        attended: sum.attended + num(r.attended),
+        completed: sum.completed + num(r.completed),
+        certificates: sum.certificates + num(r.certificateIssued),
+        male: sum.male + num(r.male),
+        female: sum.female + num(r.female),
+      }),
+      {
+        trainingDays: 0,
+        strength: 0,
+        selectedZone: 0,
+        selectedBattalion: 0,
+        selectedRank: 0,
+        rpf: 0,
+        rpsf: 0,
+        shortfall: 0,
+        excess: 0,
+        attended: 0,
+        completed: 0,
+        certificates: 0,
+        male: 0,
+        female: 0,
+      },
+    );
+
+    const rows = filteredRecords
+      .map((r, i) => {
+        const rpf =
+          num(r.totalFromRPF) ||
+          ZONES.reduce((sum, [key]) => sum + num(r[key]), 0);
+        const rpsf =
+          num(r.totalFromRPSF) ||
+          BATTALIONS.reduce((sum, [key]) => sum + num(r[key]), 0);
+        const shortfall =
+          num(r.grandTotalShortfall) ||
+          num(r.shortfallRPF) + num(r.shortfallRPSF);
+        const excess =
+          num(r.grandTotalExcess) ||
+          num(r.excessRPF) + num(r.excessRPSF);
+
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(r.courseName)}</td>
+            <td>${escapeHtml(r.batchName || "-")}</td>
+            <td>${escapeHtml(r.reference || "-")}</td>
+            <td>${escapeHtml(formatDate(r.fromDate))}</td>
+            <td>${escapeHtml(formatDate(r.toDate))}</td>
+            ${
+              selectedZone
+                ? `<td class="num"><strong>${num(r[filterZone])}</strong></td>`
+                : ""
+            }
+            ${
+              selectedBattalion
+                ? `<td class="num"><strong>${num(r[filterBattalion])}</strong></td>`
+                : ""
+            }
+            ${
+              selectedRank
+                ? `<td class="num"><strong>${num(r[filterRank])}</strong></td>`
+                : ""
+            }
+            <td class="num">${num(r.trainingDays)}</td>
+            <td class="num">${num(r.totalStrength)}</td>
+            <td class="num">${rpf}</td>
+            <td class="num">${rpsf}</td>
+            <td class="num">${rpf + rpsf}</td>
+            <td class="num">${shortfall}</td>
+            <td class="num">${excess}</td>
+            <td class="num">${num(r.attended)}</td>
+            <td class="num">${num(r.completed)}</td>
+            <td class="num">${num(r.certificateIssued)}</td>
+            <td class="num">${num(r.male)}</td>
+            <td class="num">${num(r.female)}</td>
+            <td>${escapeHtml(r.remarks || "-")}</td>
+          </tr>`;
+      })
+      .join("");
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Course Proforma Summary</title>
+          <style>
+            @page { size: A4 landscape; margin: 10mm; }
+            * { box-sizing: border-box; }
+            body { margin: 0; color: #111827; font-family: Arial, sans-serif; font-size: 9px; }
+            .header { text-align: center; border-bottom: 2px solid #1f2937; padding-bottom: 8px; margin-bottom: 10px; }
+            .header h1 { margin: 0; font-size: 17px; letter-spacing: 0.5px; }
+            .header p { margin: 4px 0 0; font-size: 10px; }
+            .meta { display: flex; justify-content: space-between; margin: 8px 0; font-weight: 700; }
+            .filters { margin: 0 0 8px; padding: 6px 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: 700; }
+            .breakdown { margin: 8px 0; border: 1px solid #374151; padding: 6px 8px; }
+            .breakdown h3 { margin: 0 0 6px; font-size: 11px; }
+            .breakdown-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+            .breakdown-item { border: 1px solid #d1d5db; padding: 5px; text-align: center; background: #f9fafb; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+            th, td { border: 1px solid #374151; padding: 4px 3px; vertical-align: top; }
+            th { background: #e5e7eb; font-size: 8px; text-transform: uppercase; }
+            td { font-size: 8px; }
+            .num { text-align: right; }
+            tbody tr:nth-child(even) { background: #f9fafb; }
+            tfoot td { background: #dbeafe; font-weight: 700; }
+            .footer { margin-top: 10px; display: flex; justify-content: space-between; }
+            .sign { width: 30%; border-top: 1px solid #374151; padding-top: 4px; text-align: center; }
+            @media print {
+              thead { display: table-header-group; }
+              tr { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>COURSE PROFORMA CONSOLIDATED SUMMARY</h1>
+            <p>RPSF Training Center, Rajahi Camp, Gorakhpur</p>
+          </div>
+          <div class="meta">
+            <span>Record(s): ${filteredRecords.length}</span>
+            <span>Printed on: ${escapeHtml(
+              new Date().toLocaleString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            )}</span>
+          </div>
+          ${
+            activeFilters.length
+              ? `<div class="filters">Applied filters: ${escapeHtml(activeFilters.join(" | "))}</div>`
+              : ""
+          }
+          ${
+            battalionBreakdown.length
+              ? `<div class="breakdown">
+                  <h3>RPSF Battalion-wise Arrivals</h3>
+                  <div class="breakdown-grid">
+                    ${battalionBreakdown
+                      .map(
+                        (item) =>
+                          `<div class="breakdown-item"><strong>${escapeHtml(item.label)}</strong><br/>${item.arrivals} arrived</div>`,
+                      )
+                      .join("")}
+                  </div>
+                </div>`
+              : ""
+          }
+          <table>
+            <thead>
+              <tr>
+                <th style="width:3%">#</th>
+                <th style="width:12%">Course Name</th>
+                <th style="width:7%">Batch</th>
+                <th style="width:8%">Reference</th>
+                <th style="width:7%">From</th>
+                <th style="width:7%">To</th>
+                ${selectedZone ? `<th style="width:5%">${escapeHtml(selectedZone)} Arrivals</th>` : ""}
+                ${selectedBattalion ? `<th style="width:5%">${escapeHtml(selectedBattalion)} Arrivals</th>` : ""}
+                ${selectedRank ? `<th style="width:5%">${escapeHtml(selectedRank)} Strength</th>` : ""}
+                <th style="width:5%">Days</th>
+                <th style="width:5%">Strength</th>
+                <th style="width:5%">RPF</th>
+                <th style="width:5%">RPSF</th>
+                <th style="width:5%">Arrival</th>
+                <th style="width:5%">Shortfall</th>
+                <th style="width:5%">Excess</th>
+                <th style="width:5%">Attended</th>
+                <th style="width:5%">Completed</th>
+                <th style="width:5%">Certificate</th>
+                <th style="width:4%">Male</th>
+                <th style="width:4%">Female</th>
+                <th style="width:11%">Remarks</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+            <tfoot>
+              <tr>
+                <td colspan="${6 + selectedColumnCount}">TOTAL</td>
+                ${selectedZone ? `<td class="num">${totals.selectedZone}</td>` : ""}
+                ${selectedBattalion ? `<td class="num">${totals.selectedBattalion}</td>` : ""}
+                ${selectedRank ? `<td class="num">${totals.selectedRank}</td>` : ""}
+                <td class="num">${totals.trainingDays}</td>
+                <td class="num">${totals.strength}</td>
+                <td class="num">${totals.rpf}</td>
+                <td class="num">${totals.rpsf}</td>
+                <td class="num">${totals.rpf + totals.rpsf}</td>
+                <td class="num">${totals.shortfall}</td>
+                <td class="num">${totals.excess}</td>
+                <td class="num">${totals.attended}</td>
+                <td class="num">${totals.completed}</td>
+                <td class="num">${totals.certificates}</td>
+                <td class="num">${totals.male}</td>
+                <td class="num">${totals.female}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div class="footer">
+            <div class="sign">Prepared by</div>
+            <div class="sign">Checked by</div>
+            <div class="sign">Approved by</div>
+          </div>
+          <script>window.onload = function () { window.print(); };</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   const calcRpfTotal = ZONES.reduce((sum, [key]) => sum + num(form[key]), 0);
   const calcRpsfTotal = BATTALIONS.reduce(
@@ -429,21 +728,32 @@ export default function AdminDataEntry() {
           <h2>Data Entry</h2>
           <p>Add and manage course proforma records.</p>
         </div>
-        <button
-          type="button"
-          className="primary"
-          onClick={() => {
-            if (showForm) {
-              resetForm();
-              setShowForm(false);
-            } else {
-              setShowForm(true);
-            }
-          }}
-          style={{ padding: "10px 24px" }}
-        >
-          {showForm ? "Close Form" : "Add New Record"}
-        </button>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="table-action"
+            onClick={handlePrintSummary}
+            disabled={filteredRecords.length === 0}
+            style={{ padding: "10px 18px" }}
+          >
+            Print Summary
+          </button>
+          <button
+            type="button"
+            className="primary"
+            onClick={() => {
+              if (showForm) {
+                resetForm();
+                setShowForm(false);
+              } else {
+                setShowForm(true);
+              }
+            }}
+            style={{ padding: "10px 24px" }}
+          >
+            {showForm ? "Close Form" : "Add New Record"}
+          </button>
+        </div>
       </div>
 
       {message && (
@@ -550,7 +860,7 @@ export default function AdminDataEntry() {
                   />
                 </div>
                 <div style={fieldStyle}>
-                  <label style={labelStyle}>Total Strength</label>
+                  <label style={labelStyle}>Alloted Strength</label>
                   <input
                     type="number"
                     name="totalStrength"

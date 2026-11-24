@@ -1601,13 +1601,12 @@ function TrainingCertificatePreview({ cert, onClose, isPrintMode = false }) {
                 role="img"
               >
                 <defs>
-                  <path
-                    id="ccArcHindi"
-                    d="M 64 311 L 134 238 C 194 187 330 156 500 156 C 670 156 806 187 866 238 L 936 311"
-                  />
+                  {/* Hindi: outer arch, centre x=500, rx 427, ry 156 */}
+                  <path id="ccArcHindi" d="M 73 330 A 427 156 0 0 1 927 330" />
+                  {/* English: inner arch, same baseline, rx 385, ry 122 */}
                   <path
                     id="ccArcEnglish"
-                    d="M 121 316 L 176 264 C 230 232 330 196 500 196 C 670 196 770 232 824 264 L 879 316"
+                    d="M 115 330 A 385 122 0 0 1 885 330"
                   />
                   <linearGradient id="ccTitle" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#e8283c" />
@@ -1617,9 +1616,9 @@ function TrainingCertificatePreview({ cert, onClose, isPrintMode = false }) {
                   <linearGradient
                     id="ccEn"
                     gradientUnits="userSpaceOnUse"
-                    x1="121"
+                    x1="115"
                     y1="0"
-                    x2="879"
+                    x2="885"
                     y2="0"
                   >
                     <stop offset="0%" stopColor="#a02fc0" />
@@ -1643,23 +1642,23 @@ function TrainingCertificatePreview({ cert, onClose, isPrintMode = false }) {
                   />
                 )}
 
-                <text className="tc-arc-hi">
+                <text className="tc-arc-hi" style={{ fontSize: "44px" }}>
                   <textPath
                     href="#ccArcHindi"
-                    startOffset="5"
-                    textLength="950"
-                    lengthAdjust="spacingAndGlyphs"
+                    startOffset="13"
+                    textLength="940"
+                    lengthAdjust="spacing"
                   >
                     रेलवे सुरक्षा विशेष बल, प्रशिक्षण केन्द्र, रजही कैम्प,
                     गोरखपुर
                   </textPath>
                 </text>
-                <text className="tc-arc-en">
+                <text className="tc-arc-en" style={{ fontSize: "23px" }}>
                   <textPath
                     href="#ccArcEnglish"
-                    startOffset="7"
-                    textLength="805"
-                    lengthAdjust="spacingAndGlyphs"
+                    startOffset="11"
+                    textLength="828"
+                    lengthAdjust="spacing"
                   >
                     Railway Protection Special Force, Training Centre, Rajahi
                     Camp, Gorakhpur
