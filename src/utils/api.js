@@ -1065,13 +1065,18 @@ export async function getMyReattemptRequests() {
 export async function getAdminReattemptRequests(status) {
   const token = localStorage.getItem("rpsf_login_token");
   let url = `${API_BASE_URL}/api/admin/reattempt-requests`;
-  if (status) url += `?status=${status}`;
+  if (status) url += `?status=${encodeURIComponent(status)}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  const data = await res.json().catch(() => []);
-  if (!res.ok) throw new Error(data.message || "Failed to load requests");
-  return data;
+  const data = await res.json().catch(() => ({ message: "Invalid server response" }));
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to load reattempt requests");
+  }
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.requests)) return data.requests;
+  if (Array.isArray(data.data)) return data.data;
+  return [];
 }
 
 export async function respondToReattemptRequest(id, status, adminNote) {

@@ -23,8 +23,9 @@ export default function AdminReattemptRequests() {
   const load = async () => {
     try {
       setLoading(true);
+      setMessage("");
       const data = await getAdminReattemptRequests(filter);
-      setRequests(data);
+      setRequests(Array.isArray(data) ? data : []);
     } catch (err) {
       setMessage(err.message);
     } finally {

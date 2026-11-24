@@ -329,17 +329,9 @@ export default function UserExam() {
 
   // 👇 UPDATED: getExamBadge with time status
   const getExamBadge = (exam) => {
-    if (exam.statusMessage === "not_started") {
+    if (exam.reattemptUsed) {
       return {
-        text: "Upcoming",
-        bg: "#eff6ff",
-        color: "#1d4ed8",
-        border: "#bfdbfe",
-      };
-    }
-    if (exam.statusMessage === "ended") {
-      return {
-        text: "Ended",
+        text: "Reattempt Used",
         bg: "#fef2f2",
         color: "#b91c1c",
         border: "#fecaca",
@@ -359,6 +351,22 @@ export default function UserExam() {
         bg: "#f0f8f1",
         color: "#15803d",
         border: "#a7ddb2",
+      };
+    }
+    if (exam.statusMessage === "not_started") {
+      return {
+        text: "Upcoming",
+        bg: "#eff6ff",
+        color: "#1d4ed8",
+        border: "#bfdbfe",
+      };
+    }
+    if (exam.statusMessage === "ended") {
+      return {
+        text: "Ended",
+        bg: "#fef2f2",
+        color: "#b91c1c",
+        border: "#fecaca",
       };
     }
     if (exam.attempted) {
@@ -564,7 +572,8 @@ export default function UserExam() {
                         </div>
 
                         {/* 👇 NEW: Upcoming exam — countdown + disabled button */}
-                        {exam.statusMessage === "not_started" && (
+                        {exam.statusMessage === "not_started" &&
+                          !exam.reattemptUsed && (
                           <>
                             <div
                               style={{
@@ -596,28 +605,17 @@ export default function UserExam() {
                           </>
                         )}
 
-                        {/* 👇 NEW: Ended exam */}
-                        {exam.statusMessage === "ended" && (
+                        {/* 👇 Existing button logic (available / attempted / reattempt) */}
+                        {exam.reattemptUsed ? (
                           <button
                             className="exam-start-btn"
                             disabled
                             style={{ cursor: "not-allowed" }}
                           >
-                            Exam Ended
+                            Reattempt Used
                           </button>
-                        )}
-
-                        {/* 👇 Existing button logic (available / attempted / reattempt) */}
-                        {exam.statusMessage !== "not_started" &&
-                          exam.statusMessage !== "ended" &&
-                          (exam.canAttempt ? (
-                            <button
-                              className="exam-start-btn"
-                              onClick={() => startExam(exam._id)}
-                            >
-                              Start Exam
-                            </button>
-                          ) : exam.requestStatus === "pending" ? (
+                        ) : exam.statusMessage !== "not_started" &&
+                          (exam.requestStatus === "pending" ? (
                             <button
                               className="exam-start-btn"
                               disabled
@@ -631,6 +629,32 @@ export default function UserExam() {
                               onClick={() => startExam(exam._id)}
                             >
                               Start Reattempt
+                            </button>
+                          ) : exam.statusMessage === "ended" && !exam.attempted ? (
+                            <button
+                              className="exam-start-btn"
+                              disabled
+                              style={{ cursor: "not-allowed" }}
+                            >
+                              Exam Ended
+                            </button>
+                          ) : exam.statusMessage === "ended" && exam.attempted ? (
+                            <button
+                              className="exam-start-btn"
+                              onClick={() => openReattemptModal(exam)}
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #78350f, #b45309)",
+                              }}
+                            >
+                              Request Reattempt
+                            </button>
+                          ) : exam.canAttempt ? (
+                            <button
+                              className="exam-start-btn"
+                              onClick={() => startExam(exam._id)}
+                            >
+                              Start Exam
                             </button>
                           ) : (
                             <button

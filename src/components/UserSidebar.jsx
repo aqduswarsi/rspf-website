@@ -62,6 +62,14 @@ export default function UserSidebar({ isOpen, onClose }) {
         >
           Gallery
         </NavLink>
+        <NavLink
+          to="/user/course/exam"
+          className={({ isActive }) =>
+            `admin-nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          Exam
+        </NavLink>
 
         {/* ============ MY ACCOUNT ============ */}
         <button
@@ -133,14 +141,6 @@ export default function UserSidebar({ isOpen, onClose }) {
               }
             >
               I Read Your Course
-            </NavLink>
-            <NavLink
-              to="/user/course/exam"
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? "active" : ""}`
-              }
-            >
-              Exam
             </NavLink>
             <NavLink
               to="/user/course/result"
