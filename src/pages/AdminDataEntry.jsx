@@ -428,16 +428,6 @@ export default function AdminDataEntry() {
       filterFromDate ? `From date: ${formatDate(filterFromDate)}` : "",
       filterToDate ? `To date: ${formatDate(filterToDate)}` : "",
     ].filter(Boolean);
-    const selectedColumnCount =
-      (selectedZone ? 1 : 0) +
-      (selectedBattalion ? 1 : 0) +
-      (selectedRank ? 1 : 0);
-
-    const battalionBreakdown = BATTALIONS.map(([key, label]) => ({
-      label,
-      arrivals: filteredRecords.reduce((sum, r) => sum + num(r[key]), 0),
-    })).filter((item) => item.arrivals > 0);
-
     const totals = filteredRecords.reduce(
       (sum, r) => ({
         trainingDays: sum.trainingDays + num(r.trainingDays),
@@ -586,10 +576,6 @@ export default function AdminDataEntry() {
             .header p { margin: 4px 0 0; font-size: 10px; }
             .meta { display: flex; justify-content: space-between; margin: 8px 0; font-weight: 700; }
             .filters { margin: 0 0 8px; padding: 6px 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: 700; }
-            .breakdown { margin: 8px 0; border: 1px solid #374151; padding: 6px 8px; }
-            .breakdown h3 { margin: 0 0 6px; font-size: 11px; }
-            .breakdown-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-            .breakdown-item { border: 1px solid #d1d5db; padding: 5px; text-align: center; background: #f9fafb; }
             table { width: 100%; border-collapse: collapse; table-layout: fixed; }
             th, td { border: 1px solid #374151; padding: 4px 3px; vertical-align: top; }
             th { background: #e5e7eb; font-size: 7px; text-transform: uppercase; padding: 4px 2px; text-align: center; overflow-wrap: anywhere; }
@@ -627,21 +613,6 @@ export default function AdminDataEntry() {
               ? `<div class="filters">Applied filters: ${escapeHtml(activeFilters.join(" | "))}</div>`
               : ""
           }
-          ${
-            battalionBreakdown.length
-              ? `<div class="breakdown">
-                  <h3>RPSF Battalion-wise Arrivals</h3>
-                  <div class="breakdown-grid">
-                    ${battalionBreakdown
-                      .map(
-                        (item) =>
-                          `<div class="breakdown-item"><strong>${escapeHtml(item.label)}</strong><br/>${item.arrivals} arrived</div>`,
-                      )
-                      .join("")}
-                  </div>
-                </div>`
-              : ""
-          }
           <table>
             <colgroup>${colGroup}</colgroup>
             <thead>
@@ -673,7 +644,7 @@ export default function AdminDataEntry() {
             <tbody>${rows}</tbody>
             <tfoot>
               <tr>
-                <td colspan="${6 + selectedColumnCount}">TOTAL</td>
+                <td colspan="6">TOTAL</td>
                 ${selectedZone ? `<td class="num">${totals.selectedZone}</td>` : ""}
                 ${selectedBattalion ? `<td class="num">${totals.selectedBattalion}</td>` : ""}
                 ${selectedRank ? `<td class="num">${totals.selectedRank}</td>` : ""}
