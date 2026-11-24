@@ -294,7 +294,8 @@ export default function AdminDataEntry() {
     }
 
     // Batch
-    if (filterBatch && textValue(r.batchName) !== textValue(filterBatch)) return false;
+    if (filterBatch && textValue(r.batchName) !== textValue(filterBatch))
+      return false;
 
     // Year
     if (filterYear) {
@@ -359,9 +360,7 @@ export default function AdminDataEntry() {
 
   const uniqueBatches = [
     ...new Set(
-      records
-        .map((r) => String(r.batchName ?? "").trim())
-        .filter(Boolean),
+      records.map((r) => String(r.batchName ?? "").trim()).filter(Boolean),
     ),
   ].sort();
 
@@ -414,12 +413,10 @@ export default function AdminDataEntry() {
       return;
     }
 
-    const selectedZone =
-      ZONES.find(([key]) => key === filterZone)?.[1] || "";
+    const selectedZone = ZONES.find(([key]) => key === filterZone)?.[1] || "";
     const selectedBattalion =
       BATTALIONS.find(([key]) => key === filterBattalion)?.[1] || "";
-    const selectedRank =
-      RANKS.find(([key]) => key === filterRank)?.[1] || "";
+    const selectedRank = RANKS.find(([key]) => key === filterRank)?.[1] || "";
     const activeFilters = [
       searchText.trim() ? `Search: ${searchText.trim()}` : "",
       filterBatch ? `Batch: ${filterBatch}` : "",
@@ -447,13 +444,16 @@ export default function AdminDataEntry() {
         strength: sum.strength + num(r.totalStrength),
         selectedZone: sum.selectedZone + num(filterZone ? r[filterZone] : 0),
         selectedBattalion:
-          sum.selectedBattalion +
-          num(filterBattalion ? r[filterBattalion] : 0),
+          sum.selectedBattalion + num(filterBattalion ? r[filterBattalion] : 0),
         selectedRank: sum.selectedRank + num(filterRank ? r[filterRank] : 0),
-        rpf: sum.rpf + (num(r.totalFromRPF) || ZONES.reduce((n, [key]) => n + num(r[key]), 0)),
+        rpf:
+          sum.rpf +
+          (num(r.totalFromRPF) ||
+            ZONES.reduce((n, [key]) => n + num(r[key]), 0)),
         rpsf:
           sum.rpsf +
-          (num(r.totalFromRPSF) || BATTALIONS.reduce((n, [key]) => n + num(r[key]), 0)),
+          (num(r.totalFromRPSF) ||
+            BATTALIONS.reduce((n, [key]) => n + num(r[key]), 0)),
         shortfall:
           sum.shortfall +
           (num(r.grandTotalShortfall) ||
@@ -497,8 +497,7 @@ export default function AdminDataEntry() {
           num(r.grandTotalShortfall) ||
           num(r.shortfallRPF) + num(r.shortfallRPSF);
         const excess =
-          num(r.grandTotalExcess) ||
-          num(r.excessRPF) + num(r.excessRPSF);
+          num(r.grandTotalExcess) || num(r.excessRPF) + num(r.excessRPSF);
 
         return `
           <tr>
@@ -540,6 +539,38 @@ export default function AdminDataEntry() {
       })
       .join("");
 
+    // Column widths (weights) - auto-normalised to 100%, order must match the table columns
+    const colWeights = [
+      2.5,
+      11,
+      6.5,
+      7,
+      6,
+      6,
+      ...(selectedZone ? [5] : []),
+      ...(selectedBattalion ? [5] : []),
+      ...(selectedRank ? [5] : []),
+      3.5,
+      5,
+      4.5,
+      4.5,
+      5,
+      5.5,
+      5,
+      5.5,
+      6,
+      6,
+      3.5,
+      4,
+      8.5,
+    ];
+    const colWeightSum = colWeights.reduce((a, b) => a + b, 0);
+    const colGroup = colWeights
+      .map(
+        (w) => `<col style="width:${((w / colWeightSum) * 100).toFixed(2)}%">`,
+      )
+      .join("");
+
     printWindow.document.write(`
       <!doctype html>
       <html>
@@ -561,8 +592,8 @@ export default function AdminDataEntry() {
             .breakdown-item { border: 1px solid #d1d5db; padding: 5px; text-align: center; background: #f9fafb; }
             table { width: 100%; border-collapse: collapse; table-layout: fixed; }
             th, td { border: 1px solid #374151; padding: 4px 3px; vertical-align: top; }
-            th { background: #e5e7eb; font-size: 8px; text-transform: uppercase; }
-            td { font-size: 8px; }
+            th { background: #e5e7eb; font-size: 7px; text-transform: uppercase; padding: 4px 2px; text-align: center; overflow-wrap: anywhere; }
+            td { font-size: 8px; overflow-wrap: anywhere; }
             .num { text-align: right; }
             tbody tr:nth-child(even) { background: #f9fafb; }
             tfoot td { background: #dbeafe; font-weight: 700; }
@@ -612,30 +643,31 @@ export default function AdminDataEntry() {
               : ""
           }
           <table>
+            <colgroup>${colGroup}</colgroup>
             <thead>
               <tr>
-                <th style="width:3%">#</th>
-                <th style="width:12%">Course Name</th>
-                <th style="width:7%">Batch</th>
-                <th style="width:8%">Reference</th>
-                <th style="width:7%">From</th>
-                <th style="width:7%">To</th>
-                ${selectedZone ? `<th style="width:5%">${escapeHtml(selectedZone)} Arrivals</th>` : ""}
-                ${selectedBattalion ? `<th style="width:5%">${escapeHtml(selectedBattalion)} Arrivals</th>` : ""}
-                ${selectedRank ? `<th style="width:5%">${escapeHtml(selectedRank)} Strength</th>` : ""}
-                <th style="width:5%">Days</th>
-                <th style="width:5%">Strength</th>
-                <th style="width:5%">RPF</th>
-                <th style="width:5%">RPSF</th>
-                <th style="width:5%">Arrival</th>
-                <th style="width:5%">Shortfall</th>
-                <th style="width:5%">Excess</th>
-                <th style="width:5%">Attended</th>
-                <th style="width:5%">Completed</th>
-                <th style="width:5%">Certificate</th>
-                <th style="width:4%">Male</th>
-                <th style="width:4%">Female</th>
-                <th style="width:11%">Remarks</th>
+                <th>#</th>
+                <th>Course Name</th>
+                <th>Batch</th>
+                <th>Reference</th>
+                <th>From</th>
+                <th>To</th>
+                ${selectedZone ? `<th>${escapeHtml(selectedZone)} Arrivals</th>` : ""}
+                ${selectedBattalion ? `<th>${escapeHtml(selectedBattalion)} Arrivals</th>` : ""}
+                ${selectedRank ? `<th>${escapeHtml(selectedRank)} Strength</th>` : ""}
+                <th>Days</th>
+                <th>Strength</th>
+                <th>RPF</th>
+                <th>RPSF</th>
+                <th>Arrival</th>
+                <th>Shortfall</th>
+                <th>Excess</th>
+                <th>Attended</th>
+                <th>Completed</th>
+                <th>Certificate</th>
+                <th>Male</th>
+                <th>Female</th>
+                <th>Remarks</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
